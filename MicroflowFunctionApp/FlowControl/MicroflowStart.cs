@@ -18,10 +18,8 @@ namespace Microflow
         public static async Task<HttpResponseMessage> HttpStart(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "start/{instanceId?}")] HttpRequestMessage req,
             [DurableClient] IDurableOrchestrationClient client,
-            string instanceId, ILogger log)
+            string instanceId)
         {
-
-            //var log = client.CreateReplaySafeLogger(inlog);
             // read http content
             var strWorkflow = await req.Content.ReadAsStringAsync();
 
@@ -59,8 +57,6 @@ namespace Microflow
             // start
             await client.StartNewAsync("Start", instanceId, projectRun);
 
-            log.LogInformation($"Started orchestration with ID = '{instanceId}', Project = '{project.ProjectName}'");
-
             return await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId);
         }
 
@@ -71,6 +67,8 @@ namespace Microflow
 
             // read ProjectRun payload
             var projectRun = context.GetInput<ProjectRun>();
+
+            log.LogInformation($"Started orchestration with ID = '{context.InstanceId}', Project = '{projectRun.ProjectId}'");
 
             // do the looping
             for (int i = 1; i <= projectRun.Loop; i++)
@@ -89,7 +87,13 @@ namespace Microflow
                 log.LogError($"Run ID {guid} completed successfully...");
             }
 
-            await MicroflowHelper.Log(projectRun.ProjectId, Guid.NewGuid().ToString(), $"{Environment.MachineName} - {projectRun.ProjectId} completed successfully");
+            // table storage custom logging
+            // TODO: move to activity/orch
+            //await MicroflowHelper.Log(projectRun.ProjectId, Guid.NewGuid().ToString(), $"{Environment.MachineName} - {projectRun.ProjectId} completed successfully");
+
+            // note: in Azure this might log duplicates because this is not a replay safe logger,
+            //       use the table storage log for accurate custom logging
+            // TODO: add better table storage logging using MicroflowHelper.Log(), investigate to remove, or use compiler directives to disable console logging
 
             // done
             log.LogError("-------------------------------------------");

@@ -70,15 +70,15 @@ namespace Microflow.API
         {
             var httpCall = context.GetInput<HttpCall>();
 
-            DurableHttpRequest durableHttpRequest = MicroflowHelper.GetDurableHttpRequest(httpCall, context.InstanceId);
-
+            //DurableHttpRequest durableHttpRequest = MicroflowHelper.GetDurableHttpRequest(httpCall, context.InstanceId);
+            
             // http call outside of Microflow, this is the micro-service api call
-            var result = await context.CallHttpAsync(durableHttpRequest);
+            //var result = await context.CallHttpAsync(durableHttpRequest);
 
-            if (result.StatusCode == System.Net.HttpStatusCode.OK)
+            //if (result.StatusCode == System.Net.HttpStatusCode.OK)
                 return true;
-            else
-                return false;
+            //else
+            //    return false;
         }
 
         /// <summary>
