@@ -1,0 +1,20 @@
+{
+  "version": "2.0",
+  "extensions": {
+    "durableTask": {
+      "logReplayEvents": false
+    }
+  },
+  "logging": {
+    "logLevel": {
+      "DurableTask.AzureStorage": "Error",
+      "DurableTask.Core": "Error"
+    },
+    "applicationInsights": {
+      "samplingExcludedTypes": "Request",
+      "samplingSettings": {
+        "isEnabled": true
+      }
+    }
+  }
+}
