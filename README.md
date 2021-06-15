@@ -1,5 +1,19 @@
 # Microflow
 Welcome to Microflow.
 
-# Overview
+## Overview
 Microflow is a dynamic servlerless workflow orchestration engine built with Azure Durable Functions. Microflow separates the workflow design from the function code so that workflows are no longer hard-coded as with normal Durable Functions. The workflow can be designed outside of Microflow and then passed in as JSON for execution, so no code changes or deployments are needed to modify any aspect of a workflow. Microflow can be deployed to the Azure Functions Consumption or Premium plans, to an Azure App Service, or to Kubernetes.
+
+## Solution Description
+
+### MicroflowFunctionApp
+This is the core of the workflow engine.
+
+#### API
+This currently contains 1 class with all the api calls.
+
+#### FlowControl
+This contains 3 classes responsible for workflow execution. ActivityCanExecuteNow old.cs can be ignored, this is an old class that did the parent count locking.
+  * ActivityCanExecuteNow.cs : Checks the parent completed count to determine if a child step can execute, all parents must be completed for a child step can execute.       Parent steps execute in parallel.
+  * Microflow.cs : This conatains the recursive function ExecuteStep. It calls the action url and the calls ActivityCanExecuteNow for child steps of the current step.
+  * MicroflowStart.cs : This is where the workflow JSON payload is received via http post and then prepares the workflow and calls start.
