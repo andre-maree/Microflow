@@ -90,16 +90,12 @@ namespace Microflow
             }
 
             await MicroflowHelper.Log(projectRun.ProjectId, Guid.NewGuid().ToString(), $"{Environment.MachineName} - {projectRun.ProjectId} completed successfully");
-            
+
             // done
-            //log.LogError("-------------------------------------------");
-            //log.LogError($"Project run {projectRun.ProjectId} completed successfully...");
-            //log.LogError("-------------------------------------------");
-            //log.LogError("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-            //log.LogError("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+            log.LogError("-------------------------------------------");
+            log.LogError($"Project run {projectRun.ProjectId} completed successfully...");
+            log.LogError("-------------------------------------------");
             log.LogError("<<<<<<<<<<<<<<<<<<<<<<<<<-----> !!! A GREAT SUCCESS !!! <----->>>>>>>>>>>>>>>>>>>>>>>>>");
-            //log.LogError("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-            //log.LogError("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         }
     }
 }

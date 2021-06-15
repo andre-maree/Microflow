@@ -101,10 +101,10 @@ namespace Microflow
                     // if parentCount is more than 1, work out if it can execute now
                     else
                     {
-                        bool canExe = await context.CallSubOrchestratorAsync<bool>("CanExecuteNow", new CanExecuteNowObject() { RunId = runObj.RunId, StepId = step.Key, ParentCount = step.Value, ProjectId = project.ProjectId });
+                        bool canExecute = await context.CallSubOrchestratorAsync<bool>("CanExecuteNow", new CanExecuteNowObject() { RunId = runObj.RunId, StepId = step.Key, ParentCount = step.Value, ProjectId = project.ProjectId });
 
                         // the last parent to complete will trigger true so the sub step can execute
-                        if (canExe)
+                        if (canExecute)
                         {
                             project.RunObject = new RunObject() { RunId = runObj.RunId, StepId = step.Key };
                             subStepTasks.Add(context.CallSubOrchestratorAsync("ExecuteStep", project));
