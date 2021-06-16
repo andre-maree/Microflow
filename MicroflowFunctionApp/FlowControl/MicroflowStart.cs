@@ -8,6 +8,8 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using System.Text.Json;
 using Microflow.Helpers;
 using MicroflowModels;
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace Microflow
 {
@@ -36,7 +38,7 @@ namespace Microflow
             // await client.PurgeInstanceHistoryAsync("7c828621-3e7a-44aa-96fd-c6946763cc2b");
 
             // step 1 contains all the steps
-            Step step1 = project.AllSteps;
+            List<Step> steps = project.AllSteps;
 
             // create a project run
             ProjectRun projectRun = new ProjectRun() { ProjectId = project.ProjectName, Loop = project.Loop };
@@ -48,7 +50,7 @@ namespace Microflow
             await MicroflowTableHelper.UpdateStatetEntity(project.ProjectName, 1);
 
             // create a new run object
-            RunObject runObj = new RunObject() { StepId = step1.StepId };
+            RunObject runObj = new RunObject() { StepId = steps[0].StepId };
             projectRun.RunObject = runObj;
 
             if (string.IsNullOrWhiteSpace(instanceId))
@@ -57,7 +59,7 @@ namespace Microflow
              }
 
             // prepare the workflow by persisting parent info to table storage
-            await MicroflowHelper.PrepareWorkflow(instanceId, projectRun, step1, project.MergeFields);
+            await MicroflowHelper.PrepareWorkflow(instanceId, projectRun, steps, project.MergeFields);
 
             // start
             await client.StartNewAsync("Start", instanceId, projectRun);

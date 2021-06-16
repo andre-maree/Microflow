@@ -15,7 +15,7 @@ namespace MicroflowModels
     public class Project
     {
         public string ProjectName { get; set; }
-        public Step AllSteps { get; set; }
+        public List<Step> AllSteps { get; set; }
         public int Loop { get; set; } = 1;
 
         [DataMember(Name = "MergeFields", EmitDefaultValue = false)]
@@ -34,7 +34,7 @@ namespace MicroflowModels
             CalloutUrl = calloutUrl;
         }
 
-        public Step(int stepId, List<Step> subSteps)
+        public Step(int stepId, List<int> subSteps)
         {
             StepId = stepId;
             SubSteps = subSteps;
@@ -47,7 +47,7 @@ namespace MicroflowModels
         public int ActionTimeoutSeconds { get; set; } = 1000;
 
         [DataMember(Name = "SubSteps", EmitDefaultValue = false)]
-        public List<Step> SubSteps { get; set; } = new List<Step>();
+        public List<int> SubSteps { get; set; } = new List<int>();
 
         [DataMember(Name = "RetryOptions", EmitDefaultValue = false)]
         public MicroflowRetryOptions RetryOptions { get; set; }

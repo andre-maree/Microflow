@@ -9,14 +9,14 @@ namespace MicroflowSDK
 {
     public static class ProjectManager
     {
-        public static Dictionary<int, Step> CreateSteps(int count, int fromId, string defaultURI = "")
+        public static List<Step>  CreateSteps(int count, int fromId, string defaultURI = "")
         {
-            Dictionary<int, Step> stepsList = new Dictionary<int, Step>();
+            List<Step> stepsList = new List<Step>();
 
             for (; fromId <= count; fromId++)
             {
                 Step step = new Step(fromId, defaultURI);
-                stepsList.Add(fromId, step);
+                stepsList.Add(step);
             }
 
             return stepsList;

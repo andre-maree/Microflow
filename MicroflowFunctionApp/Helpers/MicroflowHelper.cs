@@ -36,36 +36,34 @@ namespace Microflow.Helpers
         /// <summary>
         /// Called before a workflow executes and takes the top step and recursives it to insert step configs into table storage
         /// </summary>
-        public static async Task PrepareWorkflow(string instanceId, ProjectRun projectRun, Step step1, Dictionary<string, string> mergeFields)
+        public static async Task PrepareWorkflow(string instanceId, ProjectRun projectRun, List<Step> steps, Dictionary<string, string> mergeFields)
         {
             HashSet<KeyValuePair<int, int>> hsStepCounts = new HashSet<KeyValuePair<int, int>>();
-            HashSet<Step> hsSteps = new HashSet<Step>(new StepComparer());
 
-            Local(step1);
+            Local(steps[0]);
 
             void Local(Step step)
             {
-                hsSteps.Add(step);
                 if (step.SubSteps != null)
                 {
                     foreach (var cstep in step.SubSteps)
                     {
-                        hsStepCounts.Add(new KeyValuePair<int, int>(step.StepId, cstep.StepId));
-                        Local(cstep);
+                        hsStepCounts.Add(new KeyValuePair<int, int>(step.StepId, cstep));
+                        Local(steps[cstep-1]);
                     }
                 }
                 else
                 {
-                    step.SubSteps = new List<Step>();
+                    step.SubSteps = new List<int>();
                 }
             }
 
             var tasks = new List<Task>();
             var stepsTable = MicroflowTableHelper.GetStepsTable(projectRun.ProjectId);
 
-            for (int i = 0; i < hsSteps.Count; i++)
+            for (int i = 0; i < steps.Count; i++)
             {
-                Step step = hsSteps.ElementAt(i);
+                Step step = steps.ElementAt(i);
 
                 step.CalloutUrl = step.CalloutUrl.Replace("<instanceId>", projectRun.RunObject.RunId, StringComparison.OrdinalIgnoreCase);
                 step.CalloutUrl = step.CalloutUrl.Replace("<runId>", projectRun.RunObject.RunId, StringComparison.OrdinalIgnoreCase);
@@ -75,8 +73,8 @@ namespace Microflow.Helpers
 
                 foreach (var sub in step.SubSteps)
                 {
-                    var count = hsStepCounts.Count(x => x.Value == sub.StepId);
-                    substeps.Add(new KeyValuePair<int, int>(sub.StepId, count));
+                    var count = hsStepCounts.Count(x => x.Value == sub);
+                    substeps.Add(new KeyValuePair<int, int>(sub, count));
                 }
 
                 if (step.RetryOptions != null)

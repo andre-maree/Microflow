@@ -9,11 +9,11 @@ namespace MicroflowSDK
         {
             foreach (var parentStep in parents)
             {
-                parentStep.SubSteps.Add(step);
+                parentStep.SubSteps.Add(step.StepId);
             }
         }
 
-        public static void AddSubSteps(this Step step, params Step[] subSteps)
+        public static void AddSubSteps(this Step step, params int[] subSteps)
         {
             foreach (var subStep in subSteps)
             {
