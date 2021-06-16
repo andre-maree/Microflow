@@ -44,7 +44,7 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
 This is the core of the workflow engine.
 
 #### API
-This currently contains 2 folder and classes, 1 for internal and 1 for external api calls.
+This currently contains 2 folders each with 1 class, 1 for internal and 1 for external api calls.
 
 #### FlowControl
 This contains 3 classes responsible for workflow execution.
