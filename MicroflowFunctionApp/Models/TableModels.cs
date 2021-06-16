@@ -1,4 +1,5 @@
 ﻿using Microsoft.Azure.Cosmos.Table;
+using System;
 using System.Collections.Generic;
 
 /// <summary>
@@ -9,20 +10,43 @@ namespace Microflow
     #region TableEntity
 
     /// <summary>
-    /// Base class for http calls
+    /// Used for step level logging
     /// </summary>
-    public class LogEntity : TableEntity
+    public class LogStepEntity : TableEntity
     {
-        public LogEntity() { }
+        public LogStepEntity() { }
 
-        public LogEntity(string projectId, string runId, string logMessage)
+        public LogStepEntity(string stepId, string runId, string logMessage)
+        {
+            PartitionKey = runId;
+            RowKey = stepId;
+            LogMessage = logMessage;
+            LogDate = DateTime.UtcNow;
+        }
+
+        public string LogMessage { get; set; }
+
+        public DateTime LogDate { get; set; }
+    }
+
+    /// <summary>
+    /// Used for orchestration level logging
+    /// </summary>
+    public class LogOrchestrationEntity : TableEntity
+    {
+        public LogOrchestrationEntity() { }
+
+        public LogOrchestrationEntity(string projectId, string runId, string logMessage)
         {
             PartitionKey = projectId;
             RowKey = runId;
             LogMessage = logMessage;
+            LogDate = DateTime.UtcNow;
         }
 
         public string LogMessage { get; set; }
+
+        public DateTime LogDate { get; set; }
     }
 
     /// <summary>

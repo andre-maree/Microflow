@@ -38,10 +38,10 @@ namespace Microflow
             ProjectRun projectRun = new ProjectRun() { ProjectId = project.ProjectName, Loop = project.Loop };
 
             // create the storage tables for the project
-            await MicroflowHelper.CreateTables(project.ProjectName);
+            await MicroflowTableHelper.CreateTables(project.ProjectName);
 
             // set the state of the project to running
-            await MicroflowHelper.UpdateStatetEntity(project.ProjectName, 1);
+            await MicroflowTableHelper.UpdateStatetEntity(project.ProjectName, 1);
 
             // create a new run object
             RunObject runObj = new RunObject() { StepId = step1.StepId };
@@ -87,13 +87,15 @@ namespace Microflow
                 log.LogError($"Run ID {guid} completed successfully...");
             }
 
-            // table storage custom logging
-            // TODO: move to activity/orch
-            //await MicroflowHelper.Log(projectRun.ProjectId, Guid.NewGuid().ToString(), $"{Environment.MachineName} - {projectRun.ProjectId} completed successfully");
+            // log to table workflow completed
+            RetryOptions retryOptions = new RetryOptions(TimeSpan.FromSeconds(15), 10)
+            {
+                MaxRetryInterval = TimeSpan.FromSeconds(1000),
+                BackoffCoefficient = 1.5,
+                RetryTimeout = TimeSpan.FromSeconds(30)
+            };
 
-            // note: in Azure this might log duplicates because this is not a replay safe logger,
-            //       use the table storage log for accurate custom logging
-            // TODO: add better table storage logging using MicroflowHelper.Log(), investigate to remove, or use compiler directives to disable console logging
+            await context.CallSubOrchestratorWithRetryAsync("TableLogOrchestration", retryOptions, new LogOrchestrationEntity(projectRun.ProjectId, projectRun.RunObject.RunId, $"{Environment.MachineName} - {projectRun.ProjectId} completed successfully"));
 
             // done
             log.LogError("-------------------------------------------");

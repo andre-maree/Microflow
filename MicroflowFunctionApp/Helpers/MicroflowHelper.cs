@@ -13,23 +13,6 @@ namespace Microflow.Helpers
 {
     public static class MicroflowHelper
     {
-        public async static Task Log(string projectId, string runId, string message)
-        {
-            CloudTable table = null;
-            try
-            {
-                table = GetLogTable();
-
-                LogEntity logEntity = new LogEntity(projectId, runId, message);
-                TableOperation mergeOperation = TableOperation.InsertOrReplace(logEntity);
-                await table.ExecuteAsync(mergeOperation);
-            }
-            catch (StorageException ex)
-            {
-                
-            }
-        }
-
         public static RetryOptions GetRetryOptions(HttpCallWithRetries httpCallWithRetries)
         {
             RetryOptions ops = new RetryOptions(TimeSpan.FromSeconds(httpCallWithRetries.Retry_DelaySeconds), httpCallWithRetries.Retry_MaxRetries);
@@ -38,160 +21,6 @@ namespace Microflow.Helpers
             ops.BackoffCoefficient = httpCallWithRetries.Retry_BackoffCoefficient;
 
             return ops;
-        }
-
-        public static async Task Pause(ProjectControlEntity projectControlEntity)
-        {
-            try
-            {
-                CloudTable table = GetProjectControlTable();
-
-                TableOperation mergeOperation = TableOperation.Merge(projectControlEntity);
-
-                await table.ExecuteAsync(mergeOperation);
-            }
-            catch (StorageException)
-            {
-                throw;
-            }
-        }
-
-        public static async Task<ProjectControlEntity> GetProjectControl(string projectId)
-        {
-            try
-            {
-                CloudTable table = GetProjectControlTable();
-
-                TableOperation mergeOperation = TableOperation.Retrieve<ProjectControlEntity>(projectId, "0");
-
-                TableResult result = await table.ExecuteAsync(mergeOperation);
-                ProjectControlEntity projectControlEntity = result.Result as ProjectControlEntity;
-
-                return projectControlEntity;
-            }
-            catch (StorageException)
-            {
-                throw;
-            }
-        }
-
-        public static async Task<int> GetState(string projectId)
-        {
-            try
-            {
-                CloudTable table = GetProjectControlTable();
-
-                TableOperation mergeOperation = TableOperation.Retrieve<ProjectControlEntity>(projectId, "0");
-
-                TableResult result = await table.ExecuteAsync(mergeOperation);
-                ProjectControlEntity projectControlEntity = result.Result as ProjectControlEntity;
-
-                // ReSharper disable once PossibleNullReferenceException
-                return projectControlEntity.State;
-            }
-            catch (StorageException)
-            {
-                throw;
-            }
-        }
-
-        public static async Task<HttpCallWithRetries> GetStep(ProjectRun projectRun)
-        {
-            try
-            {
-                CloudTable table = GetStepsTable(projectRun.ProjectId);
-
-                TableOperation retrieveOperation = TableOperation.Retrieve<HttpCallWithRetries>($"{projectRun.ProjectId}", $"{projectRun.RunObject.StepId}");
-                TableResult result = await table.ExecuteAsync(retrieveOperation);
-                HttpCallWithRetries stepEnt = result.Result as HttpCallWithRetries;
-
-                return stepEnt;
-            }
-            catch (StorageException)
-            {
-                throw;
-            }
-        }
-
-        public static async Task UpdateStatetEntity(string projectId, int state)
-        {
-            CloudTable table = null;
-            try
-            {
-                table = GetProjectControlTable();
-
-                ProjectControlEntity projectControlEntity = new ProjectControlEntity(projectId, state);
-                TableOperation mergeOperation = TableOperation.InsertOrMerge(projectControlEntity);
-                await table.ExecuteAsync(mergeOperation);
-            }
-            catch (StorageException ex)
-            {
-            }
-        }
-
-        /// <summary>
-        /// Called on start to create needed tables
-        /// </summary>
-        public static async Task CreateTables(string projectId)
-        {
-            try
-            {
-                // StepsMyProject for step config
-                CloudTable stepsTable = GetStepsTable(projectId);
-
-                // RunControlMyProject for parent execution completed count
-                CloudTable runTable = GetRunTable(projectId);
-
-                // MicroflowLog table
-                CloudTable logTable = GetLogTable();
-
-                //var delLogTableTask = await logTable.DeleteIfExistsAsync();
-
-                // ProjectControlTable
-                CloudTable projectTable = GetProjectControlTable();
-
-                var t1 = stepsTable.CreateIfNotExistsAsync();
-                var t2 = runTable.CreateIfNotExistsAsync();
-                var t3 = logTable.CreateIfNotExistsAsync();
-                var t4 = projectTable.CreateIfNotExistsAsync();
-
-                await t1;
-                await t2;
-                await t3;
-                await t4;
-            }
-            catch (StorageException)
-            {
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// Called on start to insert needed step configs
-        /// </summary>
-        public static async Task InsertStep(HttpCall stepEnt, CloudTable table)
-        {
-            try
-            {
-                TableOperation op = TableOperation.InsertOrReplace(stepEnt);
-                await table.ExecuteAsync(op);
-            }
-            catch (StorageException)
-            {
-                throw;
-            }
-        }
-        public class StepComparer : IEqualityComparer<Step>
-        {
-            public bool Equals(Step x, Step y)
-            {
-                return y != null && x != null && x.StepId == y.StepId;
-            }
-
-            public int GetHashCode(Step obj)
-            {
-                return obj.StepId.GetHashCode();
-            }
         }
 
         /// <summary>
@@ -222,7 +51,7 @@ namespace Microflow.Helpers
             }
 
             var tasks = new List<Task>();
-            var stepsTable = GetStepsTable(projectRun.ProjectId);
+            var stepsTable = MicroflowTableHelper.GetStepsTable(projectRun.ProjectId);
 
             for (int i = 0; i < hsSteps.Count; i++)
             {
@@ -256,7 +85,7 @@ namespace Microflow.Helpers
                     stentRetries.Retry_TimeoutSeconds = step.RetryOptions.TimeOutSeconds;
                     stentRetries.Retry_BackoffCoefficient = step.RetryOptions.BackoffCoefficient;
 
-                    tasks.Add(InsertStep(stentRetries, stepsTable));
+                    tasks.Add(MicroflowTableHelper.InsertStep(stentRetries, stepsTable));
                 }
                 else
                 {
@@ -268,7 +97,7 @@ namespace Microflow.Helpers
                         ActionTimeoutSeconds = step.ActionTimeoutSeconds
                     };
 
-                    tasks.Add(InsertStep(stent, stepsTable));
+                    tasks.Add(MicroflowTableHelper.InsertStep(stent, stepsTable));
                 }
             }
 
@@ -288,41 +117,7 @@ namespace Microflow.Helpers
             }
             return sb.ToString();
         }
-        private static CloudTable GetRunTable(string projectId)
-        {
-            CloudTableClient tableClient = GetTableClient();
-
-            return tableClient.GetTableReference($"RunControl{projectId}");
-        }
-
-        private static CloudTable GetStepsTable(string projectId)
-        {
-            CloudTableClient tableClient = GetTableClient();
-
-            return tableClient.GetTableReference($"Steps{projectId}");
-        }
-
-        private static CloudTable GetProjectControlTable()
-        {
-            CloudTableClient tableClient = GetTableClient();
-
-            return tableClient.GetTableReference($"ProjectControl");
-        }
-
-        private static CloudTable GetLogTable()
-        {
-            CloudTableClient tableClient = GetTableClient();
-
-            return tableClient.GetTableReference($"MicroflowLog");
-        }
-
-        private static CloudTableClient GetTableClient()
-        {
-            CloudStorageAccount storageAccount = CloudStorageAccount.Parse(Environment.GetEnvironmentVariable("AzureWebJobsStorage"));
-
-            return storageAccount.CreateCloudTableClient(new TableClientConfiguration());
-        }
-
+        
         public static void ParseMergeFields(string strWorkflow, ref Project project)
         {
             StringBuilder sb = new StringBuilder(strWorkflow);
@@ -357,6 +152,19 @@ namespace Microflow.Helpers
             newDurableHttpRequest.Headers.Remove("x-functions-key");
 
             return newDurableHttpRequest;
+        }
+
+        public class StepComparer : IEqualityComparer<Step>
+        {
+            public bool Equals(Step x, Step y)
+            {
+                return y != null && x != null && x.StepId == y.StepId;
+            }
+
+            public int GetHashCode(Step obj)
+            {
+                return obj.StepId.GetHashCode();
+            }
         }
     }
 }
