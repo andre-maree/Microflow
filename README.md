@@ -41,6 +41,7 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
 ```
 {
   "ProjectName": "MicroflowDemo",
+  "DefaultRetryOptions": null,
   "Steps": [
     {
       "StepId": 1,
@@ -95,8 +96,7 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
   "Loop": 1,
   "MergeFields": {
     "default_post_url": "https://reqbin.com/echo/post/json?workflowid=<workflowId>processid=<stepId>"
-  },
-  "DefaultRetryOptions": null
+  }
 }
 ```
 
