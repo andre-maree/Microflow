@@ -32,6 +32,9 @@ Future enhancements:
 - workflow stop, pause and continue
 - Azure AD authentication
 
+## JSON Workflow Example
+{"ProjectName":"MicroflowDemo","AllSteps":{"StepId":1,"CalloutUrl":"{default_post_url}","CallbackAction":"approve","StopOnActionFailed":true,"ActionTimeoutSeconds":60,"SubSteps":[{"StepId":2,"CalloutUrl":"{default_post_url}","CallbackAction":null,"StopOnActionFailed":true,"ActionTimeoutSeconds":1000,"SubSteps":[{"StepId":4,"CalloutUrl":"{default_post_url}","CallbackAction":null,"StopOnActionFailed":true,"ActionTimeoutSeconds":1000,"SubSteps":[],"RetryOptions":null}],"RetryOptions":{"DelaySeconds":5,"MaxDelaySeconds":10,"MaxRetries":2,"BackoffCoefficient":5,"TimeOutSeconds":30}},{"StepId":3,"CalloutUrl":"{default_post_url}","CallbackAction":null,"StopOnActionFailed":true,"ActionTimeoutSeconds":1000,"SubSteps":[{"StepId":4,"CalloutUrl":"{default_post_url}","CallbackAction":null,"StopOnActionFailed":true,"ActionTimeoutSeconds":1000,"SubSteps":[],"RetryOptions":null}],"RetryOptions":null}],"RetryOptions":{"DelaySeconds":5,"MaxDelaySeconds":10,"MaxRetries":2,"BackoffCoefficient":5,"TimeOutSeconds":30}},"Loop":1,"MergeFields":{"default_post_url":"https://reqbin.com/echo/post/json?workflowid=\u003CworkflowId\u003E\u0026processid=\u003CstepId\u003E"},"DefaultRetryOptions":null}
+
 ## Test Examples
 The code for these can be found in the console app\Tests.cs. There is also a SimpleSteps test that consists of 1 parent with 2 children and the 2 children have a common child step. This is not included in this diagram:
 
