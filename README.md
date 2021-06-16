@@ -37,6 +37,82 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
 
 ![2 Test cases](https://github.com/andre-maree/Microflow/blob/master/Tests.png)
 
+## JSON Workflow Example
+```
+{
+   "ProjectName":"MicroflowDemo",
+   "AllSteps":{
+      "StepId":1,
+      "CalloutUrl":"{default_post_url}",
+      "CallbackAction":"approve",
+      "StopOnActionFailed":true,
+      "ActionTimeoutSeconds":60,
+      "SubSteps":[
+         {
+            "StepId":2,
+            "CalloutUrl":"{default_post_url}",
+            "CallbackAction":null,
+            "StopOnActionFailed":true,
+            "ActionTimeoutSeconds":1000,
+            "SubSteps":[
+               {
+                  "StepId":4,
+                  "CalloutUrl":"{default_post_url}",
+                  "CallbackAction":null,
+                  "StopOnActionFailed":true,
+                  "ActionTimeoutSeconds":1000,
+                  "SubSteps":[
+                     
+                  ],
+                  "RetryOptions":null
+               }
+            ],
+            "RetryOptions":{
+               "DelaySeconds":5,
+               "MaxDelaySeconds":10,
+               "MaxRetries":2,
+               "BackoffCoefficient":5,
+               "TimeOutSeconds":30
+            }
+         },
+         {
+            "StepId":3,
+            "CalloutUrl":"{default_post_url}",
+            "CallbackAction":null,
+            "StopOnActionFailed":true,
+            "ActionTimeoutSeconds":1000,
+            "SubSteps":[
+               {
+                  "StepId":4,
+                  "CalloutUrl":"{default_post_url}",
+                  "CallbackAction":null,
+                  "StopOnActionFailed":true,
+                  "ActionTimeoutSeconds":1000,
+                  "SubSteps":[
+                     
+                  ],
+                  "RetryOptions":null
+               }
+            ],
+            "RetryOptions":null
+         }
+      ],
+      "RetryOptions":{
+         "DelaySeconds":5,
+         "MaxDelaySeconds":10,
+         "MaxRetries":2,
+         "BackoffCoefficient":5,
+         "TimeOutSeconds":30
+      }
+   },
+   "Loop":1,
+   "MergeFields":{
+      "default_post_url":"https://reqbin.com/echo/post/json?workflowid=\u003CworkflowId\u003E\u0026processid=\u003CstepId\u003E"
+   },
+   "DefaultRetryOptions":null
+}
+```
+
 ## Solution Description
 
 ### MicroflowFunctionApp
@@ -47,6 +123,6 @@ This currently contains 2 folders each with 1 class, 1 for internal and 1 for ex
 
 #### FlowControl
 This contains 3 classes responsible for workflow execution.
-  * ActivityCanExecuteNow.cs : Locks and checks the parent completed count to determine if a child step can execute, all parents must be completed for a child step to       start execution. Parent steps execute in parallel.
+  * CanStepExecuteNow.cs : Locks and checks the parent completed count to determine if a child step can execute, all parents must be completed for a child step to       start execution. Parent steps execute in parallel.
   * Microflow.cs : This conatains the recursive function ExecuteStep. It calls the action url and then calls ActivityCanExecuteNow for child steps of the current step.
   * MicroflowStart.cs : This is where the workflow JSON payload is received via http post and then prepares the workflow and calls start.
