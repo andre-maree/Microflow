@@ -38,7 +38,7 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
 ![2 Test cases](https://github.com/andre-maree/Microflow/blob/master/Tests.png)
 
 ## JSON Workflow Example
-This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 2 and StepId 3), and each sub step has 1 common sub step (StepId 4). StepId 1 has a callback ation set, and StepId 3 has a retry set.
+This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 2 and StepId 3), and each sub step has 1 common sub step (StepId 4). StepId 1 has a callback ation set, and StepId 3 has a retry set. There is 1 merge field set and is used as a default callout url.
 ```
 {
   "ProjectName": "MicroflowDemo",
