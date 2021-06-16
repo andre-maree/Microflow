@@ -9,7 +9,7 @@ Microflow functionality:
 - the micro-service implementations are cleanly separated from Microflow
 - Microflow workflow projects can run as single instances (like a risk model that should always run as 1 instance), or to run as multiple parallel overlapping instances (like ecommerce orders)
 - for custom logic like response interpretations, this can be included in Microflow, but best practice is to separate these response proxies as functions outside of Microflow, and then these will call back to Microflow
-- parallel optimized execution, there is no uneeded waiting
+- parent-child-sibling dependencies, parallel optimized execution, parent steps execute in parallel and will scale auto scale out to 200 small virtual macines in the Consuption Plan, and to 100, 4 core, 14GB memory virtual machines in the Premium Plan
 - easily manage step configs with merge fields
 - do batch processing by looping the workflow execution with Microflow`s "Loop" setting, set up variation sets, 1 variation set per loop/batch
 - set outgoing http calls to be inline (wait for response at the point of out call), or wait asyncrounously by setting CallbackAction (wait for external action/callbck)
