@@ -13,7 +13,11 @@ namespace Microflow
 {
     public static class MicroflowStart
     {
-
+        /// <summary>
+        /// This is the entry point, project payload is in the http body
+        /// </summary>
+        /// <param name="instanceId">If an instanceId is passed in, it will run as a singleton, else it will run concurrently with each with a new instanceId</param>
+        /// <returns></returns>
         [FunctionName("Microflow_HttpStart")]
         public static async Task<HttpResponseMessage> HttpStart(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "start/{instanceId?}")] HttpRequestMessage req,
@@ -50,7 +54,8 @@ namespace Microflow
             if (string.IsNullOrWhiteSpace(instanceId))
             {
                 instanceId = Guid.NewGuid().ToString();
-            }
+             }
+
             // prepare the workflow by persisting parent info to table storage
             await MicroflowHelper.PrepareWorkflow(instanceId, projectRun, step1, project.MergeFields);
 
@@ -60,6 +65,10 @@ namespace Microflow
             return await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId);
         }
 
+        /// <summary>
+        /// This is called from Microflow_HttpStart, it does the looping and calls the ExecuteStep sub orchestration passing in the top step
+        /// </summary>
+        /// <returns></returns>
         [FunctionName("Start")]
         public static async Task Start([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger inlog)
         {
@@ -88,14 +97,7 @@ namespace Microflow
             }
 
             // log to table workflow completed
-            RetryOptions retryOptions = new RetryOptions(TimeSpan.FromSeconds(15), 10)
-            {
-                MaxRetryInterval = TimeSpan.FromSeconds(1000),
-                BackoffCoefficient = 1.5,
-                RetryTimeout = TimeSpan.FromSeconds(30)
-            };
-
-            await context.CallSubOrchestratorWithRetryAsync("TableLogOrchestration", retryOptions, new LogOrchestrationEntity(projectRun.ProjectId, projectRun.RunObject.RunId, $"{Environment.MachineName} - {projectRun.ProjectId} completed successfully"));
+            await context.CallSubOrchestratorWithRetryAsync("TableLogOrchestration", MicroflowHelper.GetTableLoggingRetryOptions(), new LogOrchestrationEntity(projectRun.ProjectId, projectRun.RunObject.RunId, $"{Environment.MachineName} - {projectRun.ProjectId} completed successfully"));
 
             // done
             log.LogError("-------------------------------------------");

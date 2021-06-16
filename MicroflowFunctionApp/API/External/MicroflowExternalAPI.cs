@@ -6,14 +6,13 @@ using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.Extensions.Logging;
 
 namespace Microflow.API.External
 {
     public static class MicroflowExternalAPI
     {
         /// <summary>
-        /// Called from FunctionFlow.ExecuteStep to get the current step table config
+        /// Called from Microflow.ExecuteStep to get the current step table config
         /// </summary>
         [FunctionName("GetStep")]
         public static async Task<HttpCallWithRetries> GetStep([ActivityTrigger] ProjectRun projectRun)
@@ -29,7 +28,7 @@ namespace Microflow.API.External
         }
 
         /// <summary>
-        /// Called from FunctionFlow.ExecuteStep to get the current state of the project
+        /// Called from Microflow.ExecuteStep to get the current state of the project
         /// </summary>
         [FunctionName("GetState")]
         public static async Task<int> GetState([ActivityTrigger] string projectId)
@@ -45,7 +44,7 @@ namespace Microflow.API.External
         }
 
         /// <summary>
-        /// Called from FunctionFlow.ExecuteStep to get the current state of the project
+        /// Called from Microflow.ExecuteStep to get the project
         /// </summary>
         [FunctionName("GetProjectControl")]
         public static async Task<ProjectControlEntity> GetProjectControl([ActivityTrigger] string projectId)

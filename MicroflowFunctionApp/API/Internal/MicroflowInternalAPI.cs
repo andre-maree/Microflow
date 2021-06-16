@@ -2,10 +2,8 @@
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microflow.Helpers;
-using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 
 namespace Microflow.API
@@ -36,7 +34,8 @@ namespace Microflow.API
             if (result.StatusCode != System.Net.HttpStatusCode.OK)
                 return false;
 
-            log.LogCritical($"Waiting for callback: http://localhost:7071/api/{httpCall.CallBackAction}/{context.InstanceId}/{httpCall.RowKey}");
+            // TODO: always use https
+            log.LogCritical($"Waiting for callback: {Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}/api/{httpCall.CallBackAction}/{context.InstanceId}/{httpCall.RowKey}");
 
             // wait for the external event, set the timeout
             var actionResult = await context.WaitForExternalEvent<string>(httpCall.CallBackAction, TimeSpan.FromSeconds(httpCall.ActionTimeoutSeconds));

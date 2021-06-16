@@ -23,7 +23,7 @@ namespace MicroflowConsole
 
             //StepsManager.SetRetryForSteps(5, 10, 2, 30, 5, steps.Values.ToArray());
             //StepsManager.SetRetryForSteps(5, 10, 2, 30, 5, steps[1], steps[2]);
-            steps[1].CalloutUrl = "";// this now acts as a container for a list of top level steps
+            //steps[1].CalloutUrl = "";// this now acts as a container for a list of top level steps
             return steps[1];
         }
 

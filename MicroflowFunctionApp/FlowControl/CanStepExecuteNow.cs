@@ -4,7 +4,7 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 
 namespace Microflow
 {
-    public static class ActivityCanExecuteNow
+    public static class CanStepExecuteNow
     {
         /// <summary>
         /// Calculate if a step is ready to execute by locking and counting the completed parents - for each run and each step in the run

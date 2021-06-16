@@ -87,15 +87,7 @@ namespace Microflow
             if (subOrchestratorSuccess)
             {
                 // log to table workflow completed
-                RetryOptions retryOptionsLog = new RetryOptions(TimeSpan.FromSeconds(15), 10)
-                {
-                    MaxRetryInterval = TimeSpan.FromSeconds(1000),
-                    BackoffCoefficient = 1.5,
-                    RetryTimeout = TimeSpan.FromSeconds(30)
-                };
-
-                await context.CallSubOrchestratorWithRetryAsync("TableLogStep", retryOptionsLog, new LogStepEntity(httpCallWithRetries.RowKey, runObj.RunId, $"Step in project {project.ProjectId} completed successfully"));
-
+                await context.CallSubOrchestratorWithRetryAsync("TableLogStep", MicroflowHelper.GetTableLoggingRetryOptions(), new LogStepEntity(httpCallWithRetries.RowKey, runObj.RunId, $"Step in project {project.ProjectId} completed successfully"));
 
                 log.LogWarning($"Step {httpCallWithRetries.RowKey} done at {DateTime.Now.ToString("HH:mm:ss")}  -  Run ID: {project.RunObject.RunId}");
 
