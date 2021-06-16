@@ -41,7 +41,7 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
 ```
 {
   "ProjectName": "MicroflowDemo",
-  "AllSteps": [
+  "Steps": [
     {
       "StepId": 1,
       "CalloutUrl": "{default_post_url}",
