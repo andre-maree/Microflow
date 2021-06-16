@@ -20,11 +20,10 @@ Microflow functionality:
 - stateful and durable! Microflow leverages Durable Functions, so even when the vm crashes, Microflow will continue from where it left off, before the crash, when a new vm becomes available (Azure will do this in the background)
 - leverage the Azure serverless plans: Serverless Consumption and Premium plans
 - Microflow can run anywhere on Kubernetes when the Azure serverless environment is not available
-- Microflow is light weight and will quickly autoscale under heavy load
-- standardise micro-service orchestration accross development teams
+- Microflow is light weight and will autoscale when the is a usage spike
 
 Microflow use cases:
-- any business workflow that wishes to take advantage of state-of-the-art serverless autoscaling durable stateful workflows
+- any business workflow that wishes to take advantage of serverless autoscaling durable stateful workflows that can run anywhere
 - avoid hard coded workflows
 - use Microflow as a state-of-the-art back-end for your workflow designer, the workflow is just a simple json definition
 - use the Microflow SDK to build code based workflows outside of Microflow, and then apply changes to the workflow without the need for any deployments
