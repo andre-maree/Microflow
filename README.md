@@ -40,76 +40,63 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
 ## JSON Workflow Example
 ```
 {
-   "ProjectName":"MicroflowDemo",
-   "AllSteps":{
-      "StepId":1,
-      "CalloutUrl":"{default_post_url}",
-      "CallbackAction":"approve",
-      "StopOnActionFailed":true,
-      "ActionTimeoutSeconds":60,
-      "SubSteps":[
-         {
-            "StepId":2,
-            "CalloutUrl":"{default_post_url}",
-            "CallbackAction":null,
-            "StopOnActionFailed":true,
-            "ActionTimeoutSeconds":1000,
-            "SubSteps":[
-               {
-                  "StepId":4,
-                  "CalloutUrl":"{default_post_url}",
-                  "CallbackAction":null,
-                  "StopOnActionFailed":true,
-                  "ActionTimeoutSeconds":1000,
-                  "SubSteps":[
-                     
-                  ],
-                  "RetryOptions":null
-               }
-            ],
-            "RetryOptions":{
-               "DelaySeconds":5,
-               "MaxDelaySeconds":10,
-               "MaxRetries":2,
-               "BackoffCoefficient":5,
-               "TimeOutSeconds":30
-            }
-         },
-         {
-            "StepId":3,
-            "CalloutUrl":"{default_post_url}",
-            "CallbackAction":null,
-            "StopOnActionFailed":true,
-            "ActionTimeoutSeconds":1000,
-            "SubSteps":[
-               {
-                  "StepId":4,
-                  "CalloutUrl":"{default_post_url}",
-                  "CallbackAction":null,
-                  "StopOnActionFailed":true,
-                  "ActionTimeoutSeconds":1000,
-                  "SubSteps":[
-                     
-                  ],
-                  "RetryOptions":null
-               }
-            ],
-            "RetryOptions":null
-         }
+  "ProjectName": "MicroflowDemo",
+  "Steps": [
+    {
+      "StepId": 1,
+      "CalloutUrl": "{default_post_url}",
+      "CallbackAction": "approve",
+      "StopOnActionFailed": true,
+      "ActionTimeoutSeconds": 30,
+      "SubSteps": [
+        2,
+        3
       ],
-      "RetryOptions":{
-         "DelaySeconds":5,
-         "MaxDelaySeconds":10,
-         "MaxRetries":2,
-         "BackoffCoefficient":5,
-         "TimeOutSeconds":30
+      "RetryOptions": null
+    },
+    {
+      "StepId": 2,
+      "CalloutUrl": "{default_post_url}",
+      "CallbackAction": null,
+      "StopOnActionFailed": true,
+      "ActionTimeoutSeconds": 1000,
+      "SubSteps": [
+        4
+      ],
+      "RetryOptions": null
+    },
+    {
+      "StepId": 3,
+      "CalloutUrl": "{default_post_url}",
+      "CallbackAction": null,
+      "StopOnActionFailed": true,
+      "ActionTimeoutSeconds": 1000,
+      "SubSteps": [
+        4
+      ],
+      "RetryOptions": {
+        "DelaySeconds": 5,
+        "MaxDelaySeconds": 10,
+        "MaxRetries": 2,
+        "BackoffCoefficient": 5,
+        "TimeOutSeconds": 30
       }
-   },
-   "Loop":1,
-   "MergeFields":{
-      "default_post_url":"https://reqbin.com/echo/post/json?workflowid=\u003CworkflowId\u003E\u0026processid=\u003CstepId\u003E"
-   },
-   "DefaultRetryOptions":null
+    },
+    {
+      "StepId": 4,
+      "CalloutUrl": "{default_post_url}",
+      "CallbackAction": null,
+      "StopOnActionFailed": true,
+      "ActionTimeoutSeconds": 1000,
+      "SubSteps": [],
+      "RetryOptions": null
+    }
+  ],
+  "Loop": 1,
+  "MergeFields": {
+    "default_post_url": "https://reqbin.com/echo/post/json?workflowid=<workflowId>processid=<stepId>"
+  },
+  "DefaultRetryOptions": null
 }
 ```
 
