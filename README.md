@@ -23,10 +23,11 @@ Microflow functionality:
 - Microflow is light-weight and will autoscale when there is a usage spike
 
 Microflow use cases:
-- any business workflow that wishes to take advantage of serverless autoscaling durable stateful workflows that can run anywhere
+- any business workflow that needs to leverage serverless autoscaling durable stateful workflows that can run anywhere
 - avoid hard coded workflows
 - use Microflow as a state-of-the-art back-end for your workflow designer, the workflow is just a simple json definition
 - use the Microflow SDK to build code based workflows outside of Microflow, and then apply changes to the workflow without the need for any deployments
+- Microflow is open-source so feel free to modify Microflow to your needs
 
 Future enhancements:
 - workflow stop, pause and continue
