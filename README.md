@@ -47,6 +47,6 @@ This currently contains 2 folders each with 1 class, 1 for internal and 1 for ex
 
 #### FlowControl
 This contains 3 classes responsible for workflow execution.
-  * ActivityCanExecuteNow.cs : Locks and checks the parent completed count to determine if a child step can execute, all parents must be completed for a child step to       start execution. Parent steps execute in parallel.
+  * CanStepExecuteNow.cs : Locks and checks the parent completed count to determine if a child step can execute, all parents must be completed for a child step to       start execution. Parent steps execute in parallel.
   * Microflow.cs : This conatains the recursive function ExecuteStep. It calls the action url and then calls ActivityCanExecuteNow for child steps of the current step.
   * MicroflowStart.cs : This is where the workflow JSON payload is received via http post and then prepares the workflow and calls start.
