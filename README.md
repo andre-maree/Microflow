@@ -33,7 +33,8 @@ Future enhancements:
 - Azure AD authentication
 
 ## JSON Workflow Example
-```{
+```
+{
    "ProjectName":"MicroflowDemo",
    "AllSteps":{
       "StepId":1,
@@ -105,6 +106,7 @@ Future enhancements:
    },
    "DefaultRetryOptions":null
 }
+```
 
 ## Test Examples
 The code for these can be found in the console app\Tests.cs. There is also a SimpleSteps test that consists of 1 parent with 2 children and the 2 children have a common child step. This is not included in this diagram:
