@@ -32,6 +32,11 @@ Future enhancements:
 - workflow stop, pause and continue
 - Azure AD authentication
 
+## Test Examples
+The code for these can be found in the console app\Tests.cs. There is also a SimpleSteps test that consists of 1 parent with 2 children and the 2 children have a common child step. This is not included in this diagram:
+
+![2 Test cases](https://github.com/andre-maree/Microflow/blob/master/Tests.png)
+
 ## JSON Workflow Example
 ```
 {
@@ -107,11 +112,6 @@ Future enhancements:
    "DefaultRetryOptions":null
 }
 ```
-
-## Test Examples
-The code for these can be found in the console app\Tests.cs. There is also a SimpleSteps test that consists of 1 parent with 2 children and the 2 children have a common child step. This is not included in this diagram:
-
-![2 Test cases](https://github.com/andre-maree/Microflow/blob/master/Tests.png)
 
 ## Solution Description
 
