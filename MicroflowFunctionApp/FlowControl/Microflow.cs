@@ -23,7 +23,7 @@ namespace Microflow
             // get project run payload and set the run object
             ProjectRun project = context.GetInput<ProjectRun>();
             RunObject runObj = project.RunObject;
-
+                     
             // retries can be set for each step
             RetryOptions retryOptions = null;
 
@@ -51,35 +51,39 @@ namespace Microflow
 
             bool subOrchestratorSuccess = true;
 
-            try
+            // if the call out url is empty then no http call is done, use this for an empty conatainer step
+            if(!string.IsNullOrWhiteSpace(httpCallWithRetries.Url))
             {
-                // wait for external event flow / callback
-                if (!string.IsNullOrEmpty(httpCallWithRetries.CallBackAction))
+                try
                 {
-                    if (retryOptions == null)
-                        subOrchestratorSuccess = await context.CallSubOrchestratorAsync<bool>("HttpCallWithCallBackOrchestrator", MicroflowHelper.CreateSubOrchestrationId(), httpCallWithRetries);
+                    // wait for external event flow / callback
+                    if (!string.IsNullOrWhiteSpace(httpCallWithRetries.CallBackAction))
+                    {
+                        if (retryOptions == null)
+                            subOrchestratorSuccess = await context.CallSubOrchestratorAsync<bool>("HttpCallWithCallBackOrchestrator", MicroflowHelper.CreateSubOrchestrationId(), httpCallWithRetries);
+                        else
+                            subOrchestratorSuccess = await context.CallSubOrchestratorWithRetryAsync<bool>("HttpCallWithCallBackOrchestrator", retryOptions, MicroflowHelper.CreateSubOrchestrationId(), httpCallWithRetries);
+                    }
+                    // send and receive inline flow
                     else
-                        subOrchestratorSuccess = await context.CallSubOrchestratorWithRetryAsync<bool>("HttpCallWithCallBackOrchestrator", retryOptions, MicroflowHelper.CreateSubOrchestrationId(), httpCallWithRetries);
+                    {
+                        if (retryOptions == null)
+                            subOrchestratorSuccess = await context.CallSubOrchestratorAsync<bool>("HttpCallOrchestrator", MicroflowHelper.CreateSubOrchestrationId(), httpCallWithRetries);
+                        else
+                            subOrchestratorSuccess = await context.CallSubOrchestratorWithRetryAsync<bool>("HttpCallOrchestrator", retryOptions, MicroflowHelper.CreateSubOrchestrationId(), httpCallWithRetries);
+                    }
                 }
-                // send and receive inline flow
-                else
+                catch (Exception ex)
                 {
-                    if (retryOptions == null)
-                        subOrchestratorSuccess = await context.CallSubOrchestratorAsync<bool>("HttpCallOrchestrator", MicroflowHelper.CreateSubOrchestrationId(), httpCallWithRetries);
-                    else
-                        subOrchestratorSuccess = await context.CallSubOrchestratorWithRetryAsync<bool>("HttpCallOrchestrator", retryOptions, MicroflowHelper.CreateSubOrchestrationId(), httpCallWithRetries);
-                }
-            }
-            catch(Exception ex)
-            {
-                log.LogWarning($"Step {httpCallWithRetries.RowKey} an error result at {DateTime.Now.ToString("HH:mm:ss")}  -  Run ID: {project.RunObject.RunId}");
-                
-                if (httpCallWithRetries.StopOnActionFailed)
-                {
-                    throw;
-                }
-            }
+                    log.LogWarning($"Step {httpCallWithRetries.RowKey} an error result at {DateTime.Now.ToString("HH:mm:ss")}  -  Run ID: {project.RunObject.RunId}");
 
+                    if (httpCallWithRetries.StopOnActionFailed)
+                    {
+                        throw;
+                    }
+                }
+            }
+            
             if (subOrchestratorSuccess)
             {
                 // log to table workflow completed

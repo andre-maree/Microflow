@@ -29,15 +29,15 @@ namespace MicroflowConsole
                 };
 
                 var tasks = new List<Task>();
-
+                
                 // singleton workflow instance
                 var result = await client.PostAsJsonAsync("http://localhost:7071/api/start/39806875-9c81-4736-81c0-9be562dae71e/", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
-                
+
                 // parallel multiple workflow instances
-                //for (int i = 0; i < 100; i++)
+                //for (int i = 0; i < 10; i++)
                 //{
                 //    await Task.Delay(500);
-                    //tasks.Add(client.PostAsJsonAsync("http://localhost:7071/api/start/", project, new JsonSerializerOptions(JsonSerializerDefaults.General)));
+                //    tasks.Add(client.PostAsJsonAsync("http://localhost:7071/api/start/", project, new JsonSerializerOptions(JsonSerializerDefaults.General)));
                 //}
 
                 //await Task.WhenAll(tasks);
