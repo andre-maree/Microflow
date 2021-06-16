@@ -38,7 +38,7 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
 ![2 Test cases](https://github.com/andre-maree/Microflow/blob/master/Tests.png)
 
 ## JSON Workflow Example
-This simple workflow contains 1 parent step (1) with 2 sub steps (2 and 3), and each sub step has 1 common sun step (4)
+This simple workflow contains 1 parent step (1) with 2 sub steps (2 and 3), and each sub step has 1 common sub step (4)
 ```
 {
   "ProjectName": "MicroflowDemo",
