@@ -5,7 +5,7 @@ Welcome to Microflow.
 Microflow is a dynamic servlerless micro-service workflow orchestration engine built with C#, .NET Core 3.1, and Azure Durable Functions. Microflow separates the workflow design from the function code so that workflows are no longer hard-coded as with normal Durable Functions. The workflow can be designed outside of Microflow and then passed in as JSON for execution, so no code changes or deployments are needed to modify any aspect of a workflow. Microflow can be deployed to the Azure Functions Consumption or Premium plans, to an Azure App Service, or to Kubernetes.
 
 Microflow functionality:
-- dynamic json workflows separate and changable outside of Microflow, everything is completely dynamic and changable without Microflow knowing about it
+- dynamic json workflows separate and changable outside of Microflow, workflows are dynamic and changable without Microflow knowing about it
 - the micro-service implementations are cleanly separated from Microflow
 - Microflow workflow projects can run as single instances (like a risk model that should always run as 1 instance), or to run as multiple parallel overlapping instances (like ecommerce orders)
 - for custom logic like response interpretations, this can be included in Microflow, but best practice is to separate these response proxies as functions outside of Microflow, and then these will call back to Microflow
