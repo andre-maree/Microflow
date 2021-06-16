@@ -15,7 +15,7 @@ namespace MicroflowModels
     public class Project
     {
         public string ProjectName { get; set; }
-        public List<Step> AllSteps { get; set; }
+        public List<Step> Steps { get; set; }
         public int Loop { get; set; } = 1;
 
         [DataMember(Name = "MergeFields", EmitDefaultValue = false)]

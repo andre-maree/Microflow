@@ -38,7 +38,7 @@ namespace Microflow
             // await client.PurgeInstanceHistoryAsync("7c828621-3e7a-44aa-96fd-c6946763cc2b");
 
             // step 1 contains all the steps
-            List<Step> steps = project.AllSteps;
+            List<Step> steps = project.Steps;
 
             // create a project run
             ProjectRun projectRun = new ProjectRun() { ProjectId = project.ProjectName, Loop = project.Loop };
