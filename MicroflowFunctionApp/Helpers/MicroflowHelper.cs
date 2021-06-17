@@ -36,7 +36,7 @@ namespace Microflow.Helpers
         /// <summary>
         /// Called before a workflow executes and takes the top step and recursives it to insert step configs into table storage
         /// </summary>
-        public static async Task PrepareWorkflow(string instanceId, ProjectRun projectRun, List<Step> steps, Dictionary<string, string> mergeFields)
+        public static async Task<List<Step>> PrepareWorkflow(string instanceId, ProjectRun projectRun, List<Step> steps, Dictionary<string, string> mergeFields)
         {
             HashSet<KeyValuePair<int, int>> hsStepCounts = new HashSet<KeyValuePair<int, int>>();
 
@@ -49,7 +49,7 @@ namespace Microflow.Helpers
                     foreach (var cstep in step.SubSteps)
                     {
                         hsStepCounts.Add(new KeyValuePair<int, int>(step.StepId, cstep));
-                        Local(steps[cstep-1]);
+                        Local(steps[cstep - 1]);
                     }
                 }
                 else
@@ -61,55 +61,83 @@ namespace Microflow.Helpers
             var tasks = new List<Task>();
             var stepsTable = MicroflowTableHelper.GetStepsTable(projectRun.ProjectId);
 
+            Step stepContainer = new Step(-1, "");
+            steps.Insert(0, stepContainer);
+
             for (int i = 0; i < steps.Count; i++)
             {
                 Step step = steps.ElementAt(i);
 
-                step.CalloutUrl = step.CalloutUrl.Replace("<instanceId>", projectRun.RunObject.RunId, StringComparison.OrdinalIgnoreCase);
-                step.CalloutUrl = step.CalloutUrl.Replace("<runId>", projectRun.RunObject.RunId, StringComparison.OrdinalIgnoreCase);
-                step.CalloutUrl = step.CalloutUrl.Replace("<stepId>", step.StepId.ToString(), StringComparison.OrdinalIgnoreCase);
-
-                List<KeyValuePair<int, int>> substeps = new List<KeyValuePair<int, int>>();
-
-                foreach (var sub in step.SubSteps)
+                if (step.StepId > -1)
                 {
-                    var count = hsStepCounts.Count(x => x.Value == sub);
-                    substeps.Add(new KeyValuePair<int, int>(sub, count));
-                }
-
-                if (step.RetryOptions != null)
-                {
-                    HttpCallWithRetries stentRetries = new HttpCallWithRetries(projectRun.ProjectId, step.StepId, JsonSerializer.Serialize(substeps))
-                    { 
-                        CallBackAction = step.CallbackAction, 
-                        StopOnActionFailed = step.StopOnActionFailed,
-                        Url = step.CalloutUrl,
-                        ActionTimeoutSeconds = step.ActionTimeoutSeconds
-                    };
-
-                    stentRetries.Retry_DelaySeconds = step.RetryOptions.DelaySeconds;
-                    stentRetries.Retry_MaxDelaySeconds = step.RetryOptions.MaxDelaySeconds;
-                    stentRetries.Retry_MaxRetries = step.RetryOptions.MaxRetries;
-                    stentRetries.Retry_TimeoutSeconds = step.RetryOptions.TimeOutSeconds;
-                    stentRetries.Retry_BackoffCoefficient = step.RetryOptions.BackoffCoefficient;
-
-                    tasks.Add(MicroflowTableHelper.InsertStep(stentRetries, stepsTable));
-                }
-                else
-                {
-                    HttpCall stent = new HttpCall(projectRun.ProjectId, step.StepId, JsonSerializer.Serialize(substeps))
+                    var parents = steps.Where(x => x.SubSteps.Contains(step.StepId)).ToList();
+                    if (parents.Count == 0)
                     {
-                        CallBackAction = step.CallbackAction,
-                        StopOnActionFailed = step.StopOnActionFailed,
-                        Url = step.CalloutUrl,
-                        ActionTimeoutSeconds = step.ActionTimeoutSeconds
-                    };
+                        stepContainer.SubSteps.Add(step.StepId);
+                    }
 
-                    tasks.Add(MicroflowTableHelper.InsertStep(stent, stepsTable));
+                    step.CalloutUrl = step.CalloutUrl.Replace("<instanceId>", projectRun.RunObject.RunId, StringComparison.OrdinalIgnoreCase);
+                    step.CalloutUrl = step.CalloutUrl.Replace("<runId>", projectRun.RunObject.RunId, StringComparison.OrdinalIgnoreCase);
+                    step.CalloutUrl = step.CalloutUrl.Replace("<stepId>", step.StepId.ToString(), StringComparison.OrdinalIgnoreCase);
+
+                    List<KeyValuePair<int, int>> substeps = new List<KeyValuePair<int, int>>();
+
+                    foreach (var sub in step.SubSteps)
+                    {
+                        var count = hsStepCounts.Count(x => x.Value == sub);
+                        substeps.Add(new KeyValuePair<int, int>(sub, count));
+                    }
+
+                    if (step.RetryOptions != null)
+                    {
+                        HttpCallWithRetries stentRetries = new HttpCallWithRetries(projectRun.ProjectId, step.StepId, JsonSerializer.Serialize(substeps))
+                        {
+                            CallBackAction = step.CallbackAction,
+                            StopOnActionFailed = step.StopOnActionFailed,
+                            Url = step.CalloutUrl,
+                            ActionTimeoutSeconds = step.ActionTimeoutSeconds
+                        };
+
+                        stentRetries.Retry_DelaySeconds = step.RetryOptions.DelaySeconds;
+                        stentRetries.Retry_MaxDelaySeconds = step.RetryOptions.MaxDelaySeconds;
+                        stentRetries.Retry_MaxRetries = step.RetryOptions.MaxRetries;
+                        stentRetries.Retry_TimeoutSeconds = step.RetryOptions.TimeOutSeconds;
+                        stentRetries.Retry_BackoffCoefficient = step.RetryOptions.BackoffCoefficient;
+
+                        tasks.Add(MicroflowTableHelper.InsertStep(stentRetries, stepsTable));
+                    }
+                    else
+                    {
+                        HttpCall stent = new HttpCall(projectRun.ProjectId, step.StepId, JsonSerializer.Serialize(substeps))
+                        {
+                            CallBackAction = step.CallbackAction,
+                            StopOnActionFailed = step.StopOnActionFailed,
+                            Url = step.CalloutUrl,
+                            ActionTimeoutSeconds = step.ActionTimeoutSeconds
+                        };
+
+                        tasks.Add(MicroflowTableHelper.InsertStep(stent, stepsTable));
+                    }
                 }
             }
 
+            //{
+            //CallBackAction = step.CallbackAction,
+            //StopOnActionFailed = step.StopOnActionFailed,
+            //Url = step.CalloutUrl,
+            //ActionTimeoutSeconds = step.ActionTimeoutSeconds
+            //};
+            List<KeyValuePair<int, int>> containersubsteps = new List<KeyValuePair<int, int>>();
+            foreach (var substep in stepContainer.SubSteps)
+            {
+                containersubsteps.Add(new KeyValuePair<int, int>(substep, 1));
+            }
+
+            HttpCall containerEntity = new HttpCall(projectRun.ProjectId, -1, JsonSerializer.Serialize(containersubsteps));
+            tasks.Add(MicroflowTableHelper.InsertStep(containerEntity, stepsTable));
             await Task.WhenAll(tasks);
+
+            return steps;
         }
 
         private const string CharList = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
@@ -125,7 +153,7 @@ namespace Microflow.Helpers
             }
             return sb.ToString();
         }
-        
+
         public static void ParseMergeFields(string strWorkflow, ref Project project)
         {
             StringBuilder sb = new StringBuilder(strWorkflow);

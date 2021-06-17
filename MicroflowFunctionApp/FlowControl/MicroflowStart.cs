@@ -56,11 +56,11 @@ namespace Microflow
             if (string.IsNullOrWhiteSpace(instanceId))
             {
                 instanceId = Guid.NewGuid().ToString();
-             }
+            }
 
             // prepare the workflow by persisting parent info to table storage
-            await MicroflowHelper.PrepareWorkflow(instanceId, projectRun, steps, project.MergeFields);
-
+            steps = await MicroflowHelper.PrepareWorkflow(instanceId, projectRun, steps, project.MergeFields);
+            projectRun.RunObject.StepId = -1;
             // start
             await client.StartNewAsync("Start", instanceId, projectRun);
 

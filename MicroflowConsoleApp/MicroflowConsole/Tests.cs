@@ -17,19 +17,19 @@ namespace MicroflowConsole
 
             steps[3].AddParentSteps(steps[1], steps[2]);
 
-            steps[0].CallbackAction = "approve";
-            steps[0].StopOnActionFailed = true;
-            steps[0].ActionTimeoutSeconds = 30;
+            //steps[0].CallbackAction = "approve";
+            //steps[0].StopOnActionFailed = true;
+            //steps[0].ActionTimeoutSeconds = 30;
 
             //StepsManager.SetRetryForSteps(5, 10, 2, 30, 5, steps.Values.ToArray());
-            StepsManager.SetRetryForSteps(5, 10, 2, 30, 5, steps[2]);
+            //StepsManager.SetRetryForSteps(5, 10, 2, 30, 5, steps[2]);
             //steps[1].CalloutUrl = "";// this now acts as a container for a list of top level steps
             return steps;
         }
 
         public static List<Step> CreateTestWorkflow_10StepsParallel()
         {
-            List<Step> steps = ProjectManager.CreateSteps(14, 1, "{default_post_url}");
+            List<Step> steps = ProjectManager.CreateSteps(20, 1, "{default_post_url}");
 
             steps[0].AddSubSteps(steps[1].StepId, steps[2].StepId);
 
