@@ -46,7 +46,7 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
   "DefaultRetryOptions": null,
   "Loop": 1,
   "MergeFields": {
-    "default_post_url": "https://reqbin.com/echo/post/json?workflowid=<workflowId>processid=<stepId>"
+    "default_post_url": "https://reqbin.com/echo/post/json?workflowid=<workflowId>stepid=<stepId>"
   },
   "Steps": [
     {
