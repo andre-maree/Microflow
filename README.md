@@ -44,6 +44,10 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
 {
   "ProjectName": "MicroflowDemo",
   "DefaultRetryOptions": null,
+  "Loop": 1,
+  "MergeFields": {
+    "default_post_url": "https://reqbin.com/echo/post/json?workflowid=<workflowId>processid=<stepId>"
+  },
   "Steps": [
     {
       "StepId": 1,
@@ -94,11 +98,7 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
       "SubSteps": [],
       "RetryOptions": null
     }
-  ],
-  "Loop": 1,
-  "MergeFields": {
-    "default_post_url": "https://reqbin.com/echo/post/json?workflowid=<workflowId>processid=<stepId>"
-  }
+  ]
 }
 ```
 
