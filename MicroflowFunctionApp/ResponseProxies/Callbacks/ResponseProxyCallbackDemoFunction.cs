@@ -1,3 +1,4 @@
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -15,12 +16,20 @@ namespace Microflow.ResponseProxies
         /// </summary>
         [FunctionName("callback")]
         public static async Task<HttpResponseMessage> RaiseEvent(
-        [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = "{action}/{orchestratorId}/{stepId}/{cmd?}")] HttpRequestMessage req,
-        [DurableClient] IDurableOrchestrationClient client, string stepId, string action, string orchestratorId, string cmd)
+        [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = "{action}/{orchestratorId}/{stepId}/{content?}")] HttpRequestMessage req,
+        [DurableClient] IDurableOrchestrationClient client, string stepId, string action, string orchestratorId, string content)
         {
             //string data = await req.Content.ReadAsStringAsync();
 
-            await client.RaiseEventAsync(orchestratorId, action, cmd);
+            HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);
+
+            // pass content back
+            if (!string.IsNullOrWhiteSpace(content))
+            {
+                resp.Content = new StringContent(content);
+            }
+            
+            await client.RaiseEventAsync(orchestratorId, action, resp);
 
             return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
         }

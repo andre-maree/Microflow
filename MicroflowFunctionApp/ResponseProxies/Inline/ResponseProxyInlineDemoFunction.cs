@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System.Net.Http;
 using Microflow.API;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using System.Threading;
 
 namespace Microflow
 {
@@ -15,7 +16,9 @@ namespace Microflow
         [FunctionName("httpcall")]
         public static async Task<HttpResponseMessage> HttpCall([ActivityTrigger] HttpCall httpCall, ILogger log)
         {
-            HttpResponseMessage result = await MicroflowInternalAPI.MicroflowHttpClient.PostAsJsonAsync(httpCall.Url, (ProcessId: httpCall.PartitionKey, StepId: httpCall.RowKey));
+            var cts = new CancellationTokenSource();
+            cts.CancelAfter(60000);
+            HttpResponseMessage result = await MicroflowHttpClient.HttpClient.PostAsJsonAsync(httpCall.Url, (ProcessId: httpCall.PartitionKey, StepId: httpCall.RowKey), cts.Token);
             
             if (result.IsSuccessStatusCode)
             {

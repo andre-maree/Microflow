@@ -1,8 +1,6 @@
-﻿//using Microflow;
-using MicroflowModels;
+﻿using MicroflowModels;
 using MicroflowSDK;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace MicroflowConsole
 {
@@ -17,7 +15,7 @@ namespace MicroflowConsole
 
             steps[3].AddParentSteps(steps[1], steps[2]);
 
-            //steps[0].CallbackAction = "approve";
+            steps[0].CallbackAction = "approve";
             //steps[0].StopOnActionFailed = true;
             //steps[0].ActionTimeoutSeconds = 30;
 
@@ -29,7 +27,7 @@ namespace MicroflowConsole
 
         public static List<Step> CreateTestWorkflow_10StepsParallel()
         {
-            List<Step> steps = ProjectManager.CreateSteps(20, 1, "{default_post_url}");
+            List<Step> steps = ProjectManager.CreateSteps(14, 1, "{default_post_url}");
 
             steps[0].AddSubSteps(steps[1].StepId, steps[2].StepId);
 

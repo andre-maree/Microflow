@@ -121,12 +121,6 @@ namespace Microflow.Helpers
                 }
             }
 
-            //{
-            //CallBackAction = step.CallbackAction,
-            //StopOnActionFailed = step.StopOnActionFailed,
-            //Url = step.CalloutUrl,
-            //ActionTimeoutSeconds = step.ActionTimeoutSeconds
-            //};
             List<KeyValuePair<int, int>> containersubsteps = new List<KeyValuePair<int, int>>();
             foreach (var substep in stepContainer.SubSteps)
             {
