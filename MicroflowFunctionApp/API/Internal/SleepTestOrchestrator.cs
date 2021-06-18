@@ -24,15 +24,15 @@ namespace Microflow.API.Internal
             [OrchestrationTrigger] IDurableOrchestrationContext context,
             ILogger inlog)
         {
-            var log = context.CreateReplaySafeLogger(inlog);
+            //var log = context.CreateReplaySafeLogger(inlog);
 
-            Random random = new Random();
-            var ts = TimeSpan.FromSeconds(random.Next(10, 20));
-            DateTime deadline = context.CurrentUtcDateTime.Add(ts);
+            //Random random = new Random();
+            //var ts = TimeSpan.FromSeconds(random.Next(1, 2));
+            //DateTime deadline = context.CurrentUtcDateTime.Add(ts);
             
-            log.LogCritical("Sleeping for " + ts.Seconds + " seconds");
+            //log.LogCritical("Sleeping for " + ts.Seconds + " seconds");
 
-            await context.CreateTimer(deadline, CancellationToken.None);
+            //await context.CreateTimer(deadline, CancellationToken.None);
         }
 
         /// <summary>

@@ -14,11 +14,11 @@ namespace MicroflowConsole
         {
             using var client = new HttpClient();
 
-            var terminate = await client.PostAsync("http://localhost:7071/runtime/webhooks/durabletask/instances/39806875-9c81-4736-81c0-9be562dae71e/terminate?reason=dfgd", null);
+            //var terminate = await client.PostAsync("http://localhost:7071/runtime/webhooks/durabletask/instances/39806875-9c81-4736-81c0-9be562dae71e/terminate?reason=dfgd", null);
             try
             {
-                var workflow = Tests.CreateTestWorkflow_SimpleSteps();
-                //var workflow = Tests.CreateTestWorkflow_10StepsParallel();
+                //var workflow = Tests.CreateTestWorkflow_SimpleSteps();
+                var workflow = Tests.CreateTestWorkflow_10StepsParallel();
                 //var workflow = Tests.CreateTestWorkflow_Complex1();
 
                 var project = new Project() { 
@@ -52,9 +52,9 @@ namespace MicroflowConsole
         {
             Dictionary<string, string> mergeFields = new Dictionary<string, string>();
             // use 
-            //mergeFields.Add("default_post_url", "https://reqbin.com/echo/post/json?workflowid=<workflowId>&processid=<stepId>");
+            mergeFields.Add("default_post_url", "https://reqbin.com/echo/post/json?workflowid=<workflowId>&processid=<stepId>");
 
-            mergeFields.Add("default_post_url", "http://localhost:7071/api/SleepTestOrchestrator_HttpStart");
+            //mergeFields.Add("default_post_url", "http://localhost:7071/api/SleepTestOrchestrator_HttpStart");
 
             return mergeFields;
         }

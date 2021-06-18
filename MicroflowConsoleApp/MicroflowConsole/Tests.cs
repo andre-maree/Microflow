@@ -15,7 +15,7 @@ namespace MicroflowConsole
 
             steps[3].AddParentSteps(steps[1], steps[2]);
 
-            steps[0].CallbackAction = "approve";
+            //steps[0].CallbackAction = "approve";
             //steps[0].StopOnActionFailed = true;
             //steps[0].ActionTimeoutSeconds = 30;
 

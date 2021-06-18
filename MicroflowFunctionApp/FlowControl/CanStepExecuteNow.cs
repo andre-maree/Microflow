@@ -11,7 +11,7 @@ namespace Microflow
         /// </summary>
         /// <returns>Bool to indicate if this step request can be executed or not</returns>
         [FunctionName("CanExecuteNow")]
-        public static async Task<bool> CanExecuteNow([OrchestrationTrigger] IDurableOrchestrationContext context)
+        public static async Task<CanExecuteResult> CanExecuteNow([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
             CanExecuteNowObject canExecuteNowObject = context.GetInput<CanExecuteNowObject>();
             EntityId countId = new EntityId(nameof(Counter), canExecuteNowObject.RunId + canExecuteNowObject.StepId);
@@ -26,12 +26,12 @@ namespace Microflow
                     //await context.CallEntityAsync<int>(countId, "add");
                     //await context.CallEntityAsync(countId, "delete");
 
-                    return true;
+                    return new CanExecuteResult() { CanExecute = true, StepId = canExecuteNowObject.StepId };
                 }
 
                 await context.CallEntityAsync<int>(countId, "add");
 
-                return false;
+                return new CanExecuteResult() { CanExecute = false, StepId = canExecuteNowObject.StepId };
             }
         }
 
@@ -52,9 +52,9 @@ namespace Microflow
                 case "get":
                     ctx.Return(ctx.GetState<int>());
                     break;
-                //case "delete":
-                //    ctx.DeleteState();
-                //    break;
+                    //case "delete":
+                    //    ctx.DeleteState();
+                    //    break;
             }
         }
     }

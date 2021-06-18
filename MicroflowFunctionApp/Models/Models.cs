@@ -27,6 +27,15 @@
     }
 
     /// <summary>
+    /// Used when locking for parent step concurrency count checking
+    /// </summary>
+    public class CanExecuteResult
+    {
+        public bool CanExecute { get; set; }
+        public int StepId { get; set; }
+    }
+
+    /// <summary>
     /// This is the minimalist run object that is passed during execution inside the project run object
     /// </summary>
     public class RunObject
