@@ -72,21 +72,35 @@ namespace Microflow
                 {
                     try
                     {
+                        var id = MicroflowHelper.CreateSubOrchestrationId();
+
                         // wait for external event flow / callback
                         if (!string.IsNullOrWhiteSpace(httpCallWithRetries.CallBackAction))
                         {
+                            var name = "HttpCallWithCallBackOrchestrator";
+
                             if (retryOptions == null)
-                                subOrchestratorSuccess = await context.CallSubOrchestratorAsync<bool>("HttpCallWithCallBackOrchestrator", MicroflowHelper.CreateSubOrchestrationId(), httpCallWithRetries);
+                            {
+                                subOrchestratorSuccess = await context.CallSubOrchestratorAsync<bool>(name, id, httpCallWithRetries);
+                            }
                             else
-                                subOrchestratorSuccess = await context.CallSubOrchestratorWithRetryAsync<bool>("HttpCallWithCallBackOrchestrator", retryOptions, MicroflowHelper.CreateSubOrchestrationId(), httpCallWithRetries);
+                            {
+                                subOrchestratorSuccess = await context.CallSubOrchestratorWithRetryAsync<bool>(name, retryOptions, id, httpCallWithRetries);
+                            }
                         }
                         // send and receive inline flow
                         else
                         {
+                            var name = "HttpCallOrchestrator";
+
                             if (retryOptions == null)
-                                subOrchestratorSuccess = await context.CallSubOrchestratorAsync<bool>("HttpCallOrchestrator", MicroflowHelper.CreateSubOrchestrationId(), httpCallWithRetries);
+                            {
+                                subOrchestratorSuccess = await context.CallSubOrchestratorAsync<bool>(name, id, httpCallWithRetries);
+                            }
                             else
-                                subOrchestratorSuccess = await context.CallSubOrchestratorWithRetryAsync<bool>("HttpCallOrchestrator", retryOptions, MicroflowHelper.CreateSubOrchestrationId(), httpCallWithRetries);
+                            {
+                                subOrchestratorSuccess = await context.CallSubOrchestratorWithRetryAsync<bool>(name, retryOptions, id, httpCallWithRetries);
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -103,7 +117,11 @@ namespace Microflow
                 if (subOrchestratorSuccess)
                 {
                     // log to table workflow completed
-                    await context.CallSubOrchestratorWithRetryAsync("TableLogStep", MicroflowHelper.GetTableLoggingRetryOptions(), new LogStepEntity(httpCallWithRetries.RowKey, runObj.RunId, $"Step in project {project.ProjectId} completed successfully"));
+                    await context.CallSubOrchestratorWithRetryAsync(
+                        "TableLogStep", 
+                        MicroflowHelper.GetTableLoggingRetryOptions(), 
+                        new LogStepEntity(httpCallWithRetries.RowKey, runObj.RunId, $"Step in project {project.ProjectId} completed successfully")
+                        );
 
                     log.LogWarning($"Step {httpCallWithRetries.RowKey} done at {DateTime.Now.ToString("HH:mm:ss")}  -  Run ID: {project.RunObject.RunId}");
 
@@ -124,7 +142,13 @@ namespace Microflow
                         // if parentCount is more than 1, work out if it can execute now
                         else
                         {
-                            canExeccuteTasks.Add(context.CallSubOrchestratorAsync<CanExecuteResult>("CanExecuteNow", new CanExecuteNowObject() { RunId = runObj.RunId, StepId = step.Key, ParentCount = step.Value, ProjectId = project.ProjectId }));
+                            canExeccuteTasks.Add(context.CallSubOrchestratorAsync<CanExecuteResult>("CanExecuteNow", new CanExecuteNowObject() 
+                            {
+                                RunId = runObj.RunId, 
+                                StepId = step.Key, 
+                                ParentCount = step.Value, 
+                                ProjectId = project.ProjectId 
+                            }));
 
                             // the last parent to complete will trigger true so the sub step can execute
                             //if (canExecute)
@@ -135,12 +159,19 @@ namespace Microflow
                         }
                     }
 
-                    await Task.WhenAll(canExeccuteTasks);
+                    //await Task.WhenAll(canExeccuteTasks);
                     foreach (var task in canExeccuteTasks)
                     {
-                        if (task.Result.CanExecute)
+                        CanExecuteResult result = await task;
+
+                        if (result.CanExecute)
                         {
-                            project.RunObject = new RunObject() { RunId = runObj.RunId, StepId = task.Result.StepId };
+                            project.RunObject = new RunObject() 
+                            { 
+                                RunId = runObj.RunId, 
+                                StepId = result.StepId 
+                            };
+
                             subStepTasks.Add(context.CallSubOrchestratorAsync("ExecuteStep", project));
                         }
                     }

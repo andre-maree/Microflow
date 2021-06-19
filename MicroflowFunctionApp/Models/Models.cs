@@ -12,7 +12,6 @@
         public int PausedStepId { get; set; }
         public int Loop { get; set; } = 1;
         public int CurrentLoop { get; set; } = 1;
-        public bool DoneContainingStep { get; set; }
     }
 
     /// <summary>

@@ -11,7 +11,7 @@ namespace Microflow.API
     public static class HttpCallWithCallbackOrchestrator
     {
         /// <summary>
-        /// The callout is already made in
+        /// Does the call out and then waits for the callback
         /// </summary>
         /// <returns>True or false to indicate success</returns>
         [FunctionName("HttpCallWithCallbackOrchestrator")]

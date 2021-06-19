@@ -145,9 +145,6 @@ namespace Microflow.Helpers
                 // StepsMyProject for step config
                 CloudTable stepsTable = GetStepsTable(projectId);
 
-                // RunControlMyProject for parent execution completed count
-                CloudTable runTable = GetRunTable(projectId);
-
                 // MicroflowLog table
                 CloudTable logOrchestrationTable = GetLogOrchestrationTable();
 
@@ -160,16 +157,14 @@ namespace Microflow.Helpers
                 CloudTable projectTable = GetProjectControlTable();
 
                 var t1 = stepsTable.CreateIfNotExistsAsync();
-                var t2 = runTable.CreateIfNotExistsAsync();
-                var t3 = logOrchestrationTable.CreateIfNotExistsAsync();
-                var t4 = projectTable.CreateIfNotExistsAsync();
-                var t5 = logStepsTable.CreateIfNotExistsAsync();
+                var t2 = logOrchestrationTable.CreateIfNotExistsAsync();
+                var t3 = projectTable.CreateIfNotExistsAsync();
+                var t4 = logStepsTable.CreateIfNotExistsAsync();
 
                 await t1;
                 await t2;
                 await t3;
                 await t4;
-                await t5;
             }
             catch (StorageException)
             {
@@ -191,13 +186,6 @@ namespace Microflow.Helpers
             {
                 throw;
             }
-        }
-
-        private static CloudTable GetRunTable(string projectId)
-        {
-            CloudTableClient tableClient = GetTableClient();
-
-            return tableClient.GetTableReference($"RunControl{projectId}");
         }
 
         public static CloudTable GetStepsTable(string projectId)
