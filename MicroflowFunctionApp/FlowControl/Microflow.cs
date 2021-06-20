@@ -73,6 +73,8 @@ namespace Microflow
                     try
                     {
                         var id = MicroflowHelper.CreateSubOrchestrationId();
+                        httpCallWithRetries.RunId = runObj.RunId;
+                        httpCallWithRetries.MainOrchestrationId = project.OrchestratorInstanceId;
 
                         // wait for external event flow / callback
                         if (!string.IsNullOrWhiteSpace(httpCallWithRetries.CallBackAction))
@@ -120,7 +122,7 @@ namespace Microflow
                     await context.CallSubOrchestratorWithRetryAsync(
                         "TableLogStep", 
                         MicroflowHelper.GetTableLoggingRetryOptions(), 
-                        new LogStepEntity(httpCallWithRetries.RowKey, runObj.RunId, $"Step in project {project.ProjectId} completed successfully")
+                        new LogStepEntity(httpCallWithRetries.RowKey, runObj.RunId, $"Step in project {project.ProjectName} completed successfully")
                         );
 
                     log.LogWarning($"Step {httpCallWithRetries.RowKey} done at {DateTime.Now.ToString("HH:mm:ss")}  -  Run ID: {project.RunObject.RunId}");
@@ -147,7 +149,7 @@ namespace Microflow
                                 RunId = runObj.RunId, 
                                 StepId = step.Key, 
                                 ParentCount = step.Value, 
-                                ProjectId = project.ProjectId 
+                                ProjectId = project.ProjectName 
                             }));
 
                             // the last parent to complete will trigger true so the sub step can execute

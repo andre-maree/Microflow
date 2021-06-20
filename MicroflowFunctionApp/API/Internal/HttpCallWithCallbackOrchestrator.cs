@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Microflow.Helpers;
 using Microsoft.Azure.WebJobs;
@@ -22,7 +23,7 @@ namespace Microflow.API
 
             var httpCall = context.GetInput<HttpCall>();
 
-            DurableHttpRequest durableHttpRequest = MicroflowHelper.GetDurableHttpRequest(httpCall, context.InstanceId);
+            DurableHttpRequest durableHttpRequest = MicroflowHelper.CreateMicroflowDurableHttpRequest(httpCall, context.InstanceId);
 
             // http call outside of Microflow, this is the micro-service api call
             var result = await context.CallHttpAsync(durableHttpRequest);
@@ -31,6 +32,14 @@ namespace Microflow.API
                 return false;
 
             // TODO: always use https
+
+            //var ts = TimeSpan.FromSeconds(20);
+            //DateTime deadline = context.CurrentUtcDateTime.Add(ts);
+
+            ////log.LogCritical("Sleeping for " + ts.Seconds + " seconds");
+
+            //await context.CreateTimer(deadline, CancellationToken.None);
+
             log.LogCritical($"Waiting for callback: {Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}/api/{httpCall.CallBackAction}/{context.InstanceId}/{httpCall.RowKey}");
 
             // wait for the external event, set the timeout

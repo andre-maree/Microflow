@@ -1,7 +1,9 @@
 using System;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using MicroflowModels;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -24,15 +26,35 @@ namespace Microflow.API.Internal
             [OrchestrationTrigger] IDurableOrchestrationContext context,
             ILogger inlog)
         {
-            //var log = context.CreateReplaySafeLogger(inlog);
+            var log = context.CreateReplaySafeLogger(inlog);
+
+            string data = context.GetInput<string>();
+            MicroflowPostData postData = JsonSerializer.Deserialize<MicroflowPostData>(data);
 
             Random random = new Random();
-            var ts = TimeSpan.FromSeconds(random.Next(1, 1));
-           DateTime deadline = context.CurrentUtcDateTime.Add(ts);
-            
+            var ts = TimeSpan.FromSeconds(random.Next(5, 10));
+            DateTime deadline = context.CurrentUtcDateTime.Add(ts);
+
             //log.LogCritical("Sleeping for " + ts.Seconds + " seconds");
 
             await context.CreateTimer(deadline, CancellationToken.None);
+
+            //do the call back if there is 1
+            if (!string.IsNullOrWhiteSpace(postData.CallbackUrl))
+                {
+                    DurableHttpRequest req = new DurableHttpRequest(HttpMethod.Get, new Uri("http://" + postData.CallbackUrl));
+
+                    DurableHttpResponse resp = null;
+                    try
+                    {
+                        log.LogCritical($"Callback Now!!!!");
+                        resp = await context.CallHttpAsync(req);
+                    }
+                    catch (Exception ex)
+                    {
+                        var r = 0;
+                    }
+                }
         }
 
         /// <summary>
@@ -44,8 +66,10 @@ namespace Microflow.API.Internal
             [DurableClient] IDurableOrchestrationClient client,
             ILogger log)
         {
+            string data = await req.Content.ReadAsStringAsync();
+            //MicroflowPostData body = JsonSerializer.Deserialize<MicroflowPostData>(data);
             // Function input comes from the request content.
-            string instanceId = await client.StartNewAsync("SleepTestOrchestrator", null);
+            string instanceId = await client.StartNewAsync("SleepTestOrchestrator", null, data);
             
             return client.CreateCheckStatusResponse(req, instanceId);
         }

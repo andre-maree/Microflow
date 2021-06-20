@@ -59,7 +59,7 @@ namespace Microflow.Helpers
             }
 
             var tasks = new List<Task>();
-            var stepsTable = MicroflowTableHelper.GetStepsTable(projectRun.ProjectId);
+            var stepsTable = MicroflowTableHelper.GetStepsTable(projectRun.ProjectName);
 
             Step stepContainer = new Step(-1, "");
             steps.Insert(0, stepContainer);
@@ -90,7 +90,7 @@ namespace Microflow.Helpers
 
                     if (step.RetryOptions != null)
                     {
-                        HttpCallWithRetries stentRetries = new HttpCallWithRetries(projectRun.ProjectId, step.StepId, JsonSerializer.Serialize(substeps))
+                        HttpCallWithRetries stentRetries = new HttpCallWithRetries(projectRun.ProjectName, step.StepId, JsonSerializer.Serialize(substeps))
                         {
                             CallBackAction = step.CallbackAction,
                             StopOnActionFailed = step.StopOnActionFailed,
@@ -108,7 +108,7 @@ namespace Microflow.Helpers
                     }
                     else
                     {
-                        HttpCall stent = new HttpCall(projectRun.ProjectId, step.StepId, JsonSerializer.Serialize(substeps))
+                        HttpCall stent = new HttpCall(projectRun.ProjectName, step.StepId, JsonSerializer.Serialize(substeps))
                         {
                             CallBackAction = step.CallbackAction,
                             StopOnActionFailed = step.StopOnActionFailed,
@@ -127,7 +127,7 @@ namespace Microflow.Helpers
                 containersubsteps.Add(new KeyValuePair<int, int>(substep, 1));
             }
 
-            HttpCall containerEntity = new HttpCall(projectRun.ProjectId, -1, JsonSerializer.Serialize(containersubsteps));
+            HttpCall containerEntity = new HttpCall(projectRun.ProjectName, -1, JsonSerializer.Serialize(containersubsteps));
             tasks.Add(MicroflowTableHelper.InsertStep(containerEntity, stepsTable));
             await Task.WhenAll(tasks);
 
@@ -163,17 +163,31 @@ namespace Microflow.Helpers
             project = JsonSerializer.Deserialize<Project>(sb.ToString());
         }
 
-        public static DurableHttpRequest GetDurableHttpRequest(HttpCall httpCall, string instanceId)
+        public static DurableHttpRequest CreateMicroflowDurableHttpRequest(HttpCall httpCall, string instanceId)
         {
-            httpCall.PartitionKey = instanceId;
+            //httpCall.PartitionKey = instanceId;
+            MicroflowPostData postData = new MicroflowPostData()
+            {
+                ProjectName = httpCall.PartitionKey,
+                SubOrchestrationId = instanceId,
+                RunId = httpCall.RunId,
+                StepId = httpCall.RowKey,
+                MainOrchestrationId = httpCall.MainOrchestrationId,
+                CallbackUrl = string.IsNullOrWhiteSpace(httpCall.CallBackAction) 
+                ? "" 
+                : $"{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}/api/{httpCall.CallBackAction}/{instanceId}/{httpCall.RowKey}"
+            };
+
+            string body = JsonSerializer.Serialize(postData);
 
             DurableHttpRequest newDurableHttpRequest = new DurableHttpRequest(
                 method: HttpMethod.Post,
                 uri: new Uri(httpCall.Url),
-                timeout: TimeSpan.FromSeconds(httpCall.ActionTimeoutSeconds)
+                timeout: TimeSpan.FromSeconds(httpCall.ActionTimeoutSeconds),
             //headers: durableHttpRequest.Headers,
-            //content: durableHttpRequest.Content, // This is the line causing the issue
-            //tokenSource: durableHttpRequest.TokenSource
+            content: body // This is the line causing the issue
+                          //tokenSource: durableHttpRequest.TokenSource
+
             );
 
             // Do not copy over the x-functions-key header, as in many cases, the

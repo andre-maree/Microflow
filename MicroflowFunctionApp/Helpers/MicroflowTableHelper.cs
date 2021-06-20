@@ -105,9 +105,9 @@ namespace Microflow.Helpers
         {
             try
             {
-                CloudTable table = GetStepsTable(projectRun.ProjectId);
+                CloudTable table = GetStepsTable(projectRun.ProjectName);
 
-                TableOperation retrieveOperation = TableOperation.Retrieve<HttpCallWithRetries>($"{projectRun.ProjectId}", $"{projectRun.RunObject.StepId}");
+                TableOperation retrieveOperation = TableOperation.Retrieve<HttpCallWithRetries>($"{projectRun.ProjectName}", $"{projectRun.RunObject.StepId}");
                 TableResult result = await table.ExecuteAsync(retrieveOperation);
                 HttpCallWithRetries stepEnt = result.Result as HttpCallWithRetries;
 

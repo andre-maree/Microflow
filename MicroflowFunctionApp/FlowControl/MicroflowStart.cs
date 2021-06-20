@@ -41,7 +41,7 @@ namespace Microflow
             List<Step> steps = project.Steps;
 
             // create a project run
-            ProjectRun projectRun = new ProjectRun() { ProjectId = project.ProjectName, Loop = project.Loop };
+            ProjectRun projectRun = new ProjectRun() { ProjectName = project.ProjectName, Loop = project.Loop };
 
             // create the storage tables for the project
             await MicroflowTableHelper.CreateTables(project.ProjectName);
@@ -61,6 +61,7 @@ namespace Microflow
             // prepare the workflow by persisting parent info to table storage
             steps = await MicroflowHelper.PrepareWorkflow(instanceId, projectRun, steps, project.MergeFields);
             projectRun.RunObject.StepId = -1;
+            projectRun.OrchestratorInstanceId = instanceId;
             // start
             await client.StartNewAsync("Start", instanceId, projectRun);
 
@@ -79,7 +80,7 @@ namespace Microflow
             // read ProjectRun payload
             var projectRun = context.GetInput<ProjectRun>();
 
-            log.LogInformation($"Started orchestration with ID = '{context.InstanceId}', Project = '{projectRun.ProjectId}'");
+            log.LogInformation($"Started orchestration with ID = '{context.InstanceId}', Project = '{projectRun.ProjectName}'");
 
             // do the looping
             for (int i = 1; i <= projectRun.Loop; i++)
@@ -99,11 +100,11 @@ namespace Microflow
             }
 
             // log to table workflow completed
-            await context.CallSubOrchestratorWithRetryAsync("TableLogOrchestration", MicroflowHelper.GetTableLoggingRetryOptions(), new LogOrchestrationEntity(projectRun.ProjectId, projectRun.RunObject.RunId, $"{Environment.MachineName} - {projectRun.ProjectId} completed successfully"));
+            await context.CallSubOrchestratorWithRetryAsync("TableLogOrchestration", MicroflowHelper.GetTableLoggingRetryOptions(), new LogOrchestrationEntity(projectRun.ProjectName, projectRun.RunObject.RunId, $"{Environment.MachineName} - {projectRun.ProjectName} completed successfully"));
 
             // done
             log.LogError("-------------------------------------------");
-            log.LogError($"Project run {projectRun.ProjectId} completed successfully...");
+            log.LogError($"Project run {projectRun.ProjectName} completed successfully...");
             log.LogError("-------------------------------------------");
             log.LogError("<<<<<<<<<<<<<<<<<<<<<<<<<-----> !!! A GREAT SUCCESS !!! <----->>>>>>>>>>>>>>>>>>>>>>>>>");
         }

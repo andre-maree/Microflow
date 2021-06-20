@@ -7,11 +7,12 @@
     /// </summary>
     public class ProjectRun
     {
-        public string ProjectId { get; set; }
+        public string ProjectName { get; set; }
         public RunObject RunObject { get; set; }
         public int PausedStepId { get; set; }
         public int Loop { get; set; } = 1;
         public int CurrentLoop { get; set; } = 1;
+        public string OrchestratorInstanceId { get; set; }
     }
 
     /// <summary>

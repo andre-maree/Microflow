@@ -79,6 +79,12 @@ namespace Microflow
         public string CallBackAction { get; set; }
         public bool StopOnActionFailed { get; set; }
         public int ActionTimeoutSeconds { get; set; }
+
+        [IgnoreProperty]
+        public string RunId { get; set; }
+
+        [IgnoreProperty]
+        public string MainOrchestrationId { get; set; }
     }
     
     /// <summary>

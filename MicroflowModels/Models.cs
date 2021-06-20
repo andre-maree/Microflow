@@ -8,7 +8,11 @@ namespace MicroflowModels
 
     public class MicroflowPostData
     {
-        public string ProcessId { get; set; }
+        public string ProjectName { get; set; }
+        public string MainOrchestrationId { get; set; }
+        public string SubOrchestrationId { get; set; }
+        public string CallbackUrl { get; set; }
+        public string RunId { get; set; }
         public string StepId { get; set; }
     }
 
