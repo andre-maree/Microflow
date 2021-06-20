@@ -33,7 +33,7 @@ namespace Microflow
 
             HttpCallWithRetries httpCallWithRetries = await httpCallWithRetriesTask;
 
-            var subStepTasks = new List<Task>();
+            var allTasks = new List<Task>();
 
             // only do this for auto created container step
             if (project.RunObject.StepId == -1)
@@ -43,7 +43,7 @@ namespace Microflow
                 foreach (var step in subSteps)
                 {
                     project.RunObject = new RunObject() { RunId = runObj.RunId, StepId = step.Key };
-                    subStepTasks.Add(context.CallSubOrchestratorAsync("ExecuteStep", project));
+                    allTasks.Add(context.CallSubOrchestratorAsync("ExecuteStep", project));
                 }
             }
             // all substeps of the container step will follow the normal processing
@@ -72,7 +72,8 @@ namespace Microflow
                 {
                     try
                     {
-                        var id = MicroflowHelper.CreateSubOrchestrationId();
+                        string id = context.NewGuid().ToString();
+
                         httpCallWithRetries.RunId = runObj.RunId;
                         httpCallWithRetries.MainOrchestrationId = project.OrchestratorInstanceId;
 
@@ -119,11 +120,10 @@ namespace Microflow
                 if (subOrchestratorSuccess)
                 {
                     // log to table workflow completed
-                    await context.CallSubOrchestratorWithRetryAsync(
-                        "TableLogStep", 
-                        MicroflowHelper.GetTableLoggingRetryOptions(), 
+                    allTasks.Add(context.CallActivityAsync(
+                        "LogStep",
                         new LogStepEntity(httpCallWithRetries.RowKey, runObj.RunId, $"Step in project {project.ProjectName} completed successfully")
-                        );
+                        ));
 
                     log.LogWarning($"Step {httpCallWithRetries.RowKey} done at {DateTime.Now.ToString("HH:mm:ss")}  -  Run ID: {project.RunObject.RunId}");
 
@@ -139,7 +139,7 @@ namespace Microflow
                         {
                             // step.Key is stepId
                             project.RunObject = new RunObject() { RunId = runObj.RunId, StepId = step.Key };
-                            subStepTasks.Add(context.CallSubOrchestratorAsync("ExecuteStep", project));
+                            allTasks.Add(context.CallSubOrchestratorAsync("ExecuteStep", project));
                         }
                         // if parentCount is more than 1, work out if it can execute now
                         else
@@ -174,7 +174,7 @@ namespace Microflow
                                 StepId = result.StepId 
                             };
 
-                            subStepTasks.Add(context.CallSubOrchestratorAsync("ExecuteStep", project));
+                            allTasks.Add(context.CallSubOrchestratorAsync("ExecuteStep", project));
                         }
                     }
                 }
@@ -184,7 +184,7 @@ namespace Microflow
                 }
             }
 
-            await Task.WhenAll(subStepTasks);
+            await Task.WhenAll(allTasks);
         }
     }
 }

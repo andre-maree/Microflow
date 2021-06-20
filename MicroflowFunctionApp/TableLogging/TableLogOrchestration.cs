@@ -12,17 +12,8 @@ namespace Microflow.FlowControl
 {
     public static class TableLogOrchestration
     {
-        [FunctionName("TableLogOrchestration")]
-        public static async Task LogToOrchestration(
-            [OrchestrationTrigger] IDurableOrchestrationContext context)
-        {
-            LogOrchestrationEntity logEntity = context.GetInput<LogOrchestrationEntity>();
-
-            await context.CallActivityAsync<LogOrchestrationEntity>("TableLogOrchestrationActivity", logEntity);
-        }
-
-        [FunctionName("TableLogOrchestrationActivity")]
-        public static async Task TableLogOrchestrationActivity([ActivityTrigger] LogOrchestrationEntity logEntity, ILogger log)
+        [FunctionName("LogOrchestration")]
+        public static async Task TableLogOrchestrationActivity([ActivityTrigger] LogOrchestrationEntity logEntity)
         {
             await MicroflowTableHelper.LogOrchestration(logEntity);
         }

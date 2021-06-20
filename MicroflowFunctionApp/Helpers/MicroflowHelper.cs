@@ -6,22 +6,21 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using MicroflowModels;
-using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 
 namespace Microflow.Helpers
 {
     public static class MicroflowHelper
     {
-        public static RetryOptions GetTableLoggingRetryOptions()
-        {
-            return new RetryOptions(TimeSpan.FromSeconds(15), 10)
-            {
-                MaxRetryInterval = TimeSpan.FromSeconds(1000),
-                BackoffCoefficient = 1.5,
-                RetryTimeout = TimeSpan.FromSeconds(30)
-            };
-        }
+        //public static RetryOptions GetTableLoggingRetryOptions()
+        //{
+        //    return new RetryOptions(TimeSpan.FromSeconds(15), 10)
+        //    {
+        //        MaxRetryInterval = TimeSpan.FromSeconds(1000),
+        //        BackoffCoefficient = 1.5,
+        //        RetryTimeout = TimeSpan.FromSeconds(30)
+        //    };
+        //}
 
         public static RetryOptions GetRetryOptions(HttpCallWithRetries httpCallWithRetries)
         {
@@ -36,7 +35,7 @@ namespace Microflow.Helpers
         /// <summary>
         /// Called before a workflow executes and takes the top step and recursives it to insert step configs into table storage
         /// </summary>
-        public static async Task<List<Step>> PrepareWorkflow(string instanceId, ProjectRun projectRun, List<Step> steps, Dictionary<string, string> mergeFields)
+        public static async Task PrepareWorkflow(string instanceId, ProjectRun projectRun, List<Step> steps, Dictionary<string, string> mergeFields)
         {
             HashSet<KeyValuePair<int, int>> hsStepCounts = new HashSet<KeyValuePair<int, int>>();
 
@@ -75,10 +74,6 @@ namespace Microflow.Helpers
                     {
                         stepContainer.SubSteps.Add(step.StepId);
                     }
-
-                    //step.CalloutUrl = step.CalloutUrl.Replace("<instanceId>", projectRun.RunObject.RunId, StringComparison.OrdinalIgnoreCase);
-                    //step.CalloutUrl = step.CalloutUrl.Replace("<runId>", projectRun.RunObject.RunId, StringComparison.OrdinalIgnoreCase);
-                    //step.CalloutUrl = step.CalloutUrl.Replace("<stepId>", step.StepId.ToString(), StringComparison.OrdinalIgnoreCase);
 
                     List<KeyValuePair<int, int>> substeps = new List<KeyValuePair<int, int>>();
 
@@ -131,23 +126,8 @@ namespace Microflow.Helpers
 
             HttpCall containerEntity = new HttpCall(projectRun.ProjectName, -1, JsonSerializer.Serialize(containersubsteps));
             tasks.Add(MicroflowTableHelper.InsertStep(containerEntity, stepsTable));
+
             await Task.WhenAll(tasks);
-
-            return steps;
-        }
-
-        private const string CharList = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-
-        public static string CreateSubOrchestrationId()
-        {
-            Random r = new Random();
-            StringBuilder sb = new StringBuilder();
-
-            for (int i = 0; i < 6; i++)
-            {
-                sb.Append(CharList[r.Next(0, 62)]);
-            }
-            return sb.ToString();
         }
 
         public static void ParseMergeFields(string strWorkflow, ref Project project)
@@ -231,19 +211,6 @@ namespace Microflow.Helpers
             sb.Replace("<StepId>", httpCall.RowKey);
 
             return sb.ToString();
-        }
-
-        public class StepComparer : IEqualityComparer<Step>
-        {
-            public bool Equals(Step x, Step y)
-            {
-                return y != null && x != null && x.StepId == y.StepId;
-            }
-
-            public int GetHashCode(Step obj)
-            {
-                return obj.StepId.GetHashCode();
-            }
         }
     }
 }

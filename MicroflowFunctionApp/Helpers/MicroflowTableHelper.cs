@@ -1,13 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
-using MicroflowModels;
 using Microsoft.Azure.Cosmos.Table;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 
 namespace Microflow.Helpers
 {
@@ -15,124 +8,67 @@ namespace Microflow.Helpers
     {
         public async static Task LogStep(LogStepEntity logEntity)
         {
-            CloudTable table = null;
-            try
-            {
-                table = GetLogStepsTable();
+            CloudTable table = GetLogStepsTable();
+            TableOperation mergeOperation = TableOperation.InsertOrReplace(logEntity);
 
-                TableOperation mergeOperation = TableOperation.InsertOrReplace(logEntity);
-                await table.ExecuteAsync(mergeOperation);
-            }
-            catch (StorageException ex)
-            {
-
-            }
+            await table.ExecuteAsync(mergeOperation);
         }
 
         public async static Task LogOrchestration(LogOrchestrationEntity logEntity)
         {
-            CloudTable table = null;
-            try
-            {
-                table = GetLogOrchestrationTable();
+            CloudTable table = GetLogOrchestrationTable();
+            TableOperation mergeOperation = TableOperation.InsertOrReplace(logEntity);
 
-                TableOperation mergeOperation = TableOperation.InsertOrReplace(logEntity);
-                await table.ExecuteAsync(mergeOperation);
-            }
-            catch (StorageException ex)
-            {
-                
-            }
+            await table.ExecuteAsync(mergeOperation);
         }
 
 
         public static async Task Pause(ProjectControlEntity projectControlEntity)
         {
-            try
-            {
-                CloudTable table = GetProjectControlTable();
+            CloudTable table = GetProjectControlTable();
+            TableOperation mergeOperation = TableOperation.Merge(projectControlEntity);
 
-                TableOperation mergeOperation = TableOperation.Merge(projectControlEntity);
-
-                await table.ExecuteAsync(mergeOperation);
-            }
-            catch (StorageException)
-            {
-                throw;
-            }
+            await table.ExecuteAsync(mergeOperation);
         }
 
         public static async Task<ProjectControlEntity> GetProjectControl(string projectId)
         {
-            try
-            {
-                CloudTable table = GetProjectControlTable();
+            CloudTable table = GetProjectControlTable();
+            TableOperation mergeOperation = TableOperation.Retrieve<ProjectControlEntity>(projectId, "0");
+            TableResult result = await table.ExecuteAsync(mergeOperation);
+            ProjectControlEntity projectControlEntity = result.Result as ProjectControlEntity;
 
-                TableOperation mergeOperation = TableOperation.Retrieve<ProjectControlEntity>(projectId, "0");
-
-                TableResult result = await table.ExecuteAsync(mergeOperation);
-                ProjectControlEntity projectControlEntity = result.Result as ProjectControlEntity;
-
-                return projectControlEntity;
-            }
-            catch (StorageException)
-            {
-                throw;
-            }
+            return projectControlEntity;
         }
 
         public static async Task<int> GetState(string projectId)
         {
-            try
-            {
-                CloudTable table = GetProjectControlTable();
+            CloudTable table = GetProjectControlTable();
+            TableOperation mergeOperation = TableOperation.Retrieve<ProjectControlEntity>(projectId, "0");
+            TableResult result = await table.ExecuteAsync(mergeOperation);
+            ProjectControlEntity projectControlEntity = result.Result as ProjectControlEntity;
 
-                TableOperation mergeOperation = TableOperation.Retrieve<ProjectControlEntity>(projectId, "0");
-
-                TableResult result = await table.ExecuteAsync(mergeOperation);
-                ProjectControlEntity projectControlEntity = result.Result as ProjectControlEntity;
-
-                // ReSharper disable once PossibleNullReferenceException
-                return projectControlEntity.State;
-            }
-            catch (StorageException)
-            {
-                throw;
-            }
+            // ReSharper disable once PossibleNullReferenceException
+            return projectControlEntity.State;
         }
 
         public static async Task<HttpCallWithRetries> GetStep(ProjectRun projectRun)
         {
-            try
-            {
-                CloudTable table = GetStepsTable(projectRun.ProjectName);
+            CloudTable table = GetStepsTable(projectRun.ProjectName);
+            TableOperation retrieveOperation = TableOperation.Retrieve<HttpCallWithRetries>($"{projectRun.ProjectName}", $"{projectRun.RunObject.StepId}");
+            TableResult result = await table.ExecuteAsync(retrieveOperation);
+            HttpCallWithRetries stepEnt = result.Result as HttpCallWithRetries;
 
-                TableOperation retrieveOperation = TableOperation.Retrieve<HttpCallWithRetries>($"{projectRun.ProjectName}", $"{projectRun.RunObject.StepId}");
-                TableResult result = await table.ExecuteAsync(retrieveOperation);
-                HttpCallWithRetries stepEnt = result.Result as HttpCallWithRetries;
-
-                return stepEnt;
-            }
-            catch (StorageException)
-            {
-                throw;
-            }
+            return stepEnt;
         }
 
         public static async Task UpdateStatetEntity(string projectId, int state)
         {
-            CloudTable table = null;
-            try
-            {
-                table = GetProjectControlTable();
+            CloudTable table = GetProjectControlTable();
+            ProjectControlEntity projectControlEntity = new ProjectControlEntity(projectId, state);
+            TableOperation mergeOperation = TableOperation.InsertOrMerge(projectControlEntity);
 
-                ProjectControlEntity projectControlEntity = new ProjectControlEntity(projectId, state);
-                TableOperation mergeOperation = TableOperation.InsertOrMerge(projectControlEntity);
-                await table.ExecuteAsync(mergeOperation);
-            }
-            catch (StorageException ex)
-            {
-            }
+            await table.ExecuteAsync(mergeOperation);
         }
 
         /// <summary>
@@ -140,36 +76,29 @@ namespace Microflow.Helpers
         /// </summary>
         public static async Task CreateTables(string projectId)
         {
-            try
-            {
-                // StepsMyProject for step config
-                CloudTable stepsTable = GetStepsTable(projectId);
+            // StepsMyProject for step config
+            CloudTable stepsTable = GetStepsTable(projectId);
 
-                // MicroflowLog table
-                CloudTable logOrchestrationTable = GetLogOrchestrationTable();
+            // MicroflowLog table
+            CloudTable logOrchestrationTable = GetLogOrchestrationTable();
 
-                // MicroflowLog table
-                CloudTable logStepsTable = GetLogStepsTable();
+            // MicroflowLog table
+            CloudTable logStepsTable = GetLogStepsTable();
 
-                //var delLogTableTask = await logTable.DeleteIfExistsAsync();
+            //var delLogTableTask = await logTable.DeleteIfExistsAsync();
 
-                // ProjectControlTable
-                CloudTable projectTable = GetProjectControlTable();
+            // ProjectControlTable
+            CloudTable projectTable = GetProjectControlTable();
 
-                var t1 = stepsTable.CreateIfNotExistsAsync();
-                var t2 = logOrchestrationTable.CreateIfNotExistsAsync();
-                var t3 = projectTable.CreateIfNotExistsAsync();
-                var t4 = logStepsTable.CreateIfNotExistsAsync();
+            var t1 = stepsTable.CreateIfNotExistsAsync();
+            var t2 = logOrchestrationTable.CreateIfNotExistsAsync();
+            var t3 = projectTable.CreateIfNotExistsAsync();
+            var t4 = logStepsTable.CreateIfNotExistsAsync();
 
-                await t1;
-                await t2;
-                await t3;
-                await t4;
-            }
-            catch (StorageException)
-            {
-                throw;
-            }
+            await t1;
+            await t2;
+            await t3;
+            await t4;
         }
 
         /// <summary>
@@ -177,15 +106,9 @@ namespace Microflow.Helpers
         /// </summary>
         public static async Task InsertStep(HttpCall stepEnt, CloudTable table)
         {
-            try
-            {
-                TableOperation op = TableOperation.InsertOrReplace(stepEnt);
-                await table.ExecuteAsync(op);
-            }
-            catch (StorageException)
-            {
-                throw;
-            }
+            TableOperation op = TableOperation.InsertOrReplace(stepEnt);
+
+            await table.ExecuteAsync(op);
         }
 
         public static CloudTable GetStepsTable(string projectId)

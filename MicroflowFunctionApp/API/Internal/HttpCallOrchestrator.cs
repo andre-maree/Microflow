@@ -30,24 +30,5 @@ namespace Microflow.API
 
             return result.StatusCode == HttpStatusCode.OK;
         }
-
-
-        /// <summary>
-        /// This simulates an activity executing, replace with real call like an API call
-        /// </summary>
-        //[FunctionName("httpcall2")]
-        //public static async Task<HttpResponseMessage> HttpCall2([ActivityTrigger] HttpCall httpCall, ILogger log)
-        //{
-        //    var cts = new CancellationTokenSource();
-        //    cts.CancelAfter(30000);
-        //    HttpResponseMessage result = await MicroflowHttpClient.HttpClient.PostAsJsonAsync(httpCall.Url, (ProcessId: httpCall.PartitionKey, StepId: httpCall.RowKey), cts.Token);
-
-        //    if (result.IsSuccessStatusCode)
-        //    {
-        //        return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
-        //    }
-
-        //    return new HttpResponseMessage(result.StatusCode);
-        //}
     }
 }

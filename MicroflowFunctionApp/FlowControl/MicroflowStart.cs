@@ -59,9 +59,10 @@ namespace Microflow
             }
 
             // prepare the workflow by persisting parent info to table storage
-            steps = await MicroflowHelper.PrepareWorkflow(instanceId, projectRun, steps, project.MergeFields);
+            await MicroflowHelper.PrepareWorkflow(instanceId, projectRun, steps, project.MergeFields);
             projectRun.RunObject.StepId = -1;
             projectRun.OrchestratorInstanceId = instanceId;
+
             // start
             await client.StartNewAsync("Start", instanceId, projectRun);
 
@@ -100,7 +101,7 @@ namespace Microflow
             }
 
             // log to table workflow completed
-            await context.CallSubOrchestratorWithRetryAsync("TableLogOrchestration", MicroflowHelper.GetTableLoggingRetryOptions(), new LogOrchestrationEntity(projectRun.ProjectName, projectRun.RunObject.RunId, $"{Environment.MachineName} - {projectRun.ProjectName} completed successfully"));
+            await context.CallActivityAsync("LogOrchestration", new LogOrchestrationEntity(projectRun.ProjectName, projectRun.RunObject.RunId, $"{Environment.MachineName} - {projectRun.ProjectName} completed successfully"));
 
             // done
             log.LogError($"Project run {projectRun.ProjectName} completed successfully...");
