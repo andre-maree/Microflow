@@ -48,6 +48,7 @@ namespace MicroflowModels
         public string CalloutUrl { get; set; }
         public string CallbackAction { get; set; }
         public bool StopOnActionFailed { get; set; } = true;
+        public bool IsHttpGet { get; set; }
         public int ActionTimeoutSeconds { get; set; } = 1000;
 
         [DataMember(Name = "SubSteps", EmitDefaultValue = false)]

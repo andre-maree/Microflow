@@ -103,9 +103,7 @@ namespace Microflow
             await context.CallSubOrchestratorWithRetryAsync("TableLogOrchestration", MicroflowHelper.GetTableLoggingRetryOptions(), new LogOrchestrationEntity(projectRun.ProjectName, projectRun.RunObject.RunId, $"{Environment.MachineName} - {projectRun.ProjectName} completed successfully"));
 
             // done
-            log.LogError("-------------------------------------------");
             log.LogError($"Project run {projectRun.ProjectName} completed successfully...");
-            log.LogError("-------------------------------------------");
             log.LogError("<<<<<<<<<<<<<<<<<<<<<<<<<-----> !!! A GREAT SUCCESS !!! <----->>>>>>>>>>>>>>>>>>>>>>>>>");
         }
     }

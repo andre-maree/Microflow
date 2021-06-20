@@ -76,9 +76,9 @@ namespace Microflow.Helpers
                         stepContainer.SubSteps.Add(step.StepId);
                     }
 
-                    step.CalloutUrl = step.CalloutUrl.Replace("<instanceId>", projectRun.RunObject.RunId, StringComparison.OrdinalIgnoreCase);
-                    step.CalloutUrl = step.CalloutUrl.Replace("<runId>", projectRun.RunObject.RunId, StringComparison.OrdinalIgnoreCase);
-                    step.CalloutUrl = step.CalloutUrl.Replace("<stepId>", step.StepId.ToString(), StringComparison.OrdinalIgnoreCase);
+                    //step.CalloutUrl = step.CalloutUrl.Replace("<instanceId>", projectRun.RunObject.RunId, StringComparison.OrdinalIgnoreCase);
+                    //step.CalloutUrl = step.CalloutUrl.Replace("<runId>", projectRun.RunObject.RunId, StringComparison.OrdinalIgnoreCase);
+                    //step.CalloutUrl = step.CalloutUrl.Replace("<stepId>", step.StepId.ToString(), StringComparison.OrdinalIgnoreCase);
 
                     List<KeyValuePair<int, int>> substeps = new List<KeyValuePair<int, int>>();
 
@@ -95,7 +95,8 @@ namespace Microflow.Helpers
                             CallBackAction = step.CallbackAction,
                             StopOnActionFailed = step.StopOnActionFailed,
                             Url = step.CalloutUrl,
-                            ActionTimeoutSeconds = step.ActionTimeoutSeconds
+                            ActionTimeoutSeconds = step.ActionTimeoutSeconds,
+                            IsHttpGet = step.IsHttpGet
                         };
 
                         stentRetries.Retry_DelaySeconds = step.RetryOptions.DelaySeconds;
@@ -113,7 +114,8 @@ namespace Microflow.Helpers
                             CallBackAction = step.CallbackAction,
                             StopOnActionFailed = step.StopOnActionFailed,
                             Url = step.CalloutUrl,
-                            ActionTimeoutSeconds = step.ActionTimeoutSeconds
+                            ActionTimeoutSeconds = step.ActionTimeoutSeconds,
+                            IsHttpGet = step.IsHttpGet
                         };
 
                         tasks.Add(MicroflowTableHelper.InsertStep(stent, stepsTable));
@@ -157,45 +159,78 @@ namespace Microflow.Helpers
                 sb.Replace("{" + field.Key + "}", field.Value);
             }
 
-            sb.Replace("{workflowId}", "");
-            sb.Replace("{stepId}", "");
-
             project = JsonSerializer.Deserialize<Project>(sb.ToString());
         }
 
         public static DurableHttpRequest CreateMicroflowDurableHttpRequest(HttpCall httpCall, string instanceId)
         {
-            //httpCall.PartitionKey = instanceId;
-            MicroflowPostData postData = new MicroflowPostData()
+            string callback = string.IsNullOrWhiteSpace(httpCall.CallBackAction)
+                    ? ""
+                    : $"{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}/api/{httpCall.CallBackAction}/{instanceId}/{httpCall.RowKey}";
+
+            if (!httpCall.IsHttpGet)
             {
-                ProjectName = httpCall.PartitionKey,
-                SubOrchestrationId = instanceId,
-                RunId = httpCall.RunId,
-                StepId = httpCall.RowKey,
-                MainOrchestrationId = httpCall.MainOrchestrationId,
-                CallbackUrl = string.IsNullOrWhiteSpace(httpCall.CallBackAction) 
-                ? "" 
-                : $"{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}/api/{httpCall.CallBackAction}/{instanceId}/{httpCall.RowKey}"
-            };
+                MicroflowPostData postData = new MicroflowPostData()
+                {
+                    ProjectName = httpCall.PartitionKey,
+                    SubOrchestrationId = instanceId,
+                    RunId = httpCall.RunId,
+                    StepId = httpCall.RowKey,
+                    MainOrchestrationId = httpCall.MainOrchestrationId,
+                    CallbackUrl = callback
+                };
 
-            string body = JsonSerializer.Serialize(postData);
+                string body = JsonSerializer.Serialize(postData);
 
-            DurableHttpRequest newDurableHttpRequest = new DurableHttpRequest(
-                method: HttpMethod.Post,
-                uri: new Uri(httpCall.Url),
-                timeout: TimeSpan.FromSeconds(httpCall.ActionTimeoutSeconds),
-            //headers: durableHttpRequest.Headers,
-            content: body // This is the line causing the issue
-                          //tokenSource: durableHttpRequest.TokenSource
+                DurableHttpRequest newDurableHttpRequest = new DurableHttpRequest(
+                    method: HttpMethod.Post,
+                    uri: new Uri(ParseUrlMicroflowData(httpCall, instanceId, postData.CallbackUrl)),
+                    timeout: TimeSpan.FromSeconds(httpCall.ActionTimeoutSeconds),
+                    //headers: durableHttpRequest.Headers,
+                    content: body 
+                    //tokenSource: durableHttpRequest.TokenSource
 
-            );
+                );
 
-            // Do not copy over the x-functions-key header, as in many cases, the
-            // functions key used for the initial request will be a Function-level key
-            // and the status endpoint requires a master key.
-            newDurableHttpRequest.Headers.Remove("x-functions-key");
+                // Do not copy over the x-functions-key header, as in many cases, the
+                // functions key used for the initial request will be a Function-level key
+                // and the status endpoint requires a master key.
+                //newDurableHttpRequest.Headers.Remove("x-functions-key");
 
-            return newDurableHttpRequest;
+                return newDurableHttpRequest;
+            }
+            else
+            {
+                DurableHttpRequest newDurableHttpRequest = new DurableHttpRequest(
+                    method: HttpMethod.Get,
+                    uri: new Uri(ParseUrlMicroflowData(httpCall, instanceId, callback)),
+                    timeout: TimeSpan.FromSeconds(httpCall.ActionTimeoutSeconds)
+                //headers: durableHttpRequest.Headers,
+                              //tokenSource: durableHttpRequest.TokenSource
+
+                );
+
+                // Do not copy over the x-functions-key header, as in many cases, the
+                // functions key used for the initial request will be a Function-level key
+                // and the status endpoint requires a master key.
+                //newDurableHttpRequest.Headers.Remove("x-functions-key");
+
+                return newDurableHttpRequest;
+            }
+        }
+
+        private static string ParseUrlMicroflowData(HttpCall httpCall, string instanceId, string callbackUrl)
+        {
+            StringBuilder sb = new StringBuilder(httpCall.Url);
+
+            sb.Replace("<ProjectName>", httpCall.PartitionKey);
+            sb.Replace("<MainOrchestrationId>", httpCall.MainOrchestrationId);
+            sb.Replace("<SubOrchestrationId>", instanceId);
+            sb.Replace("<CallbackUrl>", callbackUrl);
+            sb.Replace("<RunId>", httpCall.RunId);
+            sb.Replace("<StepId>", httpCall.RowKey);
+
+            return sb.ToString();
         }
 
         public class StepComparer : IEqualityComparer<Step>

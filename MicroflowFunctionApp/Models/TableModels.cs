@@ -79,6 +79,7 @@ namespace Microflow
         public string CallBackAction { get; set; }
         public bool StopOnActionFailed { get; set; }
         public int ActionTimeoutSeconds { get; set; }
+        public bool IsHttpGet { get; set; }
 
         [IgnoreProperty]
         public string RunId { get; set; }

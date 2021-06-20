@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Specialized;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
@@ -63,15 +64,34 @@ namespace Microflow.API.Internal
         [FunctionName("SleepTestOrchestrator_HttpStart")]
         public static async Task<HttpResponseMessage> SleepTestOrchestrator_HttpStart(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequestMessage req,
-            [DurableClient] IDurableOrchestrationClient client,
-            ILogger log)
+            [DurableClient] IDurableOrchestrationClient client)
         {
-            string data = await req.Content.ReadAsStringAsync();
-            //MicroflowPostData body = JsonSerializer.Deserialize<MicroflowPostData>(data);
-            // Function input comes from the request content.
-            string instanceId = await client.StartNewAsync("SleepTestOrchestrator", null, data);
-            
-            return client.CreateCheckStatusResponse(req, instanceId);
+            if (req.Method == HttpMethod.Post)
+            {
+                string data = await req.Content.ReadAsStringAsync();
+
+                string instanceId = await client.StartNewAsync("SleepTestOrchestrator", null, data);
+
+                return client.CreateCheckStatusResponse(req, instanceId);
+            }
+            else
+            {
+                NameValueCollection data = req.RequestUri.ParseQueryString();
+                MicroflowPostData postData = new MicroflowPostData()
+                {
+                    CallbackUrl = data["CallbackUrl"],
+                    MainOrchestrationId = data["MainOrchestrationId"],
+                    ProjectName = data["ProjectName"],
+                    RunId = data["RunId"],
+                    StepId = data["StepId"],
+                    SubOrchestrationId = data["SubOrchestrationId"]
+                };
+                //MicroflowPostData body = JsonSerializer.Deserialize<MicroflowPostData>(data);
+                // Function input comes from the request content.
+                string instanceId = await client.StartNewAsync("SleepTestOrchestrator", null, JsonSerializer.Serialize(postData));
+
+                return client.CreateCheckStatusResponse(req, instanceId);
+            }
         }
     }
 }
