@@ -7,7 +7,7 @@ Microflow is a dynamic servlerless micro-service workflow orchestration engine b
 Microflow functionality:
 - dynamic json workflows separate and changable outside of Microflow, workflows are dynamic and changable without Microflow knowing about it
 - the micro-service implementations are cleanly separated from Microflow
-- Microflow workflow projects can run as single instances (like a risk model that should always run as 1 instance), or to run as multiple parallel overlapping instances (like ecommerce orders)
+- Microflow workflow projects can run as single instances (like a risk model that should always run as 1 instance), or can run as multiple parallel overlapping instances (like ecommerce orders)
 - for custom logic like response interpretations, this can be included in Microflow, but best practice is to separate these response proxies as functions outside of Microflow, and then these will call back to Microflow
 - parent-child-sibling dependencies, parallel optimized execution, parent steps execute in parallel
 - auto scale out to 200 small virtual macines in the Consuption Plan, and to 100, 4 core cpu, 14GB memory virtual machines in the Premium Plan
