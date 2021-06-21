@@ -118,3 +118,4 @@ This contains 3 classes responsible for workflow execution.
   
 ### Setup Guide
 Clone the repo locally. It is advised to separate the MicroflowConsoleApp from the MicroflowFunctionApp, this is to be able to run MicroflowFunctionApp separately, and then run the MicroflowConsoleApp to post workflows to it:
+https://github.com/andre-maree/Microflow/blob/75f23814bb6e44c0aced4e3b467e8053ebab0f36/MicroflowFunctionApp%20Solution.PNG
