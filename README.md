@@ -36,7 +36,7 @@ Future enhancements:
 ## Test Examples
 The code for these can be found in the console app\Tests.cs. There is also a SimpleSteps test that consists of 1 parent with 2 children and the 2 children have a common child step. This is not included in this diagram:
 
-![2 Test cases](https://github.com/andre-maree/Microflow/blob/master/Tests.png)
+![2 Test cases](https://github.com/andre-maree/Microflow/blob/master/Images/Tests.png)
 
 ## JSON Single Step With All Config:
 ```
@@ -136,13 +136,13 @@ Microflow Solution:<br>
 ![2 Test cases](https://github.com/andre-maree/Microflow/blob/080cf39f512dbd3a5fa1c99c12b22732465f28d6/MicroflowFunctionApp%20Solution.PNG)
 
 MicroflowConsoleApp Solution:<br>
-![2 Test cases](https://github.com/andre-maree/Microflow/blob/master/MicroflowConsoleApp%20Solution.PNG)
+![2 Test cases](https://github.com/andre-maree/Microflow/blob/master/Images/MicroflowConsoleApp%20Solution.PNG)
 
 Microflow Solution Nugets:<br>
-![2 Test cases](https://github.com/andre-maree/Microflow/blob/master/MicroflowFunctionApp%20Nuget.PNG)
+![2 Test cases](https://github.com/andre-maree/Microflow/blob/master/Images/MicroflowFunctionApp%20Nuget.PNG)
 
 MicroflowConsoleApp Solution Nugets:<br>
-![2 Test cases](https://github.com/andre-maree/Microflow/blob/master/MicroflowConsoleApp%20Nuget.PNG)
+![2 Test cases](https://github.com/andre-maree/Microflow/blob/master/Images/MicroflowConsoleApp%20Nuget.PNG)
 
 1. Run the MicroflowApp (Function App)
 2. Run the MicroflowConsole
