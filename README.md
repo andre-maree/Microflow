@@ -130,7 +130,7 @@ This contains 3 classes responsible for workflow execution.
   * MicroflowStart.cs : This is where the workflow JSON payload is received via http post and then prepares the workflow and calls start.
   
 ## Setup Guide
-Clone the repo locally. It is advised to separate the MicroflowConsoleApp from the MicroflowFunctionApp, this is to be able to run MicroflowFunctionApp separately, and then run the MicroflowConsoleApp to post workflows to it:
+Clone the repo locally. It is advised to separate the MicroflowConsoleApp from the MicroflowFunctionApp in Visual Studio, this is to be able to run MicroflowFunctionApp separately, and then run the MicroflowConsoleApp to post workflows to it:
 
 Microflow Solution:<br>
 ![2 Test cases](https://github.com/andre-maree/Microflow/blob/080cf39f512dbd3a5fa1c99c12b22732465f28d6/MicroflowFunctionApp%20Solution.PNG)
