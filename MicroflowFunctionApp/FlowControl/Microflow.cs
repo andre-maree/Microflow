@@ -33,6 +33,8 @@ namespace Microflow
 
             HttpCallWithRetries httpCallWithRetries = await httpCallWithRetriesTask;
 
+            var logRowKey = httpCallWithRetries.RowKey.GetTableRowKeyDescendingByDate(context.CurrentUtcDateTime);
+
             var allTasks = new List<Task>();
 
             // only do this for auto created container step
@@ -77,6 +79,12 @@ namespace Microflow
                         httpCallWithRetries.RunId = runObj.RunId;
                         httpCallWithRetries.MainOrchestrationId = project.OrchestratorInstanceId;
 
+                        // log start of step
+                        allTasks.Add(context.CallActivityAsync(
+                            "LogStep",
+                            new LogStepEntity(true, project.ProjectName, logRowKey, project.OrchestratorInstanceId)
+                        ));
+
                         // wait for external event flow / callback
                         if (!string.IsNullOrWhiteSpace(httpCallWithRetries.CallBackAction))
                         {
@@ -117,14 +125,14 @@ namespace Microflow
                     }
                 }
 
+                // log end of step
+                allTasks.Add(context.CallActivityAsync(
+                    "LogStep",
+                    new LogStepEntity(false, project.ProjectName, logRowKey, project.OrchestratorInstanceId)
+                ));
+
                 if (subOrchestratorSuccess)
                 {
-                    // log to table workflow completed
-                    allTasks.Add(context.CallActivityAsync(
-                        "LogStep",
-                        new LogStepEntity(httpCallWithRetries.RowKey, runObj.RunId, $"Step in project {project.ProjectName} completed successfully")
-                        ));
-
                     log.LogWarning($"Step {httpCallWithRetries.RowKey} done at {DateTime.Now.ToString("HH:mm:ss")}  -  Run ID: {project.RunObject.RunId}");
 
                     List<KeyValuePair<int, int>> subSteps = JsonSerializer.Deserialize<List<KeyValuePair<int, int>>>(httpCallWithRetries.SubSteps);

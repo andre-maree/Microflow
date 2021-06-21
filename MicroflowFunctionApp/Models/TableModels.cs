@@ -1,6 +1,7 @@
 ﻿using Microsoft.Azure.Cosmos.Table;
 using System;
 using System.Collections.Generic;
+using Microflow.Helpers;
 
 /// <summary>
 /// This is where all table entity objects reside
@@ -16,17 +17,18 @@ namespace Microflow
     {
         public LogStepEntity() { }
 
-        public LogStepEntity(string stepId, string runId, string logMessage)
+        public LogStepEntity(bool isStart, string projectName, string stepId, string runId)
         {
-            PartitionKey = runId;
+            PartitionKey = projectName + "__" + runId;
             RowKey = stepId;
-            LogMessage = logMessage;
-            LogDate = DateTime.UtcNow;
+            if (isStart)
+                StartDate = DateTime.UtcNow;
+            else
+                EndDate = DateTime.UtcNow;
         }
+        public DateTime? StartDate { get; set; }
 
-        public string LogMessage { get; set; }
-
-        public DateTime LogDate { get; set; }
+        public DateTime? EndDate { get; set; }
     }
 
     /// <summary>
@@ -36,17 +38,23 @@ namespace Microflow
     {
         public LogOrchestrationEntity() { }
 
-        public LogOrchestrationEntity(string projectId, string runId, string logMessage)
+        public LogOrchestrationEntity(bool isStart, string projectName, string rowKey, string logMessage, DateTime date)
         {
-            PartitionKey = projectId;
-            RowKey = runId;
+            PartitionKey = projectName;
             LogMessage = logMessage;
-            LogDate = DateTime.UtcNow;
+            RowKey = rowKey;
+
+            if (isStart)
+                StartDate = date;
+            else
+                EndDate = date;
         }
 
         public string LogMessage { get; set; }
 
-        public DateTime LogDate { get; set; }
+        public DateTime? StartDate { get; set; }
+
+        public DateTime? EndDate { get; set; }
     }
 
     /// <summary>
@@ -87,7 +95,7 @@ namespace Microflow
         [IgnoreProperty]
         public string MainOrchestrationId { get; set; }
     }
-    
+
     /// <summary>
     /// Http call with retries
     /// </summary>

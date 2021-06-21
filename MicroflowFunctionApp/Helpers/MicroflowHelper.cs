@@ -12,16 +12,6 @@ namespace Microflow.Helpers
 {
     public static class MicroflowHelper
     {
-        //public static RetryOptions GetTableLoggingRetryOptions()
-        //{
-        //    return new RetryOptions(TimeSpan.FromSeconds(15), 10)
-        //    {
-        //        MaxRetryInterval = TimeSpan.FromSeconds(1000),
-        //        BackoffCoefficient = 1.5,
-        //        RetryTimeout = TimeSpan.FromSeconds(30)
-        //    };
-        //}
-
         public static RetryOptions GetRetryOptions(HttpCallWithRetries httpCallWithRetries)
         {
             RetryOptions ops = new RetryOptions(TimeSpan.FromSeconds(httpCallWithRetries.Retry_DelaySeconds), httpCallWithRetries.Retry_MaxRetries);

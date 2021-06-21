@@ -32,13 +32,13 @@ namespace Microflow.API.Internal
             string data = context.GetInput<string>();
             MicroflowPostData postData = JsonSerializer.Deserialize<MicroflowPostData>(data);
 
-            //Random random = new Random();
-            //var ts = TimeSpan.FromSeconds(random.Next(5, 10));
-            //DateTime deadline = context.CurrentUtcDateTime.Add(ts);
+            Random random = new Random();
+            var ts = TimeSpan.FromSeconds(random.Next(3, 10));
+            DateTime deadline = context.CurrentUtcDateTime.Add(ts);
 
-            ////log.LogCritical("Sleeping for " + ts.Seconds + " seconds");
+            //log.LogCritical("Sleeping for " + ts.Seconds + " seconds");
 
-            //await context.CreateTimer(deadline, CancellationToken.None);
+            await context.CreateTimer(deadline, CancellationToken.None);
 
             //do the call back if there is 1
             if (!string.IsNullOrWhiteSpace(postData.CallbackUrl))

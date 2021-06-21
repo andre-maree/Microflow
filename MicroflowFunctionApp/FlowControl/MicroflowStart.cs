@@ -9,6 +9,7 @@ using System.Text.Json;
 using Microflow.Helpers;
 using MicroflowModels;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 
 namespace Microflow
@@ -35,7 +36,7 @@ namespace Microflow
             // parse the mergefields
             MicroflowHelper.ParseMergeFields(strWorkflow, ref project);
 
-            // await client.PurgeInstanceHistoryAsync("7c828621-3e7a-44aa-96fd-c6946763cc2b");
+            //await client.PurgeInstanceHistoryAsync("7c828621-3e7a-44aa-96fd-c6946763cc2b");
 
             // step 1 contains all the steps
             List<Step> steps = project.Steps;
@@ -60,6 +61,7 @@ namespace Microflow
 
             // prepare the workflow by persisting parent info to table storage
             await MicroflowHelper.PrepareWorkflow(instanceId, projectRun, steps, project.MergeFields);
+
             projectRun.RunObject.StepId = -1;
             projectRun.OrchestratorInstanceId = instanceId;
 
@@ -81,6 +83,13 @@ namespace Microflow
             // read ProjectRun payload
             var projectRun = context.GetInput<ProjectRun>();
 
+
+            // log start
+            var logRowKey = context.InstanceId.GetTableRowKeyDescendingByDate(context.CurrentUtcDateTime);
+            var logEntity = new LogOrchestrationEntity(true, projectRun.ProjectName, logRowKey,
+                $"{Environment.MachineName} - {projectRun.ProjectName} started...", context.CurrentUtcDateTime);
+            await context.CallActivityAsync("LogOrchestration", logEntity);
+
             log.LogInformation($"Started orchestration with ID = '{context.InstanceId}', Project = '{projectRun.ProjectName}'");
 
             // do the looping
@@ -101,7 +110,9 @@ namespace Microflow
             }
 
             // log to table workflow completed
-            await context.CallActivityAsync("LogOrchestration", new LogOrchestrationEntity(projectRun.ProjectName, projectRun.RunObject.RunId, $"{Environment.MachineName} - {projectRun.ProjectName} completed successfully"));
+            logEntity = new LogOrchestrationEntity(false, projectRun.ProjectName, logRowKey,
+                $"{Environment.MachineName} - {projectRun.ProjectName} completed successfully", context.CurrentUtcDateTime);
+            await context.CallActivityAsync("LogOrchestration", logEntity);
 
             // done
             log.LogError($"Project run {projectRun.ProjectName} completed successfully...");

@@ -7,10 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MicroflowApp", "MicroflowFu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MicroflowModels", "MicroflowModels\MicroflowModels.csproj", "{3182A6A0-38B4-4A4D-951A-E88B6602502E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MicroflowSDK", "MicroflowSDK\MicroflowSDK.csproj", "{B1249417-4F82-4046-AB92-659976D04F17}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MicroflowConsole", "MicroflowConsoleApp\MicroflowConsole\MicroflowConsole.csproj", "{472BA188-DDD9-402B-9437-87F244ACD10C}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,14 +21,6 @@ Global
 		{3182A6A0-38B4-4A4D-951A-E88B6602502E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3182A6A0-38B4-4A4D-951A-E88B6602502E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3182A6A0-38B4-4A4D-951A-E88B6602502E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B1249417-4F82-4046-AB92-659976D04F17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B1249417-4F82-4046-AB92-659976D04F17}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B1249417-4F82-4046-AB92-659976D04F17}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B1249417-4F82-4046-AB92-659976D04F17}.Release|Any CPU.Build.0 = Release|Any CPU
-		{472BA188-DDD9-402B-9437-87F244ACD10C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{472BA188-DDD9-402B-9437-87F244ACD10C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{472BA188-DDD9-402B-9437-87F244ACD10C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{472BA188-DDD9-402B-9437-87F244ACD10C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -6,18 +6,23 @@ namespace Microflow.Helpers
 {
     public static class MicroflowTableHelper
     {
-        public async static Task LogStep(LogStepEntity logEntity)
+        public static string GetTableRowKeyDescendingByDate(this string instring, DateTime date)
+        {
+            return $"{instring}_{String.Format("{0:D19}", DateTime.MaxValue.Ticks - date.Ticks)}";
+        }
+
+        public static async Task LogStep(LogStepEntity logEntity)
         {
             CloudTable table = GetLogStepsTable();
-            TableOperation mergeOperation = TableOperation.InsertOrReplace(logEntity);
+            TableOperation mergeOperation = TableOperation.InsertOrMerge(logEntity);
 
             await table.ExecuteAsync(mergeOperation);
         }
 
-        public async static Task LogOrchestration(LogOrchestrationEntity logEntity)
+        public static async Task LogOrchestration(LogOrchestrationEntity logEntity)
         {
             CloudTable table = GetLogOrchestrationTable();
-            TableOperation mergeOperation = TableOperation.InsertOrReplace(logEntity);
+            TableOperation mergeOperation = TableOperation.InsertOrMerge(logEntity);
 
             await table.ExecuteAsync(mergeOperation);
         }
