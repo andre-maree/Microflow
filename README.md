@@ -133,7 +133,7 @@ MicroflowConsoleApp Solution Nugets:<br>
 
 1. Run the MicroflowApp (Function App)
 2. Run the MicroflowConsole
-   - Choose which if the test workflows to to post (in the file Tests.cs: CreateTestWorkflow_SimpleSteps(), CreateTestWorkflow_Complex1(), or CreateTestWorkflow_10StepsParallel())
+   - Choose which if the test workflows to post (in the file Tests.cs: CreateTestWorkflow_SimpleSteps(), CreateTestWorkflow_Complex1(), or CreateTestWorkflow_10StepsParallel())
    - look at Program.cs: by default 1 instance with id 39806875-9c81-4736-81c0-9be562dae71e will run, but there is also a commented out loop for multiple concurrent instances
 3. The run will 1st log to console in red: "Started Run ID 2d779289-01a5-50c5-b4f4-e6fa22a9fc96..."
 4. Then each step will log success in orange" "Step 1 done at 10:38:57  -  Run ID: 2d779289-01a5-50c5-b4f4-e6fa22a9fc96"
