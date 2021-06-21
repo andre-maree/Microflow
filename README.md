@@ -10,7 +10,7 @@ Microflow functionality:
 - Microflow workflow projects can run as single instances (like a risk model that should always run as 1 instance), or to run as multiple parallel overlapping instances (like ecommerce orders)
 - for custom logic like response interpretations, this can be included in Microflow, but best practice is to separate these response proxies as functions outside of Microflow, and then these will call back to Microflow
 - parent-child-sibling dependencies, parallel optimized execution, parent steps execute in parallel
-- auto scale out to 200 small virtual macines in the Consuption Plan, and to 100, 4 core, 14GB memory virtual machines in the Premium Plan
+- auto scale out to 200 small virtual macines in the Consuption Plan, and to 100, 4 core cpu, 14GB memory virtual machines in the Premium Plan
 - easily manage step configs with merge fields
 - do batch processing by looping the workflow execution with Microflow`s "Loop" setting, set up variation sets, 1 variation set per loop/batch
 - set outgoing http calls to be inline (wait for response at the point of out call), or wait asyncrounously by setting CallbackAction (wait for external action/callbck)
@@ -38,7 +38,27 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
 
 ![2 Test cases](https://github.com/andre-maree/Microflow/blob/master/Tests.png)
 
-## JSON Workflow Example
+## JSON Single Step With All Config:
+```
+{
+   "StepId":1,
+   "CalloutUrl":"http://localhost:7071/api/SleepTestOrchestrator_HttpStart",
+   "CallbackAction":"approve",
+   "StopOnActionFailed":true,
+   "IsHttpGet":true,
+   "ActionTimeoutSeconds":30,
+   "SubSteps":[2,3],
+   "RetryOptions":{
+      "DelaySeconds":5,
+      "MaxDelaySeconds":60,
+      "MaxRetries":5,
+      "BackoffCoefficient":1,
+      "TimeOutSeconds":30
+   }
+}
+```
+
+## JSON Workflow Example:
 This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 2 and StepId 3), and each sub step has 1 common sub step (StepId 4). This is the same structure as the included test Tests.CreateTestWorkflow_SimpleSteps(). StepId 1 has a callback action set, and StepId 3 has a retry set. There is 1 merge field set and is used as a default callout url.
 ```
 {
@@ -55,10 +75,7 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
       "CallbackAction": "approve",
       "StopOnActionFailed": true,
       "ActionTimeoutSeconds": 30,
-      "SubSteps": [
-        2,
-        3
-      ],
+      "SubSteps": [2,3],
       "RetryOptions": null
     },
     {
@@ -67,9 +84,7 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
       "CallbackAction": null,
       "StopOnActionFailed": true,
       "ActionTimeoutSeconds": 1000,
-      "SubSteps": [
-        4
-      ],
+      "SubSteps": [4],
       "RetryOptions": null
     },
     {
@@ -78,9 +93,7 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
       "CallbackAction": null,
       "StopOnActionFailed": true,
       "ActionTimeoutSeconds": 1000,
-      "SubSteps": [
-        4
-      ],
+      "SubSteps": [4],
       "RetryOptions": {
         "DelaySeconds": 5,
         "MaxDelaySeconds": 10,
@@ -115,3 +128,29 @@ This contains 3 classes responsible for workflow execution.
   * CanStepExecuteNow.cs : Locks and checks the parent completed count to determine if a child step can execute, all parents must be completed for a child step to       start execution. Parent steps execute in parallel.
   * Microflow.cs : This contains the recursive function ExecuteStep. It calls the action url and then calls CanExecuteNow for child steps of the current step.
   * MicroflowStart.cs : This is where the workflow JSON payload is received via http post and then prepares the workflow and calls start.
+  
+## Setup Guide
+Clone the repo locally. It is advised to separate the MicroflowConsoleApp from the MicroflowFunctionApp, this is to be able to run MicroflowFunctionApp separately, and then run the MicroflowConsoleApp to post workflows to it:
+
+Microflow Solution:<br>
+![2 Test cases](https://github.com/andre-maree/Microflow/blob/080cf39f512dbd3a5fa1c99c12b22732465f28d6/MicroflowFunctionApp%20Solution.PNG)
+
+MicroflowConsoleApp Solution:<br>
+![2 Test cases](https://github.com/andre-maree/Microflow/blob/master/MicroflowConsoleApp%20Solution.PNG)
+
+Microflow Solution Nugets:<br>
+![2 Test cases](https://github.com/andre-maree/Microflow/blob/master/MicroflowFunctionApp%20Nuget.PNG)
+
+MicroflowConsoleApp Solution Nugets:<br>
+![2 Test cases](https://github.com/andre-maree/Microflow/blob/master/MicroflowConsoleApp%20Nuget.PNG)
+
+1. Run the MicroflowApp (Function App)
+2. Run the MicroflowConsole
+   - Choose which of the test workflows to post (in the file Tests.cs: CreateTestWorkflow_SimpleSteps(), CreateTestWorkflow_Complex1(), or CreateTestWorkflow_10StepsParallel())
+   - look at Program.cs: by default 1 instance with id 39806875-9c81-4736-81c0-9be562dae71e will run, but there is also a commented out loop for multiple concurrent instances
+3. The run will 1st log to console in red: "Started Run ID 2d779289-01a5-50c5-b4f4-e6fa22a9fc96..."
+4. Then each step will log success in orange" "Step 1 done at 10:38:57  -  Run ID: 2d779289-01a5-50c5-b4f4-e6fa22a9fc96"
+5. Then the run end will log in red: "Run ID 2d779289-01a5-50c5-b4f4-e6fa22a9fc96 completed successfully..."
+6. Then the final last log in red: "Project run MicroflowDemo completed successfully..." and "<!!! A GREAT SUCCESS !!!>"
+7. The step completions are also logged to storage table "LogSteps"
+8. Main orchetration completions are logged to storage table "LogOrchestration"
