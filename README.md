@@ -115,3 +115,6 @@ This contains 3 classes responsible for workflow execution.
   * CanStepExecuteNow.cs : Locks and checks the parent completed count to determine if a child step can execute, all parents must be completed for a child step to       start execution. Parent steps execute in parallel.
   * Microflow.cs : This contains the recursive function ExecuteStep. It calls the action url and then calls CanExecuteNow for child steps of the current step.
   * MicroflowStart.cs : This is where the workflow JSON payload is received via http post and then prepares the workflow and calls start.
+  
+### Setup Guide
+Clone the repo locally. It is advised to separate the MicroflowConsoleApp from the MicroflowFunctionApp, this is to be able to run MicroflowFunctionApp separately, and then run the MicroflowConsoleApp to post workflows to it:
