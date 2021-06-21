@@ -139,3 +139,5 @@ MicroflowConsoleApp Solution Nugets:<br>
 4. Then each step will log success in orange" "Step 1 done at 10:38:57  -  Run ID: 2d779289-01a5-50c5-b4f4-e6fa22a9fc96"
 5. Then the run end will log in red: "Run ID 2d779289-01a5-50c5-b4f4-e6fa22a9fc96 completed successfully..."
 6. Then the final last log in red: "Project run MicroflowDemo completed successfully..." and "<!!! A GREAT SUCCESS !!!>"
+7. The step completions are also logged to storage table "LogSteps"
+8. Main orchetration completions are logged to storage table "LogOrchestration"
