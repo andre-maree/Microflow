@@ -154,3 +154,18 @@ MicroflowConsoleApp Solution Nugets:<br>
 6. Then the final last log in red: "Project run MicroflowDemo completed successfully..." and "<!!! A GREAT SUCCESS !!!>"
 7. The step completions are also logged to storage table "LogSteps"
 8. Main orchestration completions are logged to storage table "LogOrchestration"
+
+## Logging
+
+### Console Logging:
+
+   * Red at start: "Started Run ID db7d8fd4-e7e3-5e57-9017-e7ec3ad6bb01..."
+   * Orange for each completed step: "Step 1 done at 10:55:02  -  Run ID: db7d8fd4-e7e3-5e57-9017-e7ec3ad6bb01"
+   * Red at run end: "Run ID db7d8fd4-e7e3-5e57-9017-e7ec3ad6bb01 completed successfully..."
+   * Red at project end: "Project run MicroflowDemo completed successfully..."
+   * Red at project end: "<-----> !!! A GREAT SUCCESS !!! <----->"
+
+### Table Storage Logging
+
+Logs top level orchestration processing info to storage table "LogOrchestration", logs step processing info to storage table "LogSteps". For both there is a start and end date in the log entry. When an orchestration or step starts, an entry with the start date is saved, and when this item completes, the same entry with the start date will get an end date.
+
