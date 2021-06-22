@@ -33,13 +33,26 @@ namespace Microflow.API.Internal
             MicroflowPostData postData = JsonSerializer.Deserialize<MicroflowPostData>(data);
 
             Random random = new Random();
-            var ts = TimeSpan.FromSeconds(random.Next(3, 10));
+            var ts = TimeSpan.FromSeconds(random.Next(10, 19));
             DateTime deadline = context.CurrentUtcDateTime.Add(ts);
 
             //log.LogCritical("Sleeping for " + ts.Seconds + " seconds");
-
-            await context.CreateTimer(deadline, CancellationToken.None);
-
+            using (var cts = new CancellationTokenSource())
+            {
+                try
+                {
+                    //cts.CancelAfter(60000);
+                    await context.CreateTimer(deadline, cts.Token);
+                }
+                catch (TaskCanceledException)
+                {
+                    log.LogCritical("========================TaskCanceledException==========================");
+                }
+                finally
+                {
+                    cts.Dispose();
+                }
+            }
             //do the call back if there is 1
             if (!string.IsNullOrWhiteSpace(postData.CallbackUrl))
                 {
