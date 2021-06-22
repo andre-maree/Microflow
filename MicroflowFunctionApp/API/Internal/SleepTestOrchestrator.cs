@@ -58,16 +58,7 @@ namespace Microflow.API.Internal
                 {
                     DurableHttpRequest req = new DurableHttpRequest(HttpMethod.Get, new Uri("http://" + postData.CallbackUrl));
 
-                    DurableHttpResponse resp = null;
-                    try
-                    {
-                        log.LogCritical($"Callback Now!!!!");
-                        resp = await context.CallHttpAsync(req);
-                    }
-                    catch (Exception ex)
-                    {
-                        var r = 0;
-                    }
+                    DurableHttpResponse resp = await context.CallHttpAsync(req); 
                 }
         }
 

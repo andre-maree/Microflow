@@ -34,19 +34,20 @@ namespace Microflow
             HttpCallWithRetries httpCallWithRetries = await httpCallWithRetriesTask;
 
             var logRowKey = httpCallWithRetries.RowKey.GetTableRowKeyDescendingByDate(context.CurrentUtcDateTime);
-
-            var allTasks = new List<Task>();
-
+            
             // only do this for auto created container step
             if (project.RunObject.StepId == -1)
             {
                 List<KeyValuePair<int, int>> subSteps = JsonSerializer.Deserialize<List<KeyValuePair<int, int>>>(httpCallWithRetries.SubSteps);
+                var subTasks = new List<Task>();
 
                 foreach (var step in subSteps)
                 {
                     project.RunObject = new RunObject() { RunId = runObj.RunId, StepId = step.Key };
-                    allTasks.Add(context.CallSubOrchestratorAsync("ExecuteStep", project));
+                    subTasks.Add(context.CallSubOrchestratorAsync("ExecuteStep", project));
                 }
+
+                await Task.WhenAll(subTasks);
             }
             // all substeps of the container step will follow the normal processing
             else
@@ -68,6 +69,8 @@ namespace Microflow
                 //}
 
                 bool subOrchestratorSuccess = true;
+                var subTasks = new List<Task>();
+                var logTasks = new List<Task>();
 
                 // if the call out url is empty then no http call is done, use this for an empty conatainer step
                 if (!string.IsNullOrWhiteSpace(httpCallWithRetries.Url))
@@ -80,7 +83,7 @@ namespace Microflow
                         httpCallWithRetries.MainOrchestrationId = project.OrchestratorInstanceId;
 
                         // log start of step
-                        allTasks.Add(context.CallActivityAsync(
+                        logTasks.Add(context.CallActivityAsync(
                             "LogStep",
                             new LogStepEntity(true, project.ProjectName, logRowKey, project.OrchestratorInstanceId)
                         ));
@@ -126,7 +129,7 @@ namespace Microflow
                 }
 
                 // log end of step
-                allTasks.Add(context.CallActivityAsync(
+                logTasks.Add(context.CallActivityAsync(
                     "LogStep",
                     new LogStepEntity(false, project.ProjectName, logRowKey, project.OrchestratorInstanceId)
                 ));
@@ -147,7 +150,7 @@ namespace Microflow
                         {
                             // step.Key is stepId
                             project.RunObject = new RunObject() { RunId = runObj.RunId, StepId = step.Key };
-                            allTasks.Add(context.CallSubOrchestratorAsync("ExecuteStep", project));
+                            subTasks.Add(context.CallSubOrchestratorAsync("ExecuteStep", project));
                         }
                         // if parentCount is more than 1, work out if it can execute now
                         else
@@ -182,17 +185,18 @@ namespace Microflow
                                 StepId = result.StepId 
                             };
 
-                            allTasks.Add(context.CallSubOrchestratorAsync("ExecuteStep", project));
+                            subTasks.Add(context.CallSubOrchestratorAsync("ExecuteStep", project));
                         }
                     }
+
+                    await Task.WhenAll(logTasks);
+                    await Task.WhenAll(subTasks);
                 }
                 else
                 {
                     log.LogError($"Step {httpCallWithRetries.RowKey} failed at {DateTime.Now.ToString("HH:mm:ss")}  -  Run ID: {project.RunObject.RunId}");
                 }
             }
-
-            await Task.WhenAll(allTasks);
         }
     }
 }

@@ -9,8 +9,10 @@ using System.Text.Json;
 using Microflow.Helpers;
 using MicroflowModels;
 using System.Collections.Generic;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
+using Microsoft.Azure.Cosmos.Table;
 
 namespace Microflow
 {
@@ -27,48 +29,64 @@ namespace Microflow
             [DurableClient] IDurableOrchestrationClient client,
             string instanceId)
         {
-            // read http content
-            var strWorkflow = await req.Content.ReadAsStringAsync();
-
-            // deserialize the workflow json
-            var project = JsonSerializer.Deserialize<Project>(strWorkflow);
-
-            // parse the mergefields
-            MicroflowHelper.ParseMergeFields(strWorkflow, ref project);
-
-            //await client.PurgeInstanceHistoryAsync("7c828621-3e7a-44aa-96fd-c6946763cc2b");
-
-            // step 1 contains all the steps
-            List<Step> steps = project.Steps;
-
-            // create a project run
-            ProjectRun projectRun = new ProjectRun() { ProjectName = project.ProjectName, Loop = project.Loop };
-
-            // create the storage tables for the project
-            await MicroflowTableHelper.CreateTables(project.ProjectName);
-
-            // set the state of the project to running
-            await MicroflowTableHelper.UpdateStatetEntity(project.ProjectName, 1);
-
-            // create a new run object
-            RunObject runObj = new RunObject() { StepId = steps[0].StepId };
-            projectRun.RunObject = runObj;
-
-            if (string.IsNullOrWhiteSpace(instanceId))
+            try
             {
-                instanceId = Guid.NewGuid().ToString();
+                // read http content
+                var strWorkflow = await req.Content.ReadAsStringAsync();
+
+                // deserialize the workflow json
+                var project = JsonSerializer.Deserialize<Project>(strWorkflow);
+
+                // parse the mergefields
+                MicroflowHelper.ParseMergeFields(strWorkflow, ref project);
+
+                //await client.PurgeInstanceHistoryAsync("7c828621-3e7a-44aa-96fd-c6946763cc2b");
+
+                // step 1 contains all the steps
+                List<Step> steps = project.Steps;
+
+                // create a project run
+                ProjectRun projectRun = new ProjectRun() { ProjectName = project.ProjectName, Loop = project.Loop };
+
+                // create the storage tables for the project
+                await MicroflowTableHelper.CreateTables(project.ProjectName);
+
+                // set the state of the project to running
+                await MicroflowTableHelper.UpdateStatetEntity(project.ProjectName, 1);
+
+                // create a new run object
+                RunObject runObj = new RunObject() { StepId = steps[0].StepId };
+                projectRun.RunObject = runObj;
+
+                if (string.IsNullOrWhiteSpace(instanceId))
+                {
+                    instanceId = Guid.NewGuid().ToString();
+                }
+
+                // prepare the workflow by persisting parent info to table storage
+                await MicroflowHelper.PrepareWorkflow(instanceId, projectRun, steps, project.MergeFields);
+
+                projectRun.RunObject.StepId = -1;
+                projectRun.OrchestratorInstanceId = instanceId;
+
+                // start
+                await client.StartNewAsync("Start", instanceId, projectRun);
+
+                return await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromSeconds(1));
+
             }
-
-            // prepare the workflow by persisting parent info to table storage
-            await MicroflowHelper.PrepareWorkflow(instanceId, projectRun, steps, project.MergeFields);
-
-            projectRun.RunObject.StepId = -1;
-            projectRun.OrchestratorInstanceId = instanceId;
-
-            // start
-            await client.StartNewAsync("Start", instanceId, projectRun);
-
-            return await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId);
+            catch (StorageException e)
+            {
+                var resp = new HttpResponseMessage(HttpStatusCode.InternalServerError);
+                resp.Content = new StringContent(e.Message);
+                return resp;
+            }
+            catch (Exception e)
+            {
+                var resp = new HttpResponseMessage(HttpStatusCode.InternalServerError);
+                resp.Content = new StringContent(e.Message);
+                return resp;
+            }
         }
 
         /// <summary>
