@@ -11,7 +11,7 @@ namespace MicroflowConsole
     class Program
     {
         //private static string baseUrl = "http://localhost:7071";
-        private static string baseUrl = "https://microflowapp20210622163955.azurewebsites.net";
+        private static string baseUrl = "https://microflowapp20210623213025.azurewebsites.net";
 
         static async Task Main(string[] args)
         {
@@ -25,10 +25,11 @@ namespace MicroflowConsole
                 //var workflow = Tests.CreateTestWorkflow_10StepsParallel();
                 var workflow = Tests.CreateTestWorkflow_Complex1();
 
-                var project = new Project() { 
+                var project = new Project() {
                     ProjectName = "MicroflowDemo",
-                    Steps = workflow, 
-                    Loop = 1, 
+                    Steps = workflow,
+                    Loop = 1,
+                    PrepareWorkflow = true,
                     MergeFields = CreateMergeFields() 
                 };
 
@@ -42,9 +43,17 @@ namespace MicroflowConsole
                 //parallel multiple workflow instances
                 for (int i = 0; i < 200; i++)
                 {
-                    await Task.Delay(500);
-                    //await posttask;
-                    tasks.Add(client.PostAsJsonAsync(baseUrl + "/api/start/", project, new JsonSerializerOptions(JsonSerializerDefaults.General)));
+                    if (i == 0)
+                    {
+                        var r = await client.PostAsJsonAsync(baseUrl + "/api/start/", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
+                        project.PrepareWorkflow = false;
+                    }
+                    else
+                    {
+                        await Task.Delay(500);
+                        //await posttask;
+                        tasks.Add(client.PostAsJsonAsync(baseUrl + "/api/start/", project, new JsonSerializerOptions(JsonSerializerDefaults.General)));
+                    }
                 }
 
                 //await posttask;

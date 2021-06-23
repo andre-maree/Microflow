@@ -21,6 +21,7 @@ namespace MicroflowModels
         public string ProjectName { get; set; }
         public List<Step> Steps { get; set; }
         public int Loop { get; set; } = 1;
+        public bool PrepareWorkflow { get; set; } = true;
 
         [DataMember(Name = "MergeFields", EmitDefaultValue = false)]
         public Dictionary<string, string> MergeFields { get; set; } = new Dictionary<string, string>();

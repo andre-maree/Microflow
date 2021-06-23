@@ -48,11 +48,17 @@ namespace Microflow
                 // create a project run
                 ProjectRun projectRun = new ProjectRun() { ProjectName = project.ProjectName, Loop = project.Loop };
 
-                // create the storage tables for the project
-                await MicroflowTableHelper.CreateTables(project.ProjectName);
-
                 // set the state of the project to running
                 await MicroflowTableHelper.UpdateStatetEntity(project.ProjectName, 1);
+
+                if (project.PrepareWorkflow)
+                {
+                    // create the storage tables for the project
+                    await MicroflowTableHelper.CreateTables(project.ProjectName);
+
+                    // prepare the workflow by persisting parent info to table storage
+                    await MicroflowHelper.PrepareWorkflow(instanceId, projectRun, steps, project.MergeFields);
+                }
 
                 // create a new run object
                 RunObject runObj = new RunObject() { StepId = steps[0].StepId };
@@ -62,9 +68,6 @@ namespace Microflow
                 {
                     instanceId = Guid.NewGuid().ToString();
                 }
-
-                // prepare the workflow by persisting parent info to table storage
-                await MicroflowHelper.PrepareWorkflow(instanceId, projectRun, steps, project.MergeFields);
 
                 projectRun.RunObject.StepId = -1;
                 projectRun.OrchestratorInstanceId = instanceId;
