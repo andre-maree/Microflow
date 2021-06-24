@@ -1,4 +1,6 @@
+using System;
 using System.Threading.Tasks;
+using Microflow.Helpers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 
@@ -14,21 +16,32 @@ namespace Microflow
         public static async Task<CanExecuteResult> CanExecuteNow([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
             CanExecuteNowObject canExecuteNowObject = context.GetInput<CanExecuteNowObject>();
-            EntityId countId = new EntityId(nameof(Counter), canExecuteNowObject.RunId + canExecuteNowObject.StepId);
-
-            using (await context.LockAsync(countId))
+            try
             {
-                int parentCompletedCount = await context.CallEntityAsync<int>(countId, "get");
+                EntityId countId = new EntityId(nameof(Counter), canExecuteNowObject.RunId + canExecuteNowObject.StepId);
 
-                if (parentCompletedCount + 1 >= canExecuteNowObject.ParentCount)
+                using (await context.LockAsync(countId))
                 {
-                    // maybe needed cleanup
-                    //await context.CallEntityAsync(countId, "delete");
+                    int parentCompletedCount = await context.CallEntityAsync<int>(countId, "get");
 
-                    return new CanExecuteResult() { CanExecute = true, StepId = canExecuteNowObject.StepId };
+                    if (parentCompletedCount + 1 >= canExecuteNowObject.ParentCount)
+                    {
+                        // maybe needed cleanup
+                        //await context.CallEntityAsync(countId, "delete");
+
+                        return new CanExecuteResult() { CanExecute = true, StepId = canExecuteNowObject.StepId };
+                    }
+
+                    await context.CallEntityAsync<int>(countId, "add");
+
+                    return new CanExecuteResult() { CanExecute = false, StepId = canExecuteNowObject.StepId };
                 }
-
-                await context.CallEntityAsync<int>(countId, "add");
+            }
+            catch (Exception e)
+            {
+                // log to table workflow completed
+                var errorEntity = new LogErrorEntity(canExecuteNowObject.ProjectName, e.Message, canExecuteNowObject.RunId, canExecuteNowObject.StepId);
+                await context.CallActivityAsync("LogError", errorEntity);
 
                 return new CanExecuteResult() { CanExecute = false, StepId = canExecuteNowObject.StepId };
             }

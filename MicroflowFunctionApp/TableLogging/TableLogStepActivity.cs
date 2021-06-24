@@ -5,7 +5,7 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 
 namespace Microflow.FlowControl
 {
-    public static class TableLogStep
+    public static class TableLogStepActivity
     {
         [FunctionName("LogStep")]
         public static async Task TableLogActivity([ActivityTrigger] LogStepEntity logEntity)

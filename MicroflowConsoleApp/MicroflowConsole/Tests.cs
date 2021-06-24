@@ -9,7 +9,7 @@ namespace MicroflowConsole
         public static List<Step> CreateTestWorkflow_SimpleSteps()
         {
             // create
-            List<Step> steps = ProjectManager.CreateSteps(1, 1,"{default_post_url}");
+            List<Step> steps = ProjectManager.CreateSteps(4, 1,"{default_post_url}");
             //steps[0].IsHttpGet = true;
             //steps[0].ActionTimeoutSeconds = 30;
             //steps[0].CallbackAction = "approve";
@@ -17,11 +17,11 @@ namespace MicroflowConsole
             //steps[0].SetRetryForStep();
             //steps[0].StopOnActionFailed = true;
             
-            //steps[0].AddSubSteps(steps[1].StepId, steps[2].StepId);
+            steps[0].AddSubSteps(steps[1].StepId, steps[2].StepId);
 
-            //steps[3].AddParentSteps(steps[1], steps[2]);
+            steps[3].AddParentSteps(steps[1], steps[2]);
 
-            steps[0].CallbackAction = "approve"; 
+            //steps[0].CallbackAction = "approve"; 
             //steps[1].CallbackAction = "approve"; 
             //steps[2].CallbackAction = "approve"; 
             //steps[3].CallbackAction = "approve";

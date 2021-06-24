@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using Dynamitey.DynamicObjects;
 using Microsoft.Azure.Cosmos.Table;
 
 namespace Microflow.Helpers
@@ -9,6 +11,18 @@ namespace Microflow.Helpers
         public static string GetTableRowKeyDescendingByDate(this string instring, DateTime date)
         {
             return $"{instring}_{String.Format("{0:D19}", DateTime.MaxValue.Ticks - date.Ticks)}";
+        }
+        public static string GetTableRowKeyDescendingByDate()
+        {
+            return $"{String.Format("{0:D19}", DateTime.MaxValue.Ticks - DateTime.UtcNow.Ticks)}";
+        }
+        
+        public static async Task LogError(LogErrorEntity logEntity)
+        {
+            CloudTable table = GetErrorsTable();
+            TableOperation mergeOperation = TableOperation.InsertOrMerge(logEntity);
+
+            await table.ExecuteAsync(mergeOperation);
         }
 
         public static async Task LogStep(LogStepEntity logEntity)
@@ -67,10 +81,48 @@ namespace Microflow.Helpers
             return stepEnt;
         }
 
-        public static async Task UpdateStatetEntity(string projectId, int state)
+        public static async Task<List<TableEntity>> GetStepEntities(ProjectRun projectRun)
+        {
+            CloudTable table = GetStepsTable(projectRun.ProjectName);
+
+            TableQuery<TableEntity> query = new TableQuery<TableEntity>();
+
+            List<TableEntity> list = new List<TableEntity>();
+            //TODO use the async version
+            foreach (TableEntity entity in table.ExecuteQuery(query))
+            {
+                list.Add(entity);
+            }
+
+            return list;
+        }
+
+        public static async Task DeleteSteps(ProjectRun projectRun)
+        {
+            CloudTable table = GetStepsTable(projectRun.ProjectName);
+
+            var steps = await GetStepEntities(projectRun);
+            //TODO loop batch deletes
+            if (steps.Count > 0)
+            {
+                TableBatchOperation batchop = new TableBatchOperation();
+
+                foreach (TableEntity entity in steps)
+                {
+                    TableOperation delop = TableOperation.Delete(entity);
+                    batchop.Add(delop);
+                    //Console.WriteLine("{0}, {1}\t{2}\t{3}", entity.PartitionKey, entity.RowKey,
+                    //    entity.PartitionKey, entity.RowKey);
+                }
+
+                await table.ExecuteBatchAsync(batchop);
+            }
+        }
+
+        public static async Task UpdateStatetEntity(string projectName, int state)
         {
             CloudTable table = GetProjectControlTable();
-            ProjectControlEntity projectControlEntity = new ProjectControlEntity(projectId, state);
+            ProjectControlEntity projectControlEntity = new ProjectControlEntity(projectName, state);
             TableOperation mergeOperation = TableOperation.InsertOrMerge(projectControlEntity);
 
             await table.ExecuteAsync(mergeOperation);
@@ -79,16 +131,19 @@ namespace Microflow.Helpers
         /// <summary>
         /// Called on start to create needed tables
         /// </summary>
-        public static async Task CreateTables(string projectId)
+        public static async Task CreateTables(string projectName)
         {
             // StepsMyProject for step config
-            CloudTable stepsTable = GetStepsTable(projectId);
+            CloudTable stepsTable = GetStepsTable(projectName);
 
             // MicroflowLog table
             CloudTable logOrchestrationTable = GetLogOrchestrationTable();
 
             // MicroflowLog table
             CloudTable logStepsTable = GetLogStepsTable();
+
+            // ErrorMyProject table
+            CloudTable errorsTable = GetErrorsTable();
 
             //var delLogTableTask = await logTable.DeleteIfExistsAsync();
 
@@ -99,11 +154,13 @@ namespace Microflow.Helpers
             var t2 = logOrchestrationTable.CreateIfNotExistsAsync();
             var t3 = projectTable.CreateIfNotExistsAsync();
             var t4 = logStepsTable.CreateIfNotExistsAsync();
+            var t5 = errorsTable.CreateIfNotExistsAsync();
 
             await t1;
             await t2;
             await t3;
             await t4;
+            await t5;
         }
 
         /// <summary>
@@ -116,11 +173,18 @@ namespace Microflow.Helpers
             await table.ExecuteAsync(op);
         }
 
-        public static CloudTable GetStepsTable(string projectId)
+        public static CloudTable GetErrorsTable()
         {
             CloudTableClient tableClient = GetTableClient();
 
-            return tableClient.GetTableReference($"Steps{projectId}");
+            return tableClient.GetTableReference($"MicroflowErrors");
+        }
+
+        public static CloudTable GetStepsTable(string projectName)
+        {
+            CloudTableClient tableClient = GetTableClient();
+
+            return tableClient.GetTableReference($"Steps{projectName}");
         }
 
         private static CloudTable GetProjectControlTable()

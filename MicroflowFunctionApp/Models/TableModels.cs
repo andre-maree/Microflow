@@ -13,6 +13,27 @@ namespace Microflow
     /// <summary>
     /// Used for step level logging
     /// </summary>
+    public class LogErrorEntity : TableEntity
+    {
+        public LogErrorEntity() { }
+
+        public LogErrorEntity(string projectName, string message, string runId = null, int? stepId = null)
+        {
+            PartitionKey = projectName + "__" + runId;
+            RowKey = MicroflowTableHelper.GetTableRowKeyDescendingByDate();
+            StepId = stepId;
+            Message = message;
+            Date = DateTime.UtcNow;
+        }
+
+        public int? StepId { get; set; }
+        public DateTime Date { get; set; }
+        public string Message { get; set; }
+    }
+
+    /// <summary>
+    /// Used for step level logging
+    /// </summary>
     public class LogStepEntity : TableEntity
     {
         public LogStepEntity() { }

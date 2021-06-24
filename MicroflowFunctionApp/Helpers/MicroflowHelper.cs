@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -12,6 +13,18 @@ namespace Microflow.Helpers
 {
     public static class MicroflowHelper
     {
+        public static async Task<HttpResponseMessage> LogError(string projectName, Exception e, string runId = null, int? stepId = null)
+        {
+            await MicroflowTableHelper.LogError(
+                new LogErrorEntity(projectName, e.Message)
+            );
+
+            var resp = new HttpResponseMessage(HttpStatusCode.InternalServerError);
+            resp.Content = new StringContent(e.Message);
+
+            return resp;
+        }
+
         public static RetryOptions GetRetryOptions(HttpCallWithRetries httpCallWithRetries)
         {
             RetryOptions ops = new RetryOptions(TimeSpan.FromSeconds(httpCallWithRetries.Retry_DelaySeconds), httpCallWithRetries.Retry_MaxRetries);

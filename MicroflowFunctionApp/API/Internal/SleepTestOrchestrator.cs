@@ -33,7 +33,7 @@ namespace Microflow.API.Internal
             MicroflowPostData postData = JsonSerializer.Deserialize<MicroflowPostData>(data);
 
             Random random = new Random();
-            var ts = TimeSpan.FromSeconds(random.Next(10, 19));
+            var ts = TimeSpan.FromSeconds(random.Next(1, 2));
             DateTime deadline = context.CurrentUtcDateTime.Add(ts);
 
             //log.LogCritical("Sleeping for " + ts.Seconds + " seconds");

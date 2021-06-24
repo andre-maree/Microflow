@@ -15,7 +15,7 @@ namespace Microflow
     //        // get the cloud table
     //        CloudStorageAccount storageAccount = CloudStorageAccount.Parse(Environment.GetEnvironmentVariable("AzureWebJobsStorage"));
     //        CloudTableClient tableClient = storageAccount.CreateCloudTableClient(new TableClientConfiguration());
-    //        CloudTable table = tableClient.GetTableReference($"RunControl{canExecuteNowObject.ProjectId}");
+    //        CloudTable table = tableClient.GetTableReference($"RunControl{canExecuteNowObject.ProjectName}");
 
     //        // get countEnt for step
     //        var parentCountCompletedEnt = await GetCountEnt(table, canExecuteNowObject.RunId, canExecuteNowObject.StepId);
