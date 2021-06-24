@@ -169,5 +169,5 @@ MicroflowConsoleApp Solution Nugets:<br>
 
 ### Table Storage Logging
 
-Logs top level orchestration processing info to storage table "LogOrchestration", logs step processing info to storage table "LogSteps". For both there is a start and end date in the log entry. When an orchestration or step starts, an entry with the start date is saved, and when this item completes, the same entry with the start date will get an end date. Errors are logged to the table MicroflowErrors. The Microflow storage account is configured in the local.settings.json file.
+Logs top level orchestration processing info to storage table "LogOrchestration", logs step processing info to storage table "LogSteps". For both there is a start and end date in the log entry. When an orchestration or step starts, an entry with the start date is saved, and when this item completes, the same entry with the start date will get an end date. Errors are logged to the table "MicroflowErrors". The Microflow storage account is configured in the local.settings.json file.
 
