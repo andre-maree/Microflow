@@ -32,6 +32,8 @@ Microflow use cases:
 Future enhancements:
 - workflow stop, pause, and continue
 - Azure AD authentication
+- gRPC communication
+- proper logging implementation
 
 ## Test Examples
 The code for these can be found in the console app\Tests.cs. There is also a SimpleSteps test that consists of 1 parent with 2 children and the 2 children have a common child step (See JSON Workflow Example below). This is the diagram for the 2 more complex test workflows:
