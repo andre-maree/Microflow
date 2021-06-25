@@ -11,7 +11,7 @@ namespace MicroflowConsole
     class Program
     {
         private static string baseUrl = "http://localhost:7071";
-        //private static string baseUrl = "https://microflowapp20210623213025.azurewebsites.net";
+        //private static string baseUrl = "https://microflowappXXXXXXXXXXXXX.azurewebsites.net";
 
         static async Task Main(string[] args)
         {
@@ -21,14 +21,14 @@ namespace MicroflowConsole
             //var terminate = await client.PostAsync("http://localhost:7071/runtime/webhooks/durabletask/instances/39806875-9c81-4736-81c0-9be562dae71e/terminate?reason=dfgd", null);
             try
             {
-                var workflow = Tests.CreateTestWorkflow_SimpleSteps();
-                //var workflow = Tests.CreateTestWorkflow_10StepsParallel();
+                //var workflow = Tests.CreateTestWorkflow_SimpleSteps();
+                var workflow = Tests.CreateTestWorkflow_10StepsParallel();
                 //var workflow = Tests.CreateTestWorkflow_Complex1();
 
                 var project = new Project() {
                     ProjectName = "MicroflowDemo",
                     Steps = workflow,
-                    Loop = 3,
+                    Loop = 1,
                     MergeFields = CreateMergeFields() 
                 };
 
@@ -41,7 +41,7 @@ namespace MicroflowConsole
 
                 HttpResponseMessage posttask = await client.PostAsJsonAsync(baseUrl + "/api/prepareproject/", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
                 //parallel multiple workflow instances
-                for (int i = 0; i < 20; i++)
+                for (int i = 0; i < 1; i++)
                 {
                         await Task.Delay(500);
                         //await posttask;

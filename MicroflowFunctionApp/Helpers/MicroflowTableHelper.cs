@@ -177,40 +177,40 @@ namespace Microflow.Helpers
         {
             CloudTableClient tableClient = GetTableClient();
 
-            return tableClient.GetTableReference($"MicroflowErrors");
+            return tableClient.GetTableReference($"MicroflowLogErrors");
         }
 
         public static CloudTable GetStepsTable(string projectName)
         {
             CloudTableClient tableClient = GetTableClient();
 
-            return tableClient.GetTableReference($"Steps{projectName}");
+            return tableClient.GetTableReference($"MicroflowSteps{projectName}");
         }
 
         private static CloudTable GetProjectControlTable()
         {
             CloudTableClient tableClient = GetTableClient();
 
-            return tableClient.GetTableReference($"ProjectControl");
+            return tableClient.GetTableReference($"MicroflowProjectControl");
         }
 
         private static CloudTable GetLogOrchestrationTable()
         {
             CloudTableClient tableClient = GetTableClient();
 
-            return tableClient.GetTableReference($"LogOrchestration");
+            return tableClient.GetTableReference($"MicroflowLogOrchestrations");
         }
 
         private static CloudTable GetLogStepsTable()
         {
             CloudTableClient tableClient = GetTableClient();
 
-            return tableClient.GetTableReference($"LogSteps");
+            return tableClient.GetTableReference($"MicroflowLogSteps");
         }
 
         private static CloudTableClient GetTableClient()
         {
-            CloudStorageAccount storageAccount = CloudStorageAccount.Parse(Environment.GetEnvironmentVariable("AzureWebJobsStorage"));
+            CloudStorageAccount storageAccount = CloudStorageAccount.Parse(Environment.GetEnvironmentVariable("MicroflowStorage"));
 
             return storageAccount.CreateCloudTableClient(new TableClientConfiguration());
         }
