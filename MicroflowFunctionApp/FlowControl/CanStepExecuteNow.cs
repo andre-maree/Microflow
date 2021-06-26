@@ -39,7 +39,7 @@ namespace Microflow
             }
             catch (Exception e)
             {
-                // log to table workflow completed
+                // log to table error
                 var errorEntity = new LogErrorEntity(canExecuteNowObject.ProjectName, e.Message, canExecuteNowObject.RunId, canExecuteNowObject.StepId);
                 await context.CallActivityAsync("LogError", errorEntity);
 

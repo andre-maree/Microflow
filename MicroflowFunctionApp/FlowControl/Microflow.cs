@@ -72,7 +72,7 @@ namespace Microflow
                     //    await Task.Delay(30000);
                     //}
 
-                    bool subOrchestratorSuccess = true;
+                    MicroflowHttpResponse microflowHttpResponse = null;
                     var subTasks = new List<Task>();
                     var logTasks = new List<Task>();
 
@@ -99,11 +99,11 @@ namespace Microflow
 
                                 if (retryOptions == null)
                                 {
-                                    subOrchestratorSuccess = await context.CallSubOrchestratorAsync<bool>(name, id, httpCallWithRetries);
+                                    microflowHttpResponse = await context.CallSubOrchestratorAsync<MicroflowHttpResponse>(name, id, httpCallWithRetries);
                                 }
                                 else
                                 {
-                                    subOrchestratorSuccess = await context.CallSubOrchestratorWithRetryAsync<bool>(name, retryOptions, id, httpCallWithRetries);
+                                    microflowHttpResponse = await context.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(name, retryOptions, id, httpCallWithRetries);
                                 }
                             }
                             // send and receive inline flow
@@ -113,11 +113,11 @@ namespace Microflow
 
                                 if (retryOptions == null)
                                 {
-                                    subOrchestratorSuccess = await context.CallSubOrchestratorAsync<bool>(name, id, httpCallWithRetries);
+                                    microflowHttpResponse = await context.CallSubOrchestratorAsync<MicroflowHttpResponse>(name, id, httpCallWithRetries);
                                 }
                                 else
                                 {
-                                    subOrchestratorSuccess = await context.CallSubOrchestratorWithRetryAsync<bool>(name, retryOptions, id, httpCallWithRetries);
+                                    microflowHttpResponse = await context.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(name, retryOptions, id, httpCallWithRetries);
                                 }
                             }
                         }
@@ -132,14 +132,20 @@ namespace Microflow
                         }
                     }
 
-                    // log end of step
-                    logTasks.Add(context.CallActivityAsync(
-                        "LogStep",
-                        new LogStepEntity(false, project.ProjectName, logRowKey, project.OrchestratorInstanceId)
-                    ));
-
-                    if (subOrchestratorSuccess)
+                    if (microflowHttpResponse.Success || !httpCallWithRetries.StopOnActionFailed)
                     {
+                        // log end of step
+                        logTasks.Add(context.CallActivityAsync(
+                            "LogStep",
+                            new LogStepEntity(false,
+                                              project.ProjectName,
+                                              logRowKey,
+                                              project.OrchestratorInstanceId,
+                                              microflowHttpResponse.Success,
+                                              microflowHttpResponse.HttpResponseStatusCode,
+                                              string.IsNullOrWhiteSpace(microflowHttpResponse.Message) ? null : microflowHttpResponse.Message)
+                        ));
+
                         log.LogWarning($"Step {httpCallWithRetries.RowKey} done at {DateTime.Now.ToString("HH:mm:ss")}  -  Run ID: {project.RunObject.RunId}");
 
                         List<KeyValuePair<int, int>> subSteps = JsonSerializer.Deserialize<List<KeyValuePair<int, int>>>(httpCallWithRetries.SubSteps);
@@ -199,6 +205,20 @@ namespace Microflow
                     else
                     {
                         log.LogError($"Step {httpCallWithRetries.RowKey} failed at {DateTime.Now.ToString("HH:mm:ss")}  -  Run ID: {project.RunObject.RunId}");
+
+                        int? stepId = httpCallWithRetries == null ? -1 : Convert.ToInt32(httpCallWithRetries.RowKey);
+
+                        // log step error, stop exe
+                        logTasks.Add(context.CallActivityAsync(
+                            "LogStep",
+                            new LogStepEntity(false,
+                                              project.ProjectName,
+                                              logRowKey,
+                                              project.OrchestratorInstanceId,
+                                              false,
+                                              microflowHttpResponse.HttpResponseStatusCode,
+                                              string.IsNullOrWhiteSpace(microflowHttpResponse.Message) ? null : microflowHttpResponse.Message)
+                        ));
                     }
                 }
             }

@@ -14,9 +14,8 @@ namespace Microflow.API
         /// <summary>
         /// Does the call out and then waits for the callback
         /// </summary>
-        /// <returns>True or false to indicate success</returns>
         [FunctionName("HttpCallWithCallbackOrchestrator")]
-        public static async Task<bool> HttpCallWithCallback(
+        public static async Task<MicroflowHttpResponse> HttpCallWithCallback(
    [OrchestrationTrigger] IDurableOrchestrationContext context, ILogger inlog)
         {
             var log = context.CreateReplaySafeLogger(inlog);
@@ -26,19 +25,15 @@ namespace Microflow.API
             DurableHttpRequest durableHttpRequest = MicroflowHelper.CreateMicroflowDurableHttpRequest(httpCall, context.InstanceId);
 
             // http call outside of Microflow, this is the micro-service api call
-            var result = await context.CallHttpAsync(durableHttpRequest);
+            DurableHttpResponse durableHttpResponse = await context.CallHttpAsync(durableHttpRequest);
 
-            if (result.StatusCode != System.Net.HttpStatusCode.OK)
-                return false;
+            MicroflowHttpResponse microflowHttpResponse = durableHttpResponse.GetMicroflowResponse();
+
+            // if failed http status return
+            if (!microflowHttpResponse.Success)
+                return microflowHttpResponse;
 
             // TODO: always use https
-
-            //var ts = TimeSpan.FromSeconds(20);
-            //DateTime deadline = context.CurrentUtcDateTime.Add(ts);
-
-            ////log.LogCritical("Sleeping for " + ts.Seconds + " seconds");
-
-            //await context.CreateTimer(deadline, CancellationToken.None);
 
             log.LogCritical($"Waiting for callback: {Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}/api/{httpCall.CallBackAction}/{context.InstanceId}/{httpCall.RowKey}");
 
@@ -46,21 +41,24 @@ namespace Microflow.API
             var actionResult = await context.WaitForExternalEvent<HttpResponseMessage>(httpCall.CallBackAction, TimeSpan.FromSeconds(httpCall.ActionTimeoutSeconds));
 
             // check for action failed
-            if(!actionResult.IsSuccessStatusCode)
-            {
-                log.LogWarning($"Step {httpCall.RowKey} callback action {httpCall.CallBackAction} denied at {DateTime.Now.ToString("HH:mm:ss")}");
-
-                // return false immediately to stop the workflow processing
-                if (httpCall.StopOnActionFailed)
-                    return false;
-
-                return true;
-            }
-            else
+            if (actionResult.IsSuccessStatusCode)
             {
                 log.LogWarning($"Step {httpCall.RowKey} callback action {httpCall.CallBackAction} successful at {DateTime.Now.ToString("HH:mm:ss")}");
 
-                return true;
+                microflowHttpResponse.HttpResponseStatusCode = (int)actionResult.StatusCode;
+
+                return microflowHttpResponse;
+            }
+            // if action callback failed
+            else
+            {
+                log.LogWarning($"Step {httpCall.RowKey} callback action {httpCall.CallBackAction} fail result at {DateTime.Now.ToString("HH:mm:ss")}");
+
+                microflowHttpResponse.Success = false;
+                microflowHttpResponse.HttpResponseStatusCode = (int)actionResult.StatusCode;
+                microflowHttpResponse.Message = $"callback action {httpCall.CallBackAction} fail - " + microflowHttpResponse.Message;
+
+                return microflowHttpResponse;
             }
         }
     }

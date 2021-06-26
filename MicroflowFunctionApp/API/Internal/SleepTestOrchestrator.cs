@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Specialized;
+using System.IO;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using MicroflowModels;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -36,7 +38,6 @@ namespace Microflow.API.Internal
             var ts = TimeSpan.FromSeconds(random.Next(1, 2));
             DateTime deadline = context.CurrentUtcDateTime.Add(ts);
 
-            //log.LogCritical("Sleeping for " + ts.Seconds + " seconds");
             using (var cts = new CancellationTokenSource())
             {
                 try
@@ -53,28 +54,28 @@ namespace Microflow.API.Internal
                     cts.Dispose();
                 }
             }
-            //do the call back if there is 1
-            if (!string.IsNullOrWhiteSpace(postData.CallbackUrl))
-                {
-                    DurableHttpRequest req = new DurableHttpRequest(HttpMethod.Get, new Uri("http://" + postData.CallbackUrl));
+            // test if the callback is done, do the call back if there is 1
+            //if (!string.IsNullOrWhiteSpace(postData.CallbackUrl))
+            //    {
+            //        DurableHttpRequest req = new DurableHttpRequest(HttpMethod.Get, new Uri("http://" + postData.CallbackUrl));
 
-                    DurableHttpResponse resp = await context.CallHttpAsync(req); 
-                }
+            //        DurableHttpResponse resp = await context.CallHttpAsync(req);
+            //    }
         }
 
         /// <summary>
-        /// Http entry point
+        /// Called by the normal function and creates a new SleepTestOrchestrator
         /// </summary>
         [FunctionName("SleepTestOrchestrator_HttpStart")]
         public static async Task<HttpResponseMessage> SleepTestOrchestrator_HttpStart(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequestMessage req,
-            [DurableClient] IDurableOrchestrationClient client)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "SleepTestOrchestrator_HttpStart/{instanceId}")] HttpRequestMessage req,
+            [DurableClient] IDurableOrchestrationClient client, string instanceId)
         {
             if (req.Method == HttpMethod.Post)
             {
                 string data = await req.Content.ReadAsStringAsync();
 
-                string instanceId = await client.StartNewAsync("SleepTestOrchestrator", null, data);
+                instanceId = await client.StartNewAsync("SleepTestOrchestrator", null, data);
 
                 return client.CreateCheckStatusResponse(req, instanceId);
             }
@@ -90,12 +91,38 @@ namespace Microflow.API.Internal
                     StepId = data["StepId"],
                     SubOrchestrationId = data["SubOrchestrationId"]
                 };
-                //MicroflowPostData body = JsonSerializer.Deserialize<MicroflowPostData>(data);
-                // Function input comes from the request content.
-                string instanceId = await client.StartNewAsync("SleepTestOrchestrator", null, JsonSerializer.Serialize(postData));
 
-                return client.CreateCheckStatusResponse(req, instanceId);
+                // Function input comes from the request content.
+                instanceId = await client.StartNewAsync("SleepTestOrchestrator", null, JsonSerializer.Serialize(postData));
+
+                return await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromSeconds(1));
             }
+        }
+
+        /// <summary>
+        /// Http entry point as a normal function calling a client function
+        /// </summary>
+        [FunctionName("SleepTestOrchestrator_Function")]
+        public static async Task<HttpResponseMessage> Run(
+           [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req)
+        {
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+
+            MicroflowPostData data = JsonSerializer.Deserialize<MicroflowPostData>(requestBody);
+
+            string newInstanceId = Guid.NewGuid().ToString();
+
+            await MicroflowHttpClient.HttpClient.PostAsJsonAsync<MicroflowPostData>("http://localhost:7071/api/SleepTestOrchestrator_HttpStart/" + newInstanceId, data);
+
+            HttpResponseMessage resp = new HttpResponseMessage();
+
+            // test the returned status codes here and also the effect if Microflows step setting StopOnActionFailed
+            //resp.StatusCode = System.Net.HttpStatusCode.NotFound;
+            resp.StatusCode = System.Net.HttpStatusCode.OK;
+            // set the location and check in the stpe log if its saved when 201 created
+            //resp.Headers.Location = result.RequestMessage.RequestUri;
+
+            return resp;
         }
     }
 }

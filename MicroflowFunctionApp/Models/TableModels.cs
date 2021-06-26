@@ -38,17 +38,25 @@ namespace Microflow
     {
         public LogStepEntity() { }
 
-        public LogStepEntity(bool isStart, string projectName, string stepId, string runId)
+        public LogStepEntity(bool isStart, string projectName, string stepId, string runId, bool? success = null, int? httpStatusCode = null, string message = null)
         {
             PartitionKey = projectName + "__" + runId;
             RowKey = stepId;
             if (isStart)
                 StartDate = DateTime.UtcNow;
             else
+            {
                 EndDate = DateTime.UtcNow;
+                Success = success;
+                HttpStatusCode = httpStatusCode;
+                Message = message;
+            }
         }
-        public DateTime? StartDate { get; set; }
 
+        public bool? Success { get; set; }
+        public int? HttpStatusCode { get; set; }
+        public string Message { get; set; }
+        public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
     }
 
@@ -72,9 +80,7 @@ namespace Microflow
         }
 
         public string LogMessage { get; set; }
-
         public DateTime? StartDate { get; set; }
-
         public DateTime? EndDate { get; set; }
     }
 
@@ -86,7 +92,6 @@ namespace Microflow
         public StepEntity() { }
 
         public string SubSteps { get; set; }
-
         public Dictionary<string, string> MergeFields { get; set; }
     }
 

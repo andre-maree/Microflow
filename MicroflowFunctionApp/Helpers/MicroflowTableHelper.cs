@@ -12,6 +12,7 @@ namespace Microflow.Helpers
         {
             return $"{instring}_{String.Format("{0:D19}", DateTime.MaxValue.Ticks - date.Ticks)}";
         }
+
         public static string GetTableRowKeyDescendingByDate()
         {
             return $"{String.Format("{0:D19}", DateTime.MaxValue.Ticks - DateTime.UtcNow.Ticks)}";

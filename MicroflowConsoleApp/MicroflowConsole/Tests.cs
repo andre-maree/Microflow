@@ -15,7 +15,7 @@ namespace MicroflowConsole
             //steps[0].CallbackAction = "approve";
             //steps[0].CalloutUrl = "http://localhost:7071/api/SleepTestOrchestrator_HttpStart";
             //steps[0].SetRetryForStep();
-            //steps[0].StopOnActionFailed = true;
+            //steps[0].StopOnActionFailed = false;
             
             steps[0].AddSubSteps(steps[1].StepId, steps[2].StepId);
 
@@ -48,7 +48,7 @@ namespace MicroflowConsole
             steps[13].AddParentSteps(steps[3], steps[4], steps[5], steps[6], steps[7], steps[8], steps[9], steps[10], steps[11], steps[12]);
 
             // step configs
-            //steps[1].CallbackAction = "approve_process_start";
+            steps[2].CallbackAction = "approve_process_start";
             //steps[14].CallbackAction = "approve_process_end";
 
             return steps;

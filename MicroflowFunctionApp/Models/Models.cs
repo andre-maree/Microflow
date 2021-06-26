@@ -3,6 +3,16 @@
     #region POCOs
 
     /// <summary>
+    /// Used to hold Microflow specific http status code results
+    /// </summary>
+    public class MicroflowHttpResponse
+    {
+        public bool Success { get; set; }
+        public int HttpResponseStatusCode { get; set; }
+        public string Message { get; set; }
+    }
+
+    /// <summary>
     /// This is the minimalist project object that is passed during execution
     /// </summary>
     public class ProjectRun
