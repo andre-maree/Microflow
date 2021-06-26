@@ -37,7 +37,7 @@ namespace Microflow
 
                 httpCallWithRetries = await httpCallWithRetriesTask;
 
-                var logRowKey = httpCallWithRetries.RowKey.GetTableRowKeyDescendingByDate(context.CurrentUtcDateTime);
+                var logRowKey = MicroflowTableHelper.GetTableLogRowKeyDescendingByDate(context.CurrentUtcDateTime, context.NewGuid().ToString());
 
                 // only do this for auto created container step
                 if (project.RunObject.StepId == -1)
@@ -89,7 +89,7 @@ namespace Microflow
                             // log start of step
                             logTasks.Add(context.CallActivityAsync(
                                 "LogStep",
-                                new LogStepEntity(true, project.ProjectName, logRowKey, project.OrchestratorInstanceId)
+                                new LogStepEntity(true, project.ProjectName, logRowKey, httpCallWithRetries.RowKey, project.OrchestratorInstanceId)
                             ));
 
                             // wait for external event flow / callback
@@ -140,6 +140,7 @@ namespace Microflow
                             new LogStepEntity(false,
                                               project.ProjectName,
                                               logRowKey,
+                                              httpCallWithRetries.RowKey,
                                               project.OrchestratorInstanceId,
                                               microflowHttpResponse.Success,
                                               microflowHttpResponse.HttpResponseStatusCode,
@@ -214,6 +215,7 @@ namespace Microflow
                             new LogStepEntity(false,
                                               project.ProjectName,
                                               logRowKey,
+                                              httpCallWithRetries.RowKey,
                                               project.OrchestratorInstanceId,
                                               false,
                                               microflowHttpResponse.HttpResponseStatusCode,

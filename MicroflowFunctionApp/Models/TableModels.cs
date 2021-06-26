@@ -38,24 +38,26 @@ namespace Microflow
     {
         public LogStepEntity() { }
 
-        public LogStepEntity(bool isStart, string projectName, string stepId, string runId, bool? success = null, int? httpStatusCode = null, string message = null)
+        public LogStepEntity(bool isStart, string projectName, string rowKey, string stepId, string runId, bool? success = null, int? httpStatusCode = null, string message = null)
         {
             PartitionKey = projectName + "__" + runId;
-            RowKey = stepId;
+            RowKey = rowKey;
             if (isStart)
                 StartDate = DateTime.UtcNow;
             else
             {
-                EndDate = DateTime.UtcNow;
                 Success = success;
                 HttpStatusCode = httpStatusCode;
                 Message = message;
+                StepId = Convert.ToInt32(stepId);
+                EndDate = DateTime.UtcNow;
             }
         }
 
         public bool? Success { get; set; }
         public int? HttpStatusCode { get; set; }
         public string Message { get; set; }
+        public int StepId { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
     }
@@ -67,11 +69,12 @@ namespace Microflow
     {
         public LogOrchestrationEntity() { }
 
-        public LogOrchestrationEntity(bool isStart, string projectName, string rowKey, string logMessage, DateTime date)
+        public LogOrchestrationEntity(bool isStart, string projectName, string rowKey, string logMessage, DateTime date, string orchestrationId)
         {
             PartitionKey = projectName;
             LogMessage = logMessage;
             RowKey = rowKey;
+            OrchestrationId = orchestrationId;
 
             if (isStart)
                 StartDate = date;
@@ -79,6 +82,7 @@ namespace Microflow
                 EndDate = date;
         }
 
+        public string OrchestrationId { get; set; }
         public string LogMessage { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }

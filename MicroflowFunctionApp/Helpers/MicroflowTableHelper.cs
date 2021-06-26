@@ -8,14 +8,14 @@ namespace Microflow.Helpers
 {
     public static class MicroflowTableHelper
     {
-        public static string GetTableRowKeyDescendingByDate(this string instring, DateTime date)
+        public static string GetTableLogRowKeyDescendingByDate(DateTime date, string postfix)
         {
-            return $"{instring}_{String.Format("{0:D19}", DateTime.MaxValue.Ticks - date.Ticks)}";
+            return $"{String.Format("{0:D19}", DateTime.MaxValue.Ticks - date.Ticks)}{postfix}";
         }
 
         public static string GetTableRowKeyDescendingByDate()
         {
-            return $"{String.Format("{0:D19}", DateTime.MaxValue.Ticks - DateTime.UtcNow.Ticks)}";
+            return $"{String.Format("{0:D19}", DateTime.MaxValue.Ticks - DateTime.UtcNow.Ticks)}{Guid.NewGuid()}";
         }
         
         public static async Task LogError(LogErrorEntity logEntity)
@@ -174,7 +174,7 @@ namespace Microflow.Helpers
             await table.ExecuteAsync(op);
         }
 
-        public static CloudTable GetErrorsTable()
+        private static CloudTable GetErrorsTable()
         {
             CloudTableClient tableClient = GetTableClient();
 

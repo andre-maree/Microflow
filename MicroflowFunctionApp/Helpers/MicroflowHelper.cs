@@ -38,7 +38,7 @@ namespace Microflow.Helpers
         /// <summary>
         /// Called before a workflow executes and takes the top step and recursives it to insert step configs into table storage
         /// </summary>
-        public static async Task PrepareWorkflow(string instanceId, ProjectRun projectRun, List<Step> steps, Dictionary<string, string> mergeFields)
+        public static async Task PrepareWorkflow(ProjectRun projectRun, List<Step> steps)
         {
             HashSet<KeyValuePair<int, int>> hsStepCounts = new HashSet<KeyValuePair<int, int>>();
 

@@ -14,12 +14,12 @@ namespace Microflow.API
         /// </summary>
         [FunctionName("HttpCallOrchestrator")]
         public static async Task<MicroflowHttpResponse> HttpCallOrchestrator(
-   [OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
+   [OrchestrationTrigger] IDurableOrchestrationContext context)
         {
             var httpCall = context.GetInput<HttpCall>();
 
             DurableHttpRequest durableHttpRequest = MicroflowHelper.CreateMicroflowDurableHttpRequest(httpCall, context.InstanceId);
-
+            
             DurableHttpResponse durableHttpResponse = await context.CallHttpAsync(durableHttpRequest);
 
             return durableHttpResponse.GetMicroflowResponse();

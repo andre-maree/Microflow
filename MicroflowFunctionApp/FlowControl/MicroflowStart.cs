@@ -98,9 +98,9 @@ namespace Microflow
             try
             {
                 // log start
-                var logRowKey = context.InstanceId.GetTableRowKeyDescendingByDate(context.CurrentUtcDateTime);
+                var logRowKey = MicroflowTableHelper.GetTableLogRowKeyDescendingByDate(context.CurrentUtcDateTime, "_" + projectRun.OrchestratorInstanceId);
                 var logEntity = new LogOrchestrationEntity(true, projectRun.ProjectName, logRowKey,
-                    $"{Environment.MachineName} - {projectRun.ProjectName} started...", context.CurrentUtcDateTime);
+                    $"{Environment.MachineName} - {projectRun.ProjectName} started...", context.CurrentUtcDateTime, projectRun.OrchestratorInstanceId);
                 await context.CallActivityAsync("LogOrchestration", logEntity);
 
                 log.LogInformation(
@@ -126,7 +126,7 @@ namespace Microflow
                 // log to table workflow completed
                 logEntity = new LogOrchestrationEntity(false, projectRun.ProjectName, logRowKey,
                     $"{Environment.MachineName} - {projectRun.ProjectName} completed successfully",
-                    context.CurrentUtcDateTime);
+                    context.CurrentUtcDateTime, projectRun.OrchestratorInstanceId);
                 await context.CallActivityAsync("LogOrchestration", logEntity);
 
                 // done
@@ -149,13 +149,12 @@ namespace Microflow
 
         /// <summary>
         /// This must be called at least once before a project runs,
-        /// this is to prevent multiple concurrent instances from writing step data at project run
+        /// this is to prevent multiple concurrent instances from writing step data at project run,
+        /// call Microflow insertorupdateproject when something ischanges in the workflow, but do not always call this when corcurrent multiple workflows
         /// </summary>
-        [FunctionName("Microflow_PrepareProject")]
+        [FunctionName("Microflow_InsertOrUpdateProject")]
         public static async Task<HttpResponseMessage> SaveProject(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "prepareproject/{instanceId?}")] HttpRequestMessage req,
-            [DurableClient] IDurableOrchestrationClient client,
-            string instanceId)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "InsertOrUpdateProject")] HttpRequestMessage req)
         {
             // read http content
             var strWorkflow = await req.Content.ReadAsStringAsync();
@@ -179,7 +178,7 @@ namespace Microflow
                 MicroflowHelper.ParseMergeFields(strWorkflow, ref project);
 
                 // prepare the workflow by persisting parent info to table storage
-                await MicroflowHelper.PrepareWorkflow(instanceId, projectRun, project.Steps, project.MergeFields);
+                await MicroflowHelper.PrepareWorkflow(projectRun, project.Steps);
 
                 return new HttpResponseMessage(HttpStatusCode.OK); //await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromSeconds(1));
 

@@ -45,21 +45,22 @@ namespace MicroflowConsole
                 //var r = JsonSerializer.Serialize(project);
                 var tasks = new List<Task>();
 
+                
+                var result = await HttpClient.PostAsJsonAsync("http://localhost:7071/api/insertorupdateproject", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
                 // singleton workflow instance
-                var result = await HttpClient.PostAsJsonAsync("http://localhost:7071/api/prepareproject/39806875-9c81-4736-81c0-9be562dae71e/", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
-                var result2 = await HttpClient.PostAsJsonAsync("http://localhost:7071/api/start/39806875-9c81-4736-81c0-9be562dae71e/", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
+                //var result2 = await HttpClient.PostAsJsonAsync("http://localhost:7071/api/start/39806875-9c81-4736-81c0-9be562dae71e/", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
 
                 //HttpResponseMessage posttask = await client.PostAsJsonAsync(baseUrl + "/api/prepareproject/", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
                 ////parallel multiple workflow instances
-                //for (int i = 0; i < 1; i++)
-                //{
-                //        await Task.Delay(500);
-                //        //await posttask;
-                //        tasks.Add(client.PostAsJsonAsync(baseUrl + "/api/start/", project, new JsonSerializerOptions(JsonSerializerDefaults.General)));
-                //}
+                for (int i = 0; i < 1; i++)
+                {
+                    await Task.Delay(500);
+                    //await posttask;
+                    tasks.Add(HttpClient.PostAsJsonAsync(baseUrl + "/api/start/", project, new JsonSerializerOptions(JsonSerializerDefaults.General)));
+                }
 
-                //////await posttask;
-                //await Task.WhenAll(tasks);
+                ////await posttask;
+                await Task.WhenAll(tasks);
             }
             catch (Exception ex)
             {

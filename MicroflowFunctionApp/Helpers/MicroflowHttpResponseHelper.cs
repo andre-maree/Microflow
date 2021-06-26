@@ -1,10 +1,12 @@
 ﻿using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using System.Collections.Generic;
 
 namespace Microflow.Helpers
 {
     public static class MicroflowHttpResponseHelper
     {
+        /// <summary>
+        /// Used to handle callout responses
+        /// </summary>
         public static MicroflowHttpResponse GetMicroflowResponse(this DurableHttpResponse durableHttpResponse)
         {
             int statusCode = (int)durableHttpResponse.StatusCode;
@@ -13,6 +15,7 @@ namespace Microflow.Helpers
             {
                 return new MicroflowHttpResponse() { Success = true, HttpResponseStatusCode = statusCode};
             }
+            // if 201 created try get the location header to save it in the steps log
             else if (statusCode == 201)
             {
                 Microsoft.Extensions.Primitives.StringValues values;
