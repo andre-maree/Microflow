@@ -9,17 +9,17 @@ namespace MicroflowConsole
         public static List<Step> CreateTestWorkflow_SimpleSteps()
         {
             // create
-            List<Step> steps = ProjectManager.CreateSteps(1, 1,"{default_post_url}");
+            List<Step> steps = ProjectManager.CreateSteps(5, 1,"{default_post_url}");
             //steps[0].IsHttpGet = true;
-            steps[0].ActionTimeoutSeconds = 10;
+            //steps[2].ActionTimeoutSeconds = 10;
             //steps[0].CallbackAction = "approve";
             //steps[0].CalloutUrl = "http://localhost:7071/api/SleepTestOrchestrator_HttpStart";
             //steps[0].SetRetryForStep(1, 2,1);
             //steps[0].StopOnActionFailed = false;
             
-            //steps[0].AddSubSteps(steps[1].StepId, steps[2].StepId);
+            steps[0].AddSubSteps(steps[1].StepId, steps[2].StepId);
 
-            //steps[3].AddParentSteps(steps[1], steps[2]);
+            steps[3].AddParentSteps(steps[1], steps[2]);
 
             //steps[0].CallbackAction = "approve"; 
             //steps[1].CallbackAction = "approve"; 
@@ -49,7 +49,7 @@ namespace MicroflowConsole
 
             // step configs
             steps[2].CallbackAction = "approve_process_start";
-            //steps[14].CallbackAction = "approve_process_end";
+            steps[13].CallbackAction = "approve_process_end";
 
             return steps;
         }

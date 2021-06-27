@@ -16,11 +16,15 @@ namespace MicroflowModels
         public string StepId { get; set; }
     }
 
-    public class Project
+    public class ProjectBase
     {
         public string ProjectName { get; set; }
-        public List<Step> Steps { get; set; }
         public int Loop { get; set; } = 1;
+    }
+
+    public class Project : ProjectBase
+    {
+        public List<Step> Steps { get; set; }
 
         [DataMember(Name = "MergeFields", EmitDefaultValue = false)]
         public Dictionary<string, string> MergeFields { get; set; } = new Dictionary<string, string>();

@@ -13,8 +13,7 @@ namespace Microflow.API
         /// Inline http call, wait for response
         /// </summary>
         [FunctionName("HttpCallOrchestrator")]
-        public static async Task<MicroflowHttpResponse> HttpCallOrchestrator(
-   [OrchestrationTrigger] IDurableOrchestrationContext context)
+        public static async Task<MicroflowHttpResponse> HttpCallOrchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
             var httpCall = context.GetInput<HttpCall>();
 

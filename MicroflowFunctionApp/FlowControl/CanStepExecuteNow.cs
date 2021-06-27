@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Microflow.Helpers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 
@@ -27,7 +26,7 @@ namespace Microflow
                     if (parentCompletedCount + 1 >= canExecuteNowObject.ParentCount)
                     {
                         // maybe needed cleanup
-                        //await context.CallEntityAsync(countId, "delete");
+                        await context.CallEntityAsync(countId, "delete");
 
                         return new CanExecuteResult() { CanExecute = true, StepId = canExecuteNowObject.StepId };
                     }
@@ -64,9 +63,9 @@ namespace Microflow
                 case "get":
                     ctx.Return(ctx.GetState<int>());
                     break;
-                    //case "delete":
-                    //    ctx.DeleteState();
-                    //    break;
+                case "delete":
+                    ctx.DeleteState();
+                    break;
             }
         }
     }

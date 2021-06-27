@@ -42,7 +42,7 @@ namespace Microflow.API.External
         public static async Task<HttpResponseMessage> TestPost(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "testpost")] HttpRequestMessage req)
         {
-            await Task.Delay(1500);
+            await Task.Delay(19500);
             await req.Content.ReadAsStringAsync();
 
             //MicroflowPostData result = JsonSerializer.Deserialize<MicroflowPostData>(r);
@@ -51,7 +51,7 @@ namespace Microflow.API.External
             //{
             //    return new HttpResponseMessage(System.Net.HttpStatusCode.NotFound);
             //}
-            var resp = new HttpResponseMessage(System.Net.HttpStatusCode.NotFound);
+            var resp = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
             //    resp.Headers.Location = new Uri("http://localhost:7071/api/testpost");
             //resp.Content = new StringContent("wappa");
             return resp;

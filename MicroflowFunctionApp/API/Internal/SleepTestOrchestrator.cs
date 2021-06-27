@@ -35,7 +35,7 @@ namespace Microflow.API.Internal
             MicroflowPostData postData = JsonSerializer.Deserialize<MicroflowPostData>(data);
 
             Random random = new Random();
-            var ts = TimeSpan.FromSeconds(random.Next(5, 10));
+            var ts = TimeSpan.FromSeconds(random.Next(30, 40));
             DateTime deadline = context.CurrentUtcDateTime.Add(ts);
 
             using (var cts = new CancellationTokenSource())

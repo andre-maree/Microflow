@@ -15,8 +15,8 @@ namespace Microflow.API
         /// Does the call out and then waits for the callback
         /// </summary>
         [FunctionName("HttpCallWithCallbackOrchestrator")]
-        public static async Task<MicroflowHttpResponse> HttpCallWithCallback(
-   [OrchestrationTrigger] IDurableOrchestrationContext context, ILogger inlog)
+        public static async Task<MicroflowHttpResponse> HttpCallWithCallback([OrchestrationTrigger] IDurableOrchestrationContext context,
+                                                                             ILogger inlog)
         {
             var log = context.CreateReplaySafeLogger(inlog);
 

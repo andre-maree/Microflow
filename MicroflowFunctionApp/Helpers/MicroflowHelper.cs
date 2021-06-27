@@ -8,11 +8,45 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using MicroflowModels;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Extensions.Logging;
 
 namespace Microflow.Helpers
 {
     public static class MicroflowHelper
     {
+        public static async Task StartProjectRun(IDurableOrchestrationContext context, ILogger log, ProjectRun projectRun)
+        {
+            // do the looping
+            for (int i = 1; i <= projectRun.Loop; i++)
+            {
+                // get the top container step from table storage (from PrepareWorkflow)
+                HttpCallWithRetries httpCallWithRetries = await context.CallActivityAsync<HttpCallWithRetries>("GetStep", projectRun);
+
+                var guid = context.NewGuid().ToString();
+
+                projectRun.RunObject.RunId = guid;
+
+                log.LogError($"Started Run ID {projectRun.RunObject.RunId}...");
+
+                // pass in the current loop count so it can be used downstream/passed to the micro-services
+                projectRun.CurrentLoop = i;
+
+                List<KeyValuePair<int, int>> subSteps = JsonSerializer.Deserialize<List<KeyValuePair<int, int>>>(httpCallWithRetries.SubSteps);
+                var subTasks = new List<Task>();
+
+                foreach (var step in subSteps)
+                {
+                    projectRun.RunObject = new RunObject() { RunId = guid, StepId = step.Key };
+
+                    subTasks.Add(context.CallSubOrchestratorAsync("ExecuteStep", projectRun));
+                }
+
+                await Task.WhenAll(subTasks);
+
+                log.LogError($"Run ID {guid} completed successfully...");
+            }
+        }
+
         public static async Task<HttpResponseMessage> LogError(string projectName, Exception e, string runId = null, int? stepId = null)
         {
             await MicroflowTableHelper.LogError(

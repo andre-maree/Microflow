@@ -41,7 +41,15 @@ namespace MicroflowConsole
                     MergeFields = CreateMergeFields()
                 };
 
-                //var r = JsonSerializer.Serialize(project);
+                //List<int> topsteps = new List<int>();
+                //foreach(var step in workflow)
+                //{
+                //    if(workflow.FindAll(c => c.SubSteps.Contains(step.StepId)).Count==0)
+                //    {
+                //        topsteps.Add(step.StepId);
+                //    }
+                //}
+                ////var r = JsonSerializer.Serialize(project);
                 var tasks = new List<Task>();
 
                 // call Microflow insertorupdateproject when something ischanges in the workflow, but do not always call this when corcurrent multiple workflows
@@ -55,7 +63,7 @@ namespace MicroflowConsole
                 {
                     await Task.Delay(500);
                     //await posttask;
-                    tasks.Add(HttpClient.PostAsJsonAsync(baseUrl + "/api/start/", project, new JsonSerializerOptions(JsonSerializerDefaults.General)));
+                    tasks.Add(HttpClient.PostAsJsonAsync(baseUrl + "/api/start/", new ProjectBase() { ProjectName = "MicroflowDemo" }, new JsonSerializerOptions(JsonSerializerDefaults.General)));
                 }
 
                 ////await posttask;
@@ -75,8 +83,8 @@ namespace MicroflowConsole
             // use 
             //mergeFields.Add("default_post_url", "https://reqbin.com/echo/post/json" + querystring);
             // set the callout url to the new SleepTestOrchestrator http normal function url
-            //mergeFields.Add("default_post_url", baseUrl + "/api/SleepTestOrchestrator_Function");// + querystring);
-            mergeFields.Add("default_post_url", baseUrl + "/api/testpost");
+            mergeFields.Add("default_post_url", baseUrl + "/api/SleepTestOrchestrator_Function");// + querystring);
+            //mergeFields.Add("default_post_url", baseUrl + "/api/testpost");
 
             return mergeFields;
         }

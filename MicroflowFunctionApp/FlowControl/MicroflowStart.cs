@@ -8,7 +8,6 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using System.Text.Json;
 using Microflow.Helpers;
 using MicroflowModels;
-using System.Collections.Generic;
 using System.Net;
 using Microsoft.Azure.Cosmos.Table;
 
@@ -22,33 +21,28 @@ namespace Microflow
         /// <param name="instanceId">If an instanceId is passed in, it will run as a singleton, else it will run concurrently with each with a new instanceId</param>
         /// <returns></returns>
         [FunctionName("Microflow_HttpStart")]
-        public static async Task<HttpResponseMessage> HttpStart(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "start/{instanceId?}")] HttpRequestMessage req,
-            [DurableClient] IDurableOrchestrationClient client,
-            string instanceId)
+        public static async Task<HttpResponseMessage> HttpStart([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "start/{instanceId?}")] HttpRequestMessage req,
+                                                                [DurableClient] IDurableOrchestrationClient client,
+                                                                string instanceId)
         {
             // read http content
-            var strWorkflow = await req.Content.ReadAsStringAsync();
+            var content = await req.Content.ReadAsStringAsync();
 
             // deserialize the workflow json
-            var project = JsonSerializer.Deserialize<Project>(strWorkflow);
+            var projectbase = JsonSerializer.Deserialize<ProjectBase>(content);
 
             try
             {
-
                 //await client.PurgeInstanceHistoryAsync("7c828621-3e7a-44aa-96fd-c6946763cc2b");
 
-                // step 1 contains all the steps
-                List<Step> steps = project.Steps;
-
                 // create a project run
-                ProjectRun projectRun = new ProjectRun() { ProjectName = project.ProjectName, Loop = project.Loop };
+                ProjectRun projectRun = new ProjectRun() { ProjectName = projectbase.ProjectName, Loop = projectbase.Loop };
 
                 // set the state of the project to running
-                await MicroflowTableHelper.UpdateStatetEntity(project.ProjectName, 1);
+                await MicroflowTableHelper.UpdateStatetEntity(projectbase.ProjectName, 1);
 
                 // create a new run object
-                RunObject runObj = new RunObject() { StepId = steps[0].StepId };
+                RunObject runObj = new RunObject() { StepId = -1 };
                 projectRun.RunObject = runObj;
 
                 if (string.IsNullOrWhiteSpace(instanceId))
@@ -86,7 +80,8 @@ namespace Microflow
         /// </summary>
         /// <returns></returns>
         [FunctionName("Start")]
-        public static async Task Start([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger inlog)
+        public static async Task Start([OrchestrationTrigger] IDurableOrchestrationContext context,
+                                       ILogger inlog)
         {
             var log = context.CreateReplaySafeLogger(inlog);
 
@@ -97,34 +92,28 @@ namespace Microflow
             {
                 // log start
                 var logRowKey = MicroflowTableHelper.GetTableLogRowKeyDescendingByDate(context.CurrentUtcDateTime, "_" + projectRun.OrchestratorInstanceId);
-                var logEntity = new LogOrchestrationEntity(true, projectRun.ProjectName, logRowKey,
-                    $"{Environment.MachineName} - {projectRun.ProjectName} started...", context.CurrentUtcDateTime, projectRun.OrchestratorInstanceId);
+
+                var logEntity = new LogOrchestrationEntity(true,
+                                                           projectRun.ProjectName,
+                                                           logRowKey,
+                                                           $"{Environment.MachineName} - {projectRun.ProjectName} started...",
+                                                           context.CurrentUtcDateTime,
+                                                           projectRun.OrchestratorInstanceId);
+
                 await context.CallActivityAsync("LogOrchestration", logEntity);
 
-                log.LogInformation(
-                    $"Started orchestration with ID = '{context.InstanceId}', Project = '{projectRun.ProjectName}'");
+                log.LogInformation($"Started orchestration with ID = '{context.InstanceId}', Project = '{projectRun.ProjectName}'");
 
-                // do the looping
-                for (int i = 1; i <= projectRun.Loop; i++)
-                {
-                    var guid = context.NewGuid().ToString();
-
-                    projectRun.RunObject.RunId = guid;
-
-                    log.LogError($"Started Run ID {projectRun.RunObject.RunId}...");
-
-                    // pass in the current loop count so it can be used downstream/passed to the micro-services
-                    projectRun.CurrentLoop = i;
-
-                    await context.CallSubOrchestratorAsync("ExecuteStep", guid, projectRun);
-
-                    log.LogError($"Run ID {guid} completed successfully...");
-                }
+                await MicroflowHelper.StartProjectRun(context, log, projectRun);
 
                 // log to table workflow completed
-                logEntity = new LogOrchestrationEntity(false, projectRun.ProjectName, logRowKey,
-                    $"{Environment.MachineName} - {projectRun.ProjectName} completed successfully",
-                    context.CurrentUtcDateTime, projectRun.OrchestratorInstanceId);
+                logEntity = new LogOrchestrationEntity(false,
+                                                       projectRun.ProjectName,
+                                                       logRowKey,
+                                                       $"{Environment.MachineName} - {projectRun.ProjectName} completed successfully",
+                                                       context.CurrentUtcDateTime,
+                                                       projectRun.OrchestratorInstanceId);
+
                 await context.CallActivityAsync("LogOrchestration", logEntity);
 
                 // done
@@ -135,12 +124,14 @@ namespace Microflow
             {
                 // log to table workflow completed
                 var errorEntity = new LogErrorEntity(projectRun.ProjectName, e.Message, projectRun.RunObject.RunId);
+
                 await context.CallActivityAsync("LogError", errorEntity);
             }
             catch (Exception e)
             {
                 // log to table workflow completed
                 var errorEntity = new LogErrorEntity(projectRun.ProjectName, e.Message, projectRun.RunObject.RunId);
+
                 await context.CallActivityAsync("LogError", errorEntity);
             }
         }
@@ -151,8 +142,8 @@ namespace Microflow
         /// call Microflow insertorupdateproject when something ischanges in the workflow, but do not always call this when corcurrent multiple workflows
         /// </summary>
         [FunctionName("Microflow_InsertOrUpdateProject")]
-        public static async Task<HttpResponseMessage> SaveProject(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "InsertOrUpdateProject")] HttpRequestMessage req, [DurableClient] IDurableOrchestrationClient client)
+        public static async Task<HttpResponseMessage> SaveProject([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "InsertOrUpdateProject")] HttpRequestMessage req,
+                                                                  [DurableClient] IDurableOrchestrationClient client)
         {
             // read http content
             var strWorkflow = await req.Content.ReadAsStringAsync();
