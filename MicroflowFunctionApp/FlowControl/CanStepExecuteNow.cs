@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 
-namespace Microflow
+namespace Microflow.FlowControl
 {
     public static class CanStepExecuteNow
     {

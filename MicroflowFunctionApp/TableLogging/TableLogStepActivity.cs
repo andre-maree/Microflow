@@ -10,7 +10,7 @@ namespace Microflow.FlowControl
         [FunctionName("LogStep")]
         public static async Task TableLogActivity([ActivityTrigger] LogStepEntity logEntity)
         {
-            await MicroflowTableHelper.LogStep(logEntity);
+            await logEntity.LogStep();
         }
     }
 }

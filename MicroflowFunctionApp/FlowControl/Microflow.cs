@@ -7,7 +7,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 
-namespace Microflow
+namespace Microflow.FlowControl
 {
     public static class Microflow
     {
@@ -41,7 +41,7 @@ namespace Microflow
 
                 if (httpCallWithRetries.Retry_DelaySeconds > 0)
                 {
-                    retryOptions = MicroflowHelper.GetRetryOptions(httpCallWithRetries);
+                    retryOptions = httpCallWithRetries.GetRetryOptions();
                 }
 
                 // TODO: project stop, pause and continue

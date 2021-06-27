@@ -17,7 +17,7 @@ namespace Microflow.Helpers
             return $"{String.Format("{0:D19}", DateTime.MaxValue.Ticks - DateTime.UtcNow.Ticks)}{Guid.NewGuid()}";
         }
         
-        public static async Task LogError(LogErrorEntity logEntity)
+        public static async Task LogError(this LogErrorEntity logEntity)
         {
             CloudTable table = GetErrorsTable();
             TableOperation mergeOperation = TableOperation.InsertOrMerge(logEntity);
@@ -25,7 +25,7 @@ namespace Microflow.Helpers
             await table.ExecuteAsync(mergeOperation);
         }
 
-        public static async Task LogStep(LogStepEntity logEntity)
+        public static async Task LogStep(this LogStepEntity logEntity)
         {
             CloudTable table = GetLogStepsTable();
             TableOperation mergeOperation = TableOperation.InsertOrMerge(logEntity);
@@ -33,7 +33,7 @@ namespace Microflow.Helpers
             await table.ExecuteAsync(mergeOperation);
         }
 
-        public static async Task LogOrchestration(LogOrchestrationEntity logEntity)
+        public static async Task LogOrchestration(this LogOrchestrationEntity logEntity)
         {
             CloudTable table = GetLogOrchestrationTable();
             TableOperation mergeOperation = TableOperation.InsertOrMerge(logEntity);
@@ -41,8 +41,7 @@ namespace Microflow.Helpers
             await table.ExecuteAsync(mergeOperation);
         }
 
-
-        public static async Task Pause(ProjectControlEntity projectControlEntity)
+        public static async Task Pause(this ProjectControlEntity projectControlEntity)
         {
             CloudTable table = GetProjectControlTable();
             TableOperation mergeOperation = TableOperation.Merge(projectControlEntity);
@@ -71,7 +70,7 @@ namespace Microflow.Helpers
             return projectControlEntity.State;
         }
 
-        public static async Task<HttpCallWithRetries> GetStep(ProjectRun projectRun)
+        public static async Task<HttpCallWithRetries> GetStep(this ProjectRun projectRun)
         {
             CloudTable table = GetStepsTable(projectRun.ProjectName);
             TableOperation retrieveOperation = TableOperation.Retrieve<HttpCallWithRetries>($"{projectRun.ProjectName}", $"{projectRun.RunObject.StepId}");
@@ -81,7 +80,7 @@ namespace Microflow.Helpers
             return stepEnt;
         }
 
-        public static async Task<List<TableEntity>> GetStepEntities(ProjectRun projectRun)
+        public static List<TableEntity> GetStepEntities(this ProjectRun projectRun)
         {
             CloudTable table = GetStepsTable(projectRun.ProjectName);
 
@@ -97,11 +96,11 @@ namespace Microflow.Helpers
             return list;
         }
 
-        public static async Task DeleteSteps(ProjectRun projectRun)
+        public static async Task DeleteSteps(this ProjectRun projectRun)
         {
             CloudTable table = GetStepsTable(projectRun.ProjectName);
 
-            var steps = await GetStepEntities(projectRun);
+            var steps = projectRun.GetStepEntities();
             //TODO loop batch deletes
             if (steps.Count > 0)
             {
@@ -166,7 +165,7 @@ namespace Microflow.Helpers
         /// <summary>
         /// Called on start to insert needed step configs
         /// </summary>
-        public static async Task InsertStep(HttpCall stepEnt, CloudTable table)
+        public static async Task InsertStep(this HttpCall stepEnt, CloudTable table)
         {
             TableOperation op = TableOperation.InsertOrReplace(stepEnt);
 

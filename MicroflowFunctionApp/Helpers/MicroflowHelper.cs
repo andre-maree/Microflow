@@ -14,7 +14,7 @@ namespace Microflow.Helpers
 {
     public static class MicroflowHelper
     {
-        public static async Task StartProjectRun(IDurableOrchestrationContext context, ILogger log, ProjectRun projectRun)
+        public static async Task MicroflowStartProjectRun(this IDurableOrchestrationContext context, ILogger log, ProjectRun projectRun)
         {
             // do the looping
             for (int i = 1; i <= projectRun.Loop; i++)
@@ -47,11 +47,9 @@ namespace Microflow.Helpers
             }
         }
 
-        public static async Task<HttpResponseMessage> LogError(string projectName, Exception e, string runId = null, int? stepId = null)
+        public static async Task<HttpResponseMessage> LogError(string projectName, Exception e)
         {
-            await MicroflowTableHelper.LogError(
-                new LogErrorEntity(projectName, e.Message)
-            );
+            await new LogErrorEntity(projectName, e.Message).LogError();
 
             var resp = new HttpResponseMessage(HttpStatusCode.InternalServerError);
             resp.Content = new StringContent(e.Message);
@@ -59,7 +57,7 @@ namespace Microflow.Helpers
             return resp;
         }
 
-        public static RetryOptions GetRetryOptions(HttpCallWithRetries httpCallWithRetries)
+        public static RetryOptions GetRetryOptions(this HttpCallWithRetries httpCallWithRetries)
         {
             RetryOptions ops = new RetryOptions(TimeSpan.FromSeconds(httpCallWithRetries.Retry_DelaySeconds), httpCallWithRetries.Retry_MaxRetries);
             ops.RetryTimeout = TimeSpan.FromSeconds(httpCallWithRetries.Retry_TimeoutSeconds);
@@ -72,7 +70,7 @@ namespace Microflow.Helpers
         /// <summary>
         /// Called before a workflow executes and takes the top step and recursives it to insert step configs into table storage
         /// </summary>
-        public static async Task PrepareWorkflow(ProjectRun projectRun, List<Step> steps)
+        public static async Task PrepareWorkflow(this ProjectRun projectRun, List<Step> steps)
         {
             HashSet<KeyValuePair<int, int>> hsStepCounts = new HashSet<KeyValuePair<int, int>>();
 
@@ -137,7 +135,7 @@ namespace Microflow.Helpers
                         stentRetries.Retry_TimeoutSeconds = step.RetryOptions.TimeOutSeconds;
                         stentRetries.Retry_BackoffCoefficient = step.RetryOptions.BackoffCoefficient;
 
-                        tasks.Add(MicroflowTableHelper.InsertStep(stentRetries, stepsTable));
+                        tasks.Add(stentRetries.InsertStep(stepsTable));
                     }
                     else
                     {
@@ -150,7 +148,7 @@ namespace Microflow.Helpers
                             IsHttpGet = step.IsHttpGet
                         };
 
-                        tasks.Add(MicroflowTableHelper.InsertStep(stent, stepsTable));
+                        tasks.Add(stent.InsertStep(stepsTable));
                     }
                 }
             }
@@ -162,12 +160,12 @@ namespace Microflow.Helpers
             }
 
             HttpCall containerEntity = new HttpCall(projectRun.ProjectName, -1, JsonSerializer.Serialize(containersubsteps));
-            tasks.Add(MicroflowTableHelper.InsertStep(containerEntity, stepsTable));
+            tasks.Add(containerEntity.InsertStep(stepsTable));
 
             await Task.WhenAll(tasks);
         }
 
-        public static void ParseMergeFields(string strWorkflow, ref Project project)
+        public static void ParseMergeFields(this string strWorkflow, ref Project project)
         {
             StringBuilder sb = new StringBuilder(strWorkflow);
 
@@ -179,7 +177,7 @@ namespace Microflow.Helpers
             project = JsonSerializer.Deserialize<Project>(sb.ToString());
         }
 
-        public static DurableHttpRequest CreateMicroflowDurableHttpRequest(HttpCall httpCall, string instanceId)
+        public static DurableHttpRequest CreateMicroflowDurableHttpRequest(this HttpCall httpCall, string instanceId)
         {
             string callback = string.IsNullOrWhiteSpace(httpCall.CallBackAction)
                     ? ""
@@ -201,7 +199,7 @@ namespace Microflow.Helpers
 
                 DurableHttpRequest newDurableHttpRequest = new DurableHttpRequest(
                     method: HttpMethod.Post,
-                    uri: new Uri(ParseUrlMicroflowData(httpCall, instanceId, postData.CallbackUrl)),
+                    uri: new Uri(httpCall.ParseUrlMicroflowData(instanceId, postData.CallbackUrl)),
                     timeout: TimeSpan.FromSeconds(httpCall.ActionTimeoutSeconds),
                     //headers: durableHttpRequest.Headers,
                     content: body
@@ -220,7 +218,7 @@ namespace Microflow.Helpers
             {
                 DurableHttpRequest newDurableHttpRequest = new DurableHttpRequest(
                     method: HttpMethod.Get,
-                    uri: new Uri(ParseUrlMicroflowData(httpCall, instanceId, callback)),
+                    uri: new Uri(httpCall.ParseUrlMicroflowData(instanceId, callback)),
                     timeout: TimeSpan.FromSeconds(httpCall.ActionTimeoutSeconds)
                 //headers: durableHttpRequest.Headers,
                               //tokenSource: durableHttpRequest.TokenSource
@@ -236,7 +234,7 @@ namespace Microflow.Helpers
             }
         }
 
-        private static string ParseUrlMicroflowData(HttpCall httpCall, string instanceId, string callbackUrl)
+        private static string ParseUrlMicroflowData(this HttpCall httpCall, string instanceId, string callbackUrl)
         {
             StringBuilder sb = new StringBuilder(httpCall.Url);
 

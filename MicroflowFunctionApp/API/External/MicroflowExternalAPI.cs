@@ -15,7 +15,7 @@ namespace Microflow.API.External
         /// Called from Microflow.ExecuteStep to get the current step table config
         /// </summary>
         [FunctionName("GetStep")]
-        public static async Task<HttpCallWithRetries> GetStep([ActivityTrigger] ProjectRun projectRun) => await MicroflowTableHelper.GetStep(projectRun);
+        public static async Task<HttpCallWithRetries> GetStep([ActivityTrigger] ProjectRun projectRun) => await projectRun.GetStep();
 
         /// <summary>
         /// Called from Microflow.ExecuteStep to get the current state of the project
@@ -33,7 +33,7 @@ namespace Microflow.API.External
         /// 
         /// </summary>
         [FunctionName("Pause")]
-        public static async Task Pause([ActivityTrigger] ProjectControlEntity projectControlEntity) => await MicroflowTableHelper.Pause(projectControlEntity);
+        public static async Task Pause([ActivityTrigger] ProjectControlEntity projectControlEntity) => await projectControlEntity.Pause();
 
         /// <summary>
         /// use this to test some things like causing an exception

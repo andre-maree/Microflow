@@ -11,8 +11,13 @@ using MicroflowModels;
 using System.Net;
 using Microsoft.Azure.Cosmos.Table;
 
-namespace Microflow
+namespace Microflow.FlowControl
 {
+    /// <summary>
+    /// "Microflow_InsertOrUpdateProject" must be called to save project step meta data to table storage
+    /// after this, "Microflow_HttpStart" can be called multiple times,
+    /// if a change is made to the project, call "Microflow_InsertOrUpdateProject" again to apply the changes
+    /// </summary>
     public static class MicroflowStart
     {
         /// <summary>
@@ -104,7 +109,7 @@ namespace Microflow
 
                 log.LogInformation($"Started orchestration with ID = '{context.InstanceId}', Project = '{projectRun.ProjectName}'");
 
-                await MicroflowHelper.StartProjectRun(context, log, projectRun);
+                await context.MicroflowStartProjectRun(log, projectRun);
 
                 // log to table workflow completed
                 logEntity = new LogOrchestrationEntity(false,
@@ -160,16 +165,15 @@ namespace Microflow
                 await MicroflowTableHelper.CreateTables(project.ProjectName);
 
                 // clear step table data
-                await MicroflowTableHelper.DeleteSteps(projectRun);
+                await projectRun.DeleteSteps();
 
                 // parse the mergefields
-                MicroflowHelper.ParseMergeFields(strWorkflow, ref project);
+                strWorkflow.ParseMergeFields(ref project);
 
                 // prepare the workflow by persisting parent info to table storage
-                await MicroflowHelper.PrepareWorkflow(projectRun, project.Steps);
+                await projectRun.PrepareWorkflow(project.Steps);
 
                 return await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, Guid.NewGuid().ToString(), TimeSpan.FromSeconds(1));
-
             }
             catch (StorageException e)
             {

@@ -10,7 +10,7 @@ namespace Microflow.FlowControl
         [FunctionName("LogOrchestration")]
         public static async Task TableLogOrchestration([ActivityTrigger] LogOrchestrationEntity logEntity)
         {
-            await MicroflowTableHelper.LogOrchestration(logEntity);
+            await logEntity.LogOrchestration();
         }
     }
 }

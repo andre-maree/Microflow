@@ -17,7 +17,7 @@ namespace Microflow.API
         {
             var httpCall = context.GetInput<HttpCall>();
 
-            DurableHttpRequest durableHttpRequest = MicroflowHelper.CreateMicroflowDurableHttpRequest(httpCall, context.InstanceId);
+            DurableHttpRequest durableHttpRequest = httpCall.CreateMicroflowDurableHttpRequest(context.InstanceId);
 
             DurableHttpResponse durableHttpResponse = await context.CallHttpAsync(durableHttpRequest);
 
