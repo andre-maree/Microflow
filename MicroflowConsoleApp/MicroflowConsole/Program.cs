@@ -1,7 +1,6 @@
 ﻿using MicroflowModels;
 using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -52,7 +51,7 @@ namespace MicroflowConsole
 
                 //HttpResponseMessage posttask = await client.PostAsJsonAsync(baseUrl + "/api/prepareproject/", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
                 ////parallel multiple workflow instances
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < 1; i++)
                 {
                     await Task.Delay(500);
                     //await posttask;

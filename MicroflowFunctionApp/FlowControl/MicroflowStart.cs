@@ -176,8 +176,8 @@ namespace Microflow
 
                 // prepare the workflow by persisting parent info to table storage
                 await MicroflowHelper.PrepareWorkflow(projectRun, project.Steps);
+
                 return await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, Guid.NewGuid().ToString(), TimeSpan.FromSeconds(1));
-                //return new HttpResponseMessage(HttpStatusCode.OK); //await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromSeconds(1));
 
             }
             catch (StorageException e)

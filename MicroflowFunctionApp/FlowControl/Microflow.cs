@@ -125,9 +125,63 @@ namespace Microflow
                         {
                             log.LogWarning($"Step {httpCallWithRetries.RowKey} an error result at {DateTime.Now.ToString("HH:mm:ss")}  -  Run ID: {project.RunObject.RunId}");
 
-                            if (httpCallWithRetries.StopOnActionFailed)
+                            if (!httpCallWithRetries.StopOnActionFailed)
                             {
-                                throw;
+                                if (ex.InnerException is TimeoutException)
+                                {
+                                    microflowHttpResponse = new MicroflowHttpResponse()
+                                    {
+                                        Success = false,
+                                        HttpResponseStatusCode = 408,
+                                        Message = "action timeout"
+                                    };
+                                }
+                                else
+                                {
+                                    microflowHttpResponse = new MicroflowHttpResponse()
+                                    {
+                                        Success = false,
+                                        HttpResponseStatusCode = 500,
+                                        Message = ex.Message
+                                    };
+                                }
+                            }
+                            else
+                            {
+                                if (ex.InnerException is TimeoutException)
+                                {
+                                    // log step error, stop exe
+                                    logTasks.Add(context.CallActivityAsync(
+                                        "LogStep",
+                                        new LogStepEntity(false,
+                                                          project.ProjectName,
+                                                          logRowKey,
+                                                          httpCallWithRetries.RowKey,
+                                                          project.OrchestratorInstanceId,
+                                                          false,
+                                                          408,
+                                                          "action timeout")
+                                    ));
+                                }
+                                else
+                                {
+                                    // log step error, stop exe
+                                    logTasks.Add(context.CallActivityAsync(
+                                        "LogStep",
+                                        new LogStepEntity(false,
+                                                          project.ProjectName,
+                                                          logRowKey,
+                                                          httpCallWithRetries.RowKey,
+                                                          project.OrchestratorInstanceId,
+                                                          false,
+                                                          500,
+                                                          ex.Message)
+                                    ));
+                                }
+                                
+                                await Task.WhenAll(logTasks);
+
+                                throw ex;
                             }
                         }
                     }

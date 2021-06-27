@@ -21,7 +21,7 @@ namespace MicroflowSDK
             }
         }
 
-        public static void SetRetryForStep(this Step step, int delaySeconds = 5, int maxDelaySeconds = 60, int maxRetries = 5, int timeOutSeconds = 30, int backoffCoefficient = 1)
+        public static void SetRetryForStep(this Step step, int delaySeconds = 5, int maxDelaySeconds = 60, int maxRetries = 5, int timeOutSeconds = 60, int backoffCoefficient = 1)
         {
             var retryOptions = new MicroflowRetryOptions()
             {
