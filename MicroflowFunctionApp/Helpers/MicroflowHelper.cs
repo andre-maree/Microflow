@@ -170,9 +170,9 @@ namespace Microflow.Helpers
                     uri: new Uri(ParseUrlMicroflowData(httpCall, instanceId, postData.CallbackUrl)),
                     timeout: TimeSpan.FromSeconds(httpCall.ActionTimeoutSeconds),
                     //headers: durableHttpRequest.Headers,
-                    content: body 
+                    content: body
                     //tokenSource: durableHttpRequest.TokenSource
-
+                    
                 );
 
                 // Do not copy over the x-functions-key header, as in many cases, the

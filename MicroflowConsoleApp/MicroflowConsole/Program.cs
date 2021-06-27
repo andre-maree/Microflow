@@ -75,7 +75,8 @@ namespace MicroflowConsole
             // use 
             //mergeFields.Add("default_post_url", "https://reqbin.com/echo/post/json" + querystring);
             // set the callout url to the new SleepTestOrchestrator http normal function url
-            mergeFields.Add("default_post_url", baseUrl + "/api/SleepTestOrchestrator_Function");// + querystring);
+            //mergeFields.Add("default_post_url", baseUrl + "/api/SleepTestOrchestrator_Function");// + querystring);
+            mergeFields.Add("default_post_url", baseUrl + "/api/testpost");
 
             return mergeFields;
         }
