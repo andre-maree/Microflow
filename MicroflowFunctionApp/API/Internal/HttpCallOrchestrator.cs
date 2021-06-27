@@ -1,9 +1,9 @@
-﻿using System.Net;
+﻿using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microflow.Helpers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Microsoft.Extensions.Logging;
 
 namespace Microflow.API
 {
@@ -19,7 +19,7 @@ namespace Microflow.API
             var httpCall = context.GetInput<HttpCall>();
 
             DurableHttpRequest durableHttpRequest = MicroflowHelper.CreateMicroflowDurableHttpRequest(httpCall, context.InstanceId);
-            
+
             DurableHttpResponse durableHttpResponse = await context.CallHttpAsync(durableHttpRequest);
 
             return durableHttpResponse.GetMicroflowResponse();

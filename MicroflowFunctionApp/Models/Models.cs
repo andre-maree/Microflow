@@ -1,4 +1,6 @@
-﻿namespace Microflow
+﻿using System.Collections.Generic;
+
+namespace Microflow
 {
     #region POCOs
 
@@ -12,6 +14,13 @@
         public string Message { get; set; }
     }
 
+    public class Headers
+    {
+        public string Key { get; set; }
+        public IList<string> Value { get; set; }
+
+    }
+      
     /// <summary>
     /// This is the minimalist project object that is passed during execution
     /// </summary>

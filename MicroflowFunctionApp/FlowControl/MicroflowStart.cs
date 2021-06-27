@@ -10,8 +10,6 @@ using Microflow.Helpers;
 using MicroflowModels;
 using System.Collections.Generic;
 using System.Net;
-using System.Runtime.CompilerServices;
-using System.Text.Json.Serialization;
 using Microsoft.Azure.Cosmos.Table;
 
 namespace Microflow
@@ -154,7 +152,7 @@ namespace Microflow
         /// </summary>
         [FunctionName("Microflow_InsertOrUpdateProject")]
         public static async Task<HttpResponseMessage> SaveProject(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "InsertOrUpdateProject")] HttpRequestMessage req)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "InsertOrUpdateProject")] HttpRequestMessage req, [DurableClient] IDurableOrchestrationClient client)
         {
             // read http content
             var strWorkflow = await req.Content.ReadAsStringAsync();
@@ -164,7 +162,6 @@ namespace Microflow
 
             try
             {
-
                 // create a project run
                 ProjectRun projectRun = new ProjectRun() { ProjectName = project.ProjectName, Loop = project.Loop };
 
@@ -179,8 +176,8 @@ namespace Microflow
 
                 // prepare the workflow by persisting parent info to table storage
                 await MicroflowHelper.PrepareWorkflow(projectRun, project.Steps);
-
-                return new HttpResponseMessage(HttpStatusCode.OK); //await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromSeconds(1));
+                return await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, Guid.NewGuid().ToString(), TimeSpan.FromSeconds(1));
+                //return new HttpResponseMessage(HttpStatusCode.OK); //await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromSeconds(1));
 
             }
             catch (StorageException e)

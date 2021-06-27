@@ -42,6 +42,7 @@ namespace Microflow
         {
             PartitionKey = projectName + "__" + runId;
             RowKey = rowKey;
+            StepId = Convert.ToInt32(stepId);
             if (isStart)
                 StartDate = DateTime.UtcNow;
             else
@@ -49,7 +50,6 @@ namespace Microflow
                 Success = success;
                 HttpStatusCode = httpStatusCode;
                 Message = message;
-                StepId = Convert.ToInt32(stepId);
                 EndDate = DateTime.UtcNow;
             }
         }

@@ -1,6 +1,5 @@
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
-using Microsoft.Extensions.Logging;
 using System.Net.Http;
 using Microflow.API;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
@@ -14,18 +13,30 @@ namespace Microflow
         /// This simulates an activity executing, replace with real call like an API call
         /// </summary>
         [FunctionName("httpcall")]
-        public static async Task<HttpResponseMessage> HttpCall([ActivityTrigger] HttpCall httpCall, ILogger log)
+        public static async Task<HttpResponseMessage> HttpCall([ActivityTrigger] HttpCall httpCall)
         {
-            var cts = new CancellationTokenSource();
-            cts.CancelAfter(60000);
-            HttpResponseMessage result = await MicroflowHttpClient.HttpClient.PostAsJsonAsync(httpCall.Url, (ProcessId: httpCall.PartitionKey, StepId: httpCall.RowKey), cts.Token);
-            
-            if (result.IsSuccessStatusCode)
+            using (var cts = new CancellationTokenSource(httpCall.ActionTimeoutSeconds * 1000))
             {
-                return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
-            }
+                try
+                {
+                    HttpResponseMessage result = await MicroflowHttpClient.HttpClient.PostAsJsonAsync(httpCall.Url, (ProcessId: httpCall.PartitionKey, StepId: httpCall.RowKey), cts.Token);
 
-            return new HttpResponseMessage(result.StatusCode);
+                    if (result.IsSuccessStatusCode)
+                    {
+                        return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+                    }
+
+                    return new HttpResponseMessage(result.StatusCode);
+                }
+                catch (TaskCanceledException)
+                {
+                    return new HttpResponseMessage(System.Net.HttpStatusCode.RequestTimeout);
+                }
+                finally
+                {
+                    cts.Dispose();
+                }
+            }
         }
     }
 }

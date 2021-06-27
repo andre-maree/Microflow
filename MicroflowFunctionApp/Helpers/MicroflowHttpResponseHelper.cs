@@ -1,4 +1,5 @@
 ﻿using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using System.Text.Json;
 
 namespace Microflow.Helpers
 {
@@ -13,7 +14,7 @@ namespace Microflow.Helpers
 
             if (statusCode <= 200 || ((statusCode > 201) && (statusCode < 300)))
             {
-                return new MicroflowHttpResponse() { Success = true, HttpResponseStatusCode = statusCode};
+                return new MicroflowHttpResponse() { Success = true, HttpResponseStatusCode = statusCode };
             }
             // if 201 created try get the location header to save it in the steps log
             else if (statusCode == 201)
