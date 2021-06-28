@@ -131,8 +131,14 @@ This contains 3 classes responsible for workflow execution.
   * Microflow.cs : This contains the recursive function ExecuteStep. It calls the action URL and then calls CanExecuteNow for child steps of the current step.
   * MicroflowStart.cs : This is where the workflow JSON payload is received via http post and then prepares the workflow and calls start.
 
-### MicroflowFunctionApp
+### MicroflowConsoleApp
 This console app is used to create test workflow projects and post to Microflow. After created or modifying a project, always call "Microflow_InsertOrUpdateProject" before calling the run thhp call "Microflow_HttpStart". After a call to "Microflow_InsertOrUpdateProject" is made, then "Microflow_HttpStart" can be called multiple times as long as the project definition stays the same.
+
+### MicroflowModels
+This library holds model classes that is useful outside of the Microflow function app, but is also used by the Microflow function app.
+
+### MicroflowSDK
+This library is used to help with project workflow and steps creates.
 
 ## Setup Guide
 Clone the repo locally. It is advised to separate the MicroflowConsoleApp from the MicroflowFunctionApp in Visual Studio, this is to be able to run MicroflowFunctionApp separately, and then run the MicroflowConsoleApp to post workflows to it:
