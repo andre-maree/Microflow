@@ -126,7 +126,6 @@ This is the core of the workflow engine.
 This contains 3 functions responsible starting project execution.
   * "Microflow_InsertOrUpdateProject" : Must be called first after project creation or midification before "Microflow_HttpStart" can be called. This will persist the needed project meta data that is needed for the project to run. When running multiple concurrent instances, it is not needed to call this every time when a new instance starts to run.
   * "Microflow_HttpStart" : This will start the run of a project.
-  * MicroflowStart.cs : This is where the workflow JSON payload is received via http post and then prepares the workflow and calls start. This calls "Start".
   * "Start" : This starts the project run by getting a list of top level steps and then calls "ExecuteStep" for each top level step.
   
 #### API
