@@ -1,12 +1,9 @@
-﻿using Microsoft.Azure.Cosmos.Table;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Microflow.Helpers;
+using Microsoft.Azure.Cosmos.Table;
 
-/// <summary>
-/// This is where all table entity objects reside
-/// </summary>
-namespace Microflow
+namespace Microflow.Models
 {
     #region TableEntity
 
@@ -141,11 +138,11 @@ namespace Microflow
         }
 
         // retry options
-        public int Retry_DelaySeconds { get; set; }
-        public int Retry_MaxDelaySeconds { get; set; }
-        public int Retry_MaxRetries { get; set; }
-        public double Retry_BackoffCoefficient { get; set; }
-        public int Retry_TimeoutSeconds { get; set; }
+        public int RetryDelaySeconds { get; set; }
+        public int RetryMaxDelaySeconds { get; set; }
+        public int RetryMaxRetries { get; set; }
+        public double RetryBackoffCoefficient { get; set; }
+        public int RetryTimeoutSeconds { get; set; }
     }
 
     /// <summary>

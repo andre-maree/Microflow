@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microflow.Models;
 using Microsoft.Azure.Cosmos.Table;
 
 namespace Microflow.Helpers
 {
     public static class MicroflowTableHelper
     {
+        #region Formatting
+
         public static string GetTableLogRowKeyDescendingByDate(DateTime date, string postfix)
         {
             return $"{String.Format("{0:D19}", DateTime.MaxValue.Ticks - date.Ticks)}{postfix}";
@@ -16,7 +19,11 @@ namespace Microflow.Helpers
         {
             return $"{String.Format("{0:D19}", DateTime.MaxValue.Ticks - DateTime.UtcNow.Ticks)}{Guid.NewGuid()}";
         }
-        
+
+        #endregion
+
+        #region Table operations
+
         public static async Task LogError(this LogErrorEntity logEntity)
         {
             CloudTable table = GetErrorsTable();
@@ -110,8 +117,6 @@ namespace Microflow.Helpers
                 {
                     TableOperation delop = TableOperation.Delete(entity);
                     batchop.Add(delop);
-                    //Console.WriteLine("{0}, {1}\t{2}\t{3}", entity.PartitionKey, entity.RowKey,
-                    //    entity.PartitionKey, entity.RowKey);
                 }
 
                 await table.ExecuteBatchAsync(batchop);
@@ -172,6 +177,10 @@ namespace Microflow.Helpers
             await table.ExecuteAsync(op);
         }
 
+        #endregion
+
+        #region Get table references
+
         private static CloudTable GetErrorsTable()
         {
             CloudTableClient tableClient = GetTableClient();
@@ -213,5 +222,7 @@ namespace Microflow.Helpers
 
             return storageAccount.CreateCloudTableClient(new TableClientConfiguration());
         }
+
+        #endregion
     }
 }

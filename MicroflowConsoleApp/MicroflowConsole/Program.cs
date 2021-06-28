@@ -55,11 +55,11 @@ namespace MicroflowConsole
                 // call Microflow insertorupdateproject when something ischanges in the workflow, but do not always call this when corcurrent multiple workflows
                 var result = await HttpClient.PostAsJsonAsync("http://localhost:7071/api/insertorupdateproject", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
                 // singleton workflow instance
-                //var result2 = await HttpClient.PostAsJsonAsync("http://localhost:7071/api/start/39806875-9c81-4736-81c0-9be562dae71e/", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
+                //var result2 = await HttpClient.PostAsJsonAsync("http://localhost:7071/api/start/39806875-9c81-4736-81c0-9be562dae71e/", new ProjectBase() { ProjectName = "MicroflowDemo" }, new JsonSerializerOptions(JsonSerializerDefaults.General));
 
                 //HttpResponseMessage posttask = await client.PostAsJsonAsync(baseUrl + "/api/prepareproject/", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
                 ////parallel multiple workflow instances
-                for (int i = 0; i < 1; i++)
+                for (int i = 0; i < 10; i++)
                 {
                     await Task.Delay(500);
                     //await posttask;
@@ -83,8 +83,8 @@ namespace MicroflowConsole
             // use 
             //mergeFields.Add("default_post_url", "https://reqbin.com/echo/post/json" + querystring);
             // set the callout url to the new SleepTestOrchestrator http normal function url
-            mergeFields.Add("default_post_url", baseUrl + "/api/SleepTestOrchestrator_Function");// + querystring);
-            //mergeFields.Add("default_post_url", baseUrl + "/api/testpost");
+            //mergeFields.Add("default_post_url", baseUrl + "/api/SleepTestOrchestrator_Function");// + querystring);
+            mergeFields.Add("default_post_url", baseUrl + "/api/testpost");
 
             return mergeFields;
         }

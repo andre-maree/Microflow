@@ -1,9 +1,10 @@
 using System.Threading.Tasks;
 using Microflow.Helpers;
+using Microflow.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 
-namespace Microflow.FlowControl
+namespace Microflow.TableLogging
 {
     public static class TableLogginActivity
     {

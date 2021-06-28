@@ -1,15 +1,14 @@
-﻿using System;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Threading.Tasks;
 using Microflow.Helpers;
-using Microsoft.Azure.Cosmos.Table;
+using Microflow.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 
 namespace Microflow.API.External
 {
-    public static class MicroflowExternalAPI
+    public static class MicroflowExternalApi
     {
         /// <summary>
         /// Called from Microflow.ExecuteStep to get the current step table config
@@ -42,14 +41,15 @@ namespace Microflow.API.External
         public static async Task<HttpResponseMessage> TestPost(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "testpost")] HttpRequestMessage req)
         {
-            await Task.Delay(19500);
-            await req.Content.ReadAsStringAsync();
-
+            await Task.Delay(1500);
+            var r = await req.Content.ReadAsStringAsync();
+            
             //MicroflowPostData result = JsonSerializer.Deserialize<MicroflowPostData>(r);
 
             //if (result.StepId.Equals("1"))
             //{
-            //    return new HttpResponseMessage(System.Net.HttpStatusCode.NotFound);
+            //    int i = 0;
+            //    int y = 5 / i;
             //}
             var resp = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
             //    resp.Headers.Location = new Uri("http://localhost:7071/api/testpost");

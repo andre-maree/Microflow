@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Microflow.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 

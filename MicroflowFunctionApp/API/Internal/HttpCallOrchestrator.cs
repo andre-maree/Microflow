@@ -1,11 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Text.Json;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microflow.Helpers;
+using Microflow.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 
-namespace Microflow.API
+namespace Microflow.API.Internal
 {
     public static class MicroflowInternalAPI
     {
@@ -15,7 +14,7 @@ namespace Microflow.API
         [FunctionName("HttpCallOrchestrator")]
         public static async Task<MicroflowHttpResponse> HttpCallOrchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
-            var httpCall = context.GetInput<HttpCall>();
+            HttpCall httpCall = context.GetInput<HttpCall>();
 
             DurableHttpRequest durableHttpRequest = httpCall.CreateMicroflowDurableHttpRequest(context.InstanceId);
 

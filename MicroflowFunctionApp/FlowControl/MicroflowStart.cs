@@ -9,6 +9,7 @@ using System.Text.Json;
 using Microflow.Helpers;
 using MicroflowModels;
 using System.Net;
+using Microflow.Models;
 using Microsoft.Azure.Cosmos.Table;
 
 namespace Microflow.FlowControl
@@ -24,27 +25,32 @@ namespace Microflow.FlowControl
         /// This is the entry point, project payload is in the http body
         /// </summary>
         /// <param name="instanceId">If an instanceId is passed in, it will run as a singleton, else it will run concurrently with each with a new instanceId</param>
+        /// <param name="req"></param>
         /// <returns></returns>
         [FunctionName("Microflow_HttpStart")]
-        public static async Task<HttpResponseMessage> HttpStart([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "start/{instanceId?}")] HttpRequestMessage req,
-                                                                [DurableClient] IDurableOrchestrationClient client,
+        // ReSharper disable once InvalidXmlDocComment
+        public static async Task<HttpResponseMessage> HttpStart(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "start/{instanceId?}")]
+            HttpRequestMessage req,
+            // ReSharper disable once InvalidXmlDocComment
+            [DurableClient] IDurableOrchestrationClient client,
                                                                 string instanceId)
         {
             // read http content
-            var content = await req.Content.ReadAsStringAsync();
+            string content = await req.Content.ReadAsStringAsync();
 
             // deserialize the workflow json
-            var projectbase = JsonSerializer.Deserialize<ProjectBase>(content);
+            ProjectBase projectBase = JsonSerializer.Deserialize<ProjectBase>(content);
 
             try
             {
                 //await client.PurgeInstanceHistoryAsync("7c828621-3e7a-44aa-96fd-c6946763cc2b");
 
                 // create a project run
-                ProjectRun projectRun = new ProjectRun() { ProjectName = projectbase.ProjectName, Loop = projectbase.Loop };
+                ProjectRun projectRun = new ProjectRun() { ProjectName = projectBase.ProjectName, Loop = projectBase.Loop };
 
                 // set the state of the project to running
-                await MicroflowTableHelper.UpdateStatetEntity(projectbase.ProjectName, 1);
+                await MicroflowTableHelper.UpdateStatetEntity(projectBase.ProjectName, 1);
 
                 // create a new run object
                 RunObject runObj = new RunObject() { StepId = -1 };
@@ -64,17 +70,21 @@ namespace Microflow.FlowControl
                 return await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromSeconds(1));
 
             }
-            catch (StorageException e)
+            catch (StorageException)
             {
-                var resp = new HttpResponseMessage(HttpStatusCode.InternalServerError);
-                resp.Content = new StringContent("Project in error state, call 'prepareproject/{instanceId?}' at least once before running a project.");
-                
+                HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.InternalServerError)
+                {
+                    Content = new StringContent("Project in error state, call 'prepareproject/{instanceId?}' at least once before running a project.")
+                };
+
                 return resp;
             }
             catch (Exception e)
             {
-                var resp = new HttpResponseMessage(HttpStatusCode.InternalServerError);
-                resp.Content = new StringContent(e.Message);
+                HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.InternalServerError)
+                {
+                    Content = new StringContent(e.Message)
+                };
 
                 return resp;
             }
@@ -86,9 +96,9 @@ namespace Microflow.FlowControl
         /// <returns></returns>
         [FunctionName("Start")]
         public static async Task Start([OrchestrationTrigger] IDurableOrchestrationContext context,
-                                       ILogger inlog)
+                                       ILogger inLog)
         {
-            var log = context.CreateReplaySafeLogger(inlog);
+            ILogger log = context.CreateReplaySafeLogger(inLog);
 
             // read ProjectRun payload
             var projectRun = context.GetInput<ProjectRun>();
@@ -96,9 +106,9 @@ namespace Microflow.FlowControl
             try
             {
                 // log start
-                var logRowKey = MicroflowTableHelper.GetTableLogRowKeyDescendingByDate(context.CurrentUtcDateTime, "_" + projectRun.OrchestratorInstanceId);
+                string logRowKey = MicroflowTableHelper.GetTableLogRowKeyDescendingByDate(context.CurrentUtcDateTime, "_" + projectRun.OrchestratorInstanceId);
 
-                var logEntity = new LogOrchestrationEntity(true,
+                LogOrchestrationEntity logEntity = new LogOrchestrationEntity(true,
                                                            projectRun.ProjectName,
                                                            logRowKey,
                                                            $"{Environment.MachineName} - {projectRun.ProjectName} started...",
@@ -135,7 +145,7 @@ namespace Microflow.FlowControl
             catch (Exception e)
             {
                 // log to table workflow completed
-                var errorEntity = new LogErrorEntity(projectRun.ProjectName, e.Message, projectRun.RunObject.RunId);
+                LogErrorEntity errorEntity = new LogErrorEntity(projectRun.ProjectName, e.Message, projectRun.RunObject.RunId);
 
                 await context.CallActivityAsync("LogError", errorEntity);
             }
@@ -151,10 +161,10 @@ namespace Microflow.FlowControl
                                                                   [DurableClient] IDurableOrchestrationClient client)
         {
             // read http content
-            var strWorkflow = await req.Content.ReadAsStringAsync();
+            string strWorkflow = await req.Content.ReadAsStringAsync();
 
             // deserialize the workflow json
-            var project = JsonSerializer.Deserialize<Project>(strWorkflow);
+            Project project = JsonSerializer.Deserialize<Project>(strWorkflow);
 
             try
             {

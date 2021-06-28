@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Microflow
+namespace Microflow.Models
 {
     #region POCOs
 

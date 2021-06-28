@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microflow.Helpers;
+using Microflow.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
@@ -39,7 +40,7 @@ namespace Microflow.FlowControl
 
                 var logRowKey = MicroflowTableHelper.GetTableLogRowKeyDescendingByDate(context.CurrentUtcDateTime, context.NewGuid().ToString());
 
-                if (httpCallWithRetries.Retry_DelaySeconds > 0)
+                if (httpCallWithRetries.RetryDelaySeconds > 0)
                 {
                     retryOptions = httpCallWithRetries.GetRetryOptions();
                 }
@@ -55,16 +56,12 @@ namespace Microflow.FlowControl
                 //    await Task.Delay(30000);
                 //}
 
-                MicroflowHttpResponse microflowHttpResponse = null;
+                MicroflowHttpResponse microflowHttpResponse;
                 var subTasks = new List<Task>();
                 var logTasks = new List<Task>();
-
-                // if the call out url is empty then no http call is done, use this for an empty conatainer step
-                if (!string.IsNullOrWhiteSpace(httpCallWithRetries.Url))
-                {
-                    microflowHttpResponse = await StepCallout(context, log, projectRun, runObj, httpCallWithRetries, retryOptions, logRowKey, microflowHttpResponse, logTasks);
-                }
-
+                
+                microflowHttpResponse = await StepCallout(context, log, projectRun, runObj, httpCallWithRetries, retryOptions, logRowKey, logTasks);
+                
                 if (microflowHttpResponse.Success || !httpCallWithRetries.StopOnActionFailed)
                 {
                     LogStepEnd(context, log, projectRun, httpCallWithRetries, logRowKey, microflowHttpResponse, logTasks);
@@ -141,7 +138,6 @@ namespace Microflow.FlowControl
                                                                    HttpCallWithRetries httpCallWithRetries,
                                                                    RetryOptions retryOptions,
                                                                    string logRowKey,
-                                                                   MicroflowHttpResponse microflowHttpResponse,
                                                                    List<Task> logTasks)
         {
             try
@@ -153,42 +149,46 @@ namespace Microflow.FlowControl
 
                 // log start of step
                 LogStepStart(context, projectRun, httpCallWithRetries, logRowKey, logTasks);
+                
+                // if the call out url is empty then no http call is done, use this for an empty container step
+                if (string.IsNullOrWhiteSpace(httpCallWithRetries.Url))
+                {
+                    return new MicroflowHttpResponse()
+                    {
+                        Success = true,
+                        HttpResponseStatusCode = -1
+                    };
+                }
 
                 // wait for external event flow / callback
                 if (!string.IsNullOrWhiteSpace(httpCallWithRetries.CallBackAction))
                 {
-                    var name = "HttpCallWithCallBackOrchestrator";
+                    string name = "HttpCallWithCallBackOrchestrator";
 
                     if (retryOptions == null)
                     {
-                        microflowHttpResponse = await context.CallSubOrchestratorAsync<MicroflowHttpResponse>(name, id, httpCallWithRetries);
+                        return await context.CallSubOrchestratorAsync<MicroflowHttpResponse>(name, id, httpCallWithRetries);
                     }
-                    else
-                    {
-                        microflowHttpResponse = await context.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(name, retryOptions, id, httpCallWithRetries);
-                    }
+
+                    return await context.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(name, retryOptions, id, httpCallWithRetries);
                 }
                 // send and receive inline flow
                 else
                 {
-                    var name = "HttpCallOrchestrator";
+                    string name = "HttpCallOrchestrator";
 
                     if (retryOptions == null)
                     {
-                        microflowHttpResponse = await context.CallSubOrchestratorAsync<MicroflowHttpResponse>(name, id, httpCallWithRetries);
+                        return await context.CallSubOrchestratorAsync<MicroflowHttpResponse>(name, id, httpCallWithRetries);
                     }
-                    else
-                    {
-                        microflowHttpResponse = await context.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(name, retryOptions, id, httpCallWithRetries);
-                    }
+
+                    return await context.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(name, retryOptions, id, httpCallWithRetries);
                 }
             }
             catch (Exception ex)
             {
-                microflowHttpResponse = await HandleCalloutException(context, log, projectRun, httpCallWithRetries, logRowKey, logTasks, ex);
+                return await HandleCalloutException(context, log, projectRun, httpCallWithRetries, logRowKey, logTasks, ex);
             }
-
-            return microflowHttpResponse;
         }
 
         /// <summary>

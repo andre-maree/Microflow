@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
 using Microflow.Helpers;
+using Microflow.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 
-namespace Microflow.API
+namespace Microflow.API.Internal
 {
     public static class HttpCallWithCallbackOrchestrator
     {
@@ -16,9 +16,9 @@ namespace Microflow.API
         /// </summary>
         [FunctionName("HttpCallWithCallbackOrchestrator")]
         public static async Task<MicroflowHttpResponse> HttpCallWithCallback([OrchestrationTrigger] IDurableOrchestrationContext context,
-                                                                             ILogger inlog)
+                                                                             ILogger inLog)
         {
-            var log = context.CreateReplaySafeLogger(inlog);
+            var log = context.CreateReplaySafeLogger(inLog);
 
             var httpCall = context.GetInput<HttpCall>();
 
@@ -50,16 +50,14 @@ namespace Microflow.API
                 return microflowHttpResponse;
             }
             // if action callback failed
-            else
-            {
-                log.LogWarning($"Step {httpCall.RowKey} callback action {httpCall.CallBackAction} fail result at {DateTime.Now.ToString("HH:mm:ss")}");
 
-                microflowHttpResponse.Success = false;
-                microflowHttpResponse.HttpResponseStatusCode = (int)actionResult.StatusCode;
-                microflowHttpResponse.Message = $"callback action {httpCall.CallBackAction} fail - " + microflowHttpResponse.Message;
+            log.LogWarning($"Step {httpCall.RowKey} callback action {httpCall.CallBackAction} fail result at {DateTime.Now.ToString("HH:mm:ss")}");
 
-                return microflowHttpResponse;
-            }
+            microflowHttpResponse.Success = false;
+            microflowHttpResponse.HttpResponseStatusCode = (int)actionResult.StatusCode;
+            microflowHttpResponse.Message = $"callback action {httpCall.CallBackAction} fail - " + microflowHttpResponse.Message;
+
+            return microflowHttpResponse;
         }
     }
 }

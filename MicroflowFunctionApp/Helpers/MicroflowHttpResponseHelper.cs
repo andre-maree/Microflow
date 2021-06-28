@@ -1,5 +1,5 @@
-﻿using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using System.Text.Json;
+﻿using Microflow.Models;
+using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 
 namespace Microflow.Helpers
 {
@@ -16,20 +16,14 @@ namespace Microflow.Helpers
             {
                 return new MicroflowHttpResponse() { Success = true, HttpResponseStatusCode = statusCode };
             }
+
             // if 201 created try get the location header to save it in the steps log
-            else if (statusCode == 201)
-            {
-                Microsoft.Extensions.Primitives.StringValues values;
+            if (statusCode != 201)
+                return new MicroflowHttpResponse() {Success = false, HttpResponseStatusCode = statusCode};
 
-                if (durableHttpResponse.Headers.TryGetValue("location", out values))
-                {
-                    return new MicroflowHttpResponse() { Success = true, HttpResponseStatusCode = statusCode, Message = values[0] };
-                }
-
-                return new MicroflowHttpResponse() { Success = true, HttpResponseStatusCode = statusCode };
-            }
-
-            return new MicroflowHttpResponse() { Success = false, HttpResponseStatusCode = statusCode };
+            return durableHttpResponse.Headers.TryGetValue("location", out var values)
+                ? new MicroflowHttpResponse() {Success = true, HttpResponseStatusCode = statusCode, Message = values[0]}
+                : new MicroflowHttpResponse() {Success = true, HttpResponseStatusCode = statusCode};
         }
     }
 }

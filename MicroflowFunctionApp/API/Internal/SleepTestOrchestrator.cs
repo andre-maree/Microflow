@@ -27,9 +27,9 @@ namespace Microflow.API.Internal
         [FunctionName("SleepTestOrchestrator")]
         public static async Task SleepTestMethod(
             [OrchestrationTrigger] IDurableOrchestrationContext context,
-            ILogger inlog)
+            ILogger inLog)
         {
-            var log = context.CreateReplaySafeLogger(inlog);
+            var log = context.CreateReplaySafeLogger(inLog);
 
             string data = context.GetInput<string>();
             MicroflowPostData postData = JsonSerializer.Deserialize<MicroflowPostData>(data);
@@ -59,7 +59,7 @@ namespace Microflow.API.Internal
             {
                 DurableHttpRequest req = new DurableHttpRequest(HttpMethod.Get, new Uri("http://" + postData.CallbackUrl));
 
-                DurableHttpResponse resp = await context.CallHttpAsync(req);
+                await context.CallHttpAsync(req);
             }
         }
 
@@ -111,9 +111,7 @@ namespace Microflow.API.Internal
 
             MicroflowPostData data = JsonSerializer.Deserialize<MicroflowPostData>(requestBody);
 
-            string newInstanceId = Guid.NewGuid().ToString();
-
-            await MicroflowHttpClient.HttpClient.PostAsJsonAsync<MicroflowPostData>("http://localhost:7071/api/SleepTestOrchestrator_HttpStart/", data);
+            await MicroflowHttpClient.HttpClient.PostAsJsonAsync("http://localhost:7071/api/SleepTestOrchestrator_HttpStart/", data);
 
             HttpResponseMessage resp = new HttpResponseMessage();
 
