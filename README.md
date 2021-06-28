@@ -124,7 +124,7 @@ This is the core of the workflow engine.
 
 #### MicroflowStart
 This contains 3 functions responsible starting project execution.
-  * "Microflow_InsertOrUpdateProject" : Must be called first after project creation or midification before "Microflow_HttpStart" can be called. This will persist the needed project meta data that is needed for the project to run. When running multiple concurrent instances, it is not needed to call this every time when a new instance starts to run.
+  * "Microflow_InsertOrUpdateProject" : Must be called first after project creation or modification before "Microflow_HttpStart" can be called. This will persist the needed project meta data that is needed for the project to run. When running multiple concurrent instances, it is not needed to call this every time when a new instance starts to run.
   * "Microflow_HttpStart" : This will start the run of a project by calling "Start".
   * "Start" : This starts the project run by getting a list of top level steps and then calls "ExecuteStep" for each top level step.
  
@@ -138,7 +138,7 @@ This contains 3 classes responsible for workflow execution.
 This currently contains 2 folders each with 1 class, 1 for internal and 1 for external api calls.
 
 ### MicroflowConsoleApp
-This console app is used to create test workflow projects and post to Microflow. After created or modifying a project, always call "Microflow_InsertOrUpdateProject" before calling the run thhp call "Microflow_HttpStart". After a call to "Microflow_InsertOrUpdateProject" is made, then "Microflow_HttpStart" can be called multiple times as long as the project definition stays the same.
+This console app is used to create test workflow projects and post to Microflow. After created or modifying a project, always call "Microflow_InsertOrUpdateProject" before calling the run http call "Microflow_HttpStart". After a call to "Microflow_InsertOrUpdateProject" is made, then "Microflow_HttpStart" can be called multiple times as long as the project definition stays the same.
 
 ### MicroflowModels
 This library holds model classes that is useful outside of the Microflow function app, but is also used by the Microflow function app.
