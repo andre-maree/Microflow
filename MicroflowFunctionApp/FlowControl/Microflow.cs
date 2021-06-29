@@ -59,9 +59,18 @@ namespace Microflow.FlowControl
                 MicroflowHttpResponse microflowHttpResponse;
                 var subTasks = new List<Task>();
                 var logTasks = new List<Task>();
-                
+
+                EntityId countId = new EntityId(nameof(StepCounter), httpCallWithRetries.PartitionKey + httpCallWithRetries.RowKey);
+
+                // set the per step in-progress count to count+1
+                context.SignalEntity(countId, "add");
+
+                // call out to micro-service
                 microflowHttpResponse = await StepCallout(context, log, projectRun, runObj, httpCallWithRetries, retryOptions, logRowKey, logTasks);
-                
+
+                // set the per step in-progress count to count-1
+                context.SignalEntity(countId, "subtract");
+
                 if (microflowHttpResponse.Success || !httpCallWithRetries.StopOnActionFailed)
                 {
                     LogStepEnd(context, log, projectRun, httpCallWithRetries, logRowKey, microflowHttpResponse, logTasks);
@@ -125,6 +134,32 @@ namespace Microflow.FlowControl
                 // log to table workflow completed
                 var errorEntity = new LogErrorEntity(projectRun.ProjectName, e.Message, runObj.RunId, stepId);
                 await context.CallActivityAsync("LogError", errorEntity);
+            }
+        }
+
+        /// <summary>
+        /// Durable entity to keep a count for each run and each step in the run
+        /// </summary>
+        [FunctionName("StepCounter")]
+        public static void StepCounter([EntityTrigger] IDurableEntityContext ctx)
+        {
+            switch (ctx.OperationName.ToLowerInvariant())
+            {
+                case "add":
+                    ctx.SetState(ctx.GetState<int>() + 1);
+                    break;
+                case "reset":
+                    ctx.SetState(0);
+                    break;
+                case "get":
+                    ctx.Return(ctx.GetState<int>());
+                    break;
+                case "subtract":
+                    ctx.SetState(ctx.GetState<int>() - 1);
+                    break;
+                case "delete":
+                    ctx.DeleteState();
+                    break;
             }
         }
 

@@ -27,7 +27,7 @@ namespace Microflow.FlowControl
                     if (parentCompletedCount + 1 >= canExecuteNowObject.ParentCount)
                     {
                         // maybe needed cleanup
-                        await context.CallEntityAsync(countId, "delete");
+                        //await context.CallEntityAsync(countId, "delete");
 
                         return new CanExecuteResult() { CanExecute = true, StepId = canExecuteNowObject.StepId };
                     }

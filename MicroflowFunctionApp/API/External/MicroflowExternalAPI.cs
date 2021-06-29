@@ -11,6 +11,21 @@ namespace Microflow.API.External
     public static class MicroflowExternalApi
     {
         /// <summary>
+        /// Call this to see the step count in StepCallout per project name and stepId 
+        /// </summary>
+        [FunctionName("GetStepCountInprogress")]
+        public static async Task<int> GetStepCountInprogress([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "getstepcountinprogress/{projectNameStepId}")] HttpRequestMessage req,
+                                                             [DurableClient] IDurableEntityClient client,
+                                                             string projectNameStepId)
+        {
+            EntityId countId = new EntityId("StepCounter", projectNameStepId);
+
+            EntityStateResponse<int> reuslt = await client.ReadEntityStateAsync<int>(countId);
+
+            return reuslt.EntityState;
+        }
+
+        /// <summary>
         /// Called from Microflow.ExecuteStep to get the current step table config
         /// </summary>
         [FunctionName("GetStep")]
@@ -41,7 +56,7 @@ namespace Microflow.API.External
         public static async Task<HttpResponseMessage> TestPost(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "testpost")] HttpRequestMessage req)
         {
-            await Task.Delay(1500);
+            await Task.Delay(1000);
             var r = await req.Content.ReadAsStringAsync();
             
             //MicroflowPostData result = JsonSerializer.Deserialize<MicroflowPostData>(r);

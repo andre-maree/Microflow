@@ -49,8 +49,8 @@ namespace Microflow.FlowControl
                 // create a project run
                 ProjectRun projectRun = new ProjectRun() { ProjectName = projectBase.ProjectName, Loop = projectBase.Loop };
 
-                // set the state of the project to running
-                await MicroflowTableHelper.UpdateStatetEntity(projectBase.ProjectName, 1);
+                // ERROR! cant do this
+                //await MicroflowTableHelper.UpdateStatetEntity(projectBase.ProjectName, 1);
 
                 // create a new run object
                 RunObject runObj = new RunObject() { StepId = -1 };
@@ -70,11 +70,11 @@ namespace Microflow.FlowControl
                 return await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromSeconds(1));
 
             }
-            catch (StorageException)
+            catch (StorageException ex)
             {
                 HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.InternalServerError)
                 {
-                    Content = new StringContent("Project in error state, call 'prepareproject/{instanceId?}' at least once before running a project.")
+                    Content = new StringContent(ex.Message + " - Project in error state, call 'prepareproject/{instanceId?}' at least once before running a project.")
                 };
 
                 return resp;
@@ -115,12 +115,22 @@ namespace Microflow.FlowControl
                                                            context.CurrentUtcDateTime,
                                                            projectRun.OrchestratorInstanceId);
 
+                EntityId countId1 = new EntityId("StepCounter", projectRun.ProjectName + "1");
+                EntityId countId2 = new EntityId("StepCounter", projectRun.ProjectName + "2");
+                EntityId countId3 = new EntityId("StepCounter", projectRun.ProjectName + "3");
+                EntityId countId4 = new EntityId("StepCounter", projectRun.ProjectName + "4");
+                //await context.CallEntityAsync<int>(countId, "delete");
+
                 await context.CallActivityAsync("LogOrchestration", logEntity);
 
                 log.LogInformation($"Started orchestration with ID = '{context.InstanceId}', Project = '{projectRun.ProjectName}'");
 
                 await context.MicroflowStartProjectRun(log, projectRun);
 
+                int c1 = await context.CallEntityAsync<int>(countId1, "get");
+                int c2 = await context.CallEntityAsync<int>(countId2, "get");
+                int c3 = await context.CallEntityAsync<int>(countId3, "get");
+                int c4 = await context.CallEntityAsync<int>(countId4, "get");
                 // log to table workflow completed
                 logEntity = new LogOrchestrationEntity(false,
                                                        projectRun.ProjectName,
@@ -133,7 +143,7 @@ namespace Microflow.FlowControl
 
                 // done
                 log.LogError($"Project run {projectRun.ProjectName} completed successfully...");
-                log.LogError("<<<<<<<<<<<<<<<<<<<<<<<<<-----> !!! A GREAT SUCCESS !!! <----->>>>>>>>>>>>>>>>>>>>>>>>>");
+                log.LogError("<<<<<<<<<<<<<<<<<<<<<<<<<-----> !!! A GREAT SUCCESS count is" + c1 + " " + c2 + " " + c3 + " " + c4 + " !!! <----->>>>>>>>>>>>>>>>>>>>>>>>>");
             }
             catch (StorageException e)
             {

@@ -50,7 +50,7 @@ namespace MicroflowConsole
                 //    }
                 //}
                 ////var r = JsonSerializer.Serialize(project);
-                var tasks = new List<Task>();
+                var tasks = new List<Task<HttpResponseMessage>>();
 
                 // call Microflow insertorupdateproject when something ischanges in the workflow, but do not always call this when corcurrent multiple workflows
                 var result = await HttpClient.PostAsJsonAsync("http://localhost:7071/api/insertorupdateproject", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
@@ -59,7 +59,7 @@ namespace MicroflowConsole
 
                 //HttpResponseMessage posttask = await client.PostAsJsonAsync(baseUrl + "/api/prepareproject/", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
                 ////parallel multiple workflow instances
-                for (int i = 0; i < 10; i++)
+                for (int i = 0; i < 1; i++)
                 {
                     await Task.Delay(500);
                     //await posttask;
@@ -68,6 +68,14 @@ namespace MicroflowConsole
 
                 ////await posttask;
                 await Task.WhenAll(tasks);
+
+                foreach(var t in tasks)
+                {
+                    if(t.IsFaulted || t.IsCanceled || !t.IsCompletedSuccessfully || !t.Result.IsSuccessStatusCode)
+                    {
+                        var r = await t.Result.Content.ReadAsStringAsync();
+                    }
+                }
             }
             catch (Exception ex)
             {
