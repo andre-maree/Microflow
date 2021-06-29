@@ -115,22 +115,12 @@ namespace Microflow.FlowControl
                                                            context.CurrentUtcDateTime,
                                                            projectRun.OrchestratorInstanceId);
 
-                EntityId countId1 = new EntityId("StepCounter", projectRun.ProjectName + "1");
-                EntityId countId2 = new EntityId("StepCounter", projectRun.ProjectName + "2");
-                EntityId countId3 = new EntityId("StepCounter", projectRun.ProjectName + "3");
-                EntityId countId4 = new EntityId("StepCounter", projectRun.ProjectName + "4");
-                //await context.CallEntityAsync<int>(countId, "delete");
-
                 await context.CallActivityAsync("LogOrchestration", logEntity);
 
                 log.LogInformation($"Started orchestration with ID = '{context.InstanceId}', Project = '{projectRun.ProjectName}'");
 
                 await context.MicroflowStartProjectRun(log, projectRun);
 
-                int c1 = await context.CallEntityAsync<int>(countId1, "get");
-                int c2 = await context.CallEntityAsync<int>(countId2, "get");
-                int c3 = await context.CallEntityAsync<int>(countId3, "get");
-                int c4 = await context.CallEntityAsync<int>(countId4, "get");
                 // log to table workflow completed
                 logEntity = new LogOrchestrationEntity(false,
                                                        projectRun.ProjectName,
@@ -143,7 +133,7 @@ namespace Microflow.FlowControl
 
                 // done
                 log.LogError($"Project run {projectRun.ProjectName} completed successfully...");
-                log.LogError("<<<<<<<<<<<<<<<<<<<<<<<<<-----> !!! A GREAT SUCCESS count is" + c1 + " " + c2 + " " + c3 + " " + c4 + " !!! <----->>>>>>>>>>>>>>>>>>>>>>>>>");
+                log.LogError("<<<<<<<<<<<<<<<<<<<<<<<<<-----> !!! A GREAT SUCCESS  !!! <----->>>>>>>>>>>>>>>>>>>>>>>>>");
             }
             catch (StorageException e)
             {
