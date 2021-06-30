@@ -52,22 +52,10 @@ namespace Microflow.Helpers
         {
             HashSet<KeyValuePair<int, int>> hsStepCounts = new HashSet<KeyValuePair<int, int>>();
 
-            Local(steps[0]);
-
-            void Local(Step step)
+            foreach(Step step in steps)
             {
-                if (step.SubSteps != null)
-                {
-                    foreach (var cstep in step.SubSteps)
-                    {
-                        hsStepCounts.Add(new KeyValuePair<int, int>(step.StepId, cstep));
-                        Local(steps[cstep - 1]);
-                    }
-                }
-                else
-                {
-                    step.SubSteps = new List<int>();
-                }
+                int count = steps.Count(c => c.SubSteps.Contains(step.StepId));
+                hsStepCounts.Add(new KeyValuePair<int, int>(step.StepId, count));
             }
 
             var tasks = new List<Task>();
@@ -82,8 +70,8 @@ namespace Microflow.Helpers
 
                 if (step.StepId > -1)
                 {
-                    var parents = steps.Where(x => x.SubSteps.Contains(step.StepId)).ToList();
-                    if (parents.Count == 0)
+                    int parentCount = hsStepCounts.FirstOrDefault(s => s.Key == step.StepId).Value;
+                    if (parentCount == 0)
                     {
                         stepContainer.SubSteps.Add(step.StepId);
                     }
@@ -92,8 +80,8 @@ namespace Microflow.Helpers
 
                     foreach (var sub in step.SubSteps)
                     {
-                        var count = hsStepCounts.Count(x => x.Value == sub);
-                        substeps.Add(new KeyValuePair<int, int>(sub, count));
+                        parentCount = hsStepCounts.FirstOrDefault(s => s.Key == sub).Value;
+                        substeps.Add(new KeyValuePair<int, int>(sub, parentCount));
                     }
 
                     if (step.RetryOptions != null)
@@ -113,6 +101,7 @@ namespace Microflow.Helpers
                         stentRetries.RetryTimeoutSeconds = step.RetryOptions.TimeOutSeconds;
                         stentRetries.RetryBackoffCoefficient = step.RetryOptions.BackoffCoefficient;
 
+                        // TODO: batchop this 
                         tasks.Add(stentRetries.InsertStep(stepsTable));
                     }
                     else
@@ -125,7 +114,8 @@ namespace Microflow.Helpers
                             ActionTimeoutSeconds = step.ActionTimeoutSeconds,
                             IsHttpGet = step.IsHttpGet
                         };
-
+                        
+                        // TODO: batchop this 
                         tasks.Add(stent.InsertStep(stepsTable));
                     }
                 }

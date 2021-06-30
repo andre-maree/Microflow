@@ -76,5 +76,31 @@ namespace MicroflowConsole
 
             return steps;
         }
+
+
+        public static List<Step> CreateTestWorkflow_110Steps()
+        {
+            List<Step> steps = ProjectManager.CreateSteps(110, 1, "{default_post_url}");
+
+            steps[0].AddSubStepRange(steps, 2, 11);
+            steps[11].AddSubStepRange(steps, 13, 22);
+
+            steps[22].AddSubStepRange(steps, 24, 33);
+            steps[33].AddSubStepRange(steps, 35, 44);
+            steps[44].AddSubStepRange(steps, 46, 55);
+            steps[55].AddSubStepRange(steps, 57, 66);
+            steps[66].AddSubStepRange(steps, 68, 77);
+            steps[77].AddSubStepRange(steps, 79, 88);
+            steps[88].AddSubStepRange(steps, 90, 99);
+            steps[99].AddSubStepRange(steps, 101, 110);
+            //foreach(var step in steps)
+            //{
+
+            //}
+
+            //steps[7].CallbackAction = "approve";
+
+            return steps;
+        }
     }
 }
