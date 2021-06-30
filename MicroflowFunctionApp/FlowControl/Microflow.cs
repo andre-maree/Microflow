@@ -71,61 +71,11 @@ namespace Microflow.FlowControl
                 // set the per step in-progress count to count-1
                 context.SignalEntity(countId, "subtract");
 
-                if (microflowHttpResponse.Success || !httpCallWithRetries.StopOnActionFailed)
-                {
-                    LogStepEnd(context, log, projectRun, httpCallWithRetries, logRowKey, microflowHttpResponse, logTasks);
-
-                    List<KeyValuePair<int, int>> subSteps = JsonSerializer.Deserialize<List<KeyValuePair<int, int>>>(httpCallWithRetries.SubSteps);
-
-                    var canExeccuteTasks = new List<Task<CanExecuteResult>>();
-
-                    foreach (var step in subSteps)
-                    {
-                        // step.Value is parentCount
-                        // execute immediately if parentCount is 1
-                        if (step.Value < 2)
-                        {
-                            // step.Key is stepId
-                            projectRun.RunObject = new RunObject() { RunId = runObj.RunId, StepId = step.Key };
-                            subTasks.Add(context.CallSubOrchestratorAsync("ExecuteStep", projectRun));
-                        }
-                        // if parentCount is more than 1, work out if it can execute now
-                        else
-                        {
-                            canExeccuteTasks.Add(context.CallSubOrchestratorAsync<CanExecuteResult>("CanExecuteNow", new CanExecuteNowObject()
-                            {
-                                RunId = runObj.RunId,
-                                StepId = step.Key,
-                                ParentCount = step.Value,
-                                ProjectName = projectRun.ProjectName
-                            }));
-                        }
-                    }
-
-                    foreach (var task in canExeccuteTasks)
-                    {
-                        CanExecuteResult result = await task;
-
-                        if (result.CanExecute)
-                        {
-                            projectRun.RunObject = new RunObject()
-                            {
-                                RunId = runObj.RunId,
-                                StepId = result.StepId
-                            };
-
-                            subTasks.Add(context.CallSubOrchestratorAsync("ExecuteStep", projectRun));
-                        }
-                    }
-
-                    await Task.WhenAll(subTasks);
-                }
-                else
-                {
-                    LogStepFail(context, log, projectRun, httpCallWithRetries, logRowKey, microflowHttpResponse, logTasks);
-                }
+                await ProcessSubSteps(context, log, projectRun, runObj, httpCallWithRetries, logRowKey, microflowHttpResponse, subTasks, logTasks);
 
                 await Task.WhenAll(logTasks);
+
+                await Task.WhenAll(subTasks);
             }
             catch (Exception e)
             {
@@ -134,6 +84,90 @@ namespace Microflow.FlowControl
                 // log to table workflow completed
                 var errorEntity = new LogErrorEntity(projectRun.ProjectName, e.Message, runObj.RunId, stepId);
                 await context.CallActivityAsync("LogError", errorEntity);
+            }
+        }
+
+        /// <summary>
+        /// This method will do the 1st sub steps check,
+        /// if substep parentCount = 1 call "ExecuteStep" immediately,
+        /// else call "CanExecuteNow" to check concurrent parentCountCompleted
+        /// </summary>
+        private static async Task ProcessSubSteps(IDurableOrchestrationContext context,
+                                                      ILogger log,
+                                                      ProjectRun projectRun,
+                                                      RunObject runObj,
+                                                      HttpCallWithRetries httpCallWithRetries,
+                                                      string logRowKey,
+                                                      MicroflowHttpResponse microflowHttpResponse,
+                                                      List<Task> subTasks,
+                                                      List<Task> logTasks)
+        {
+            if (microflowHttpResponse.Success || !httpCallWithRetries.StopOnActionFailed)
+            {
+                LogStepEnd(context, log, projectRun, httpCallWithRetries, logRowKey, microflowHttpResponse, logTasks);
+
+                List<KeyValuePair<int, int>> subSteps = JsonSerializer.Deserialize<List<KeyValuePair<int, int>>>(httpCallWithRetries.SubSteps);
+
+                var canExeccuteTasks = new List<Task<CanExecuteResult>>();
+
+                foreach (var step in subSteps)
+                {
+                    // step.Value is parentCount
+                    // execute immediately if parentCount is 1
+                    if (step.Value < 2)
+                    {
+                        // step.Key is stepId
+                        projectRun.RunObject = new RunObject() { RunId = runObj.RunId, StepId = step.Key };
+                        subTasks.Add(context.CallSubOrchestratorAsync("ExecuteStep", projectRun));
+                    }
+                    // if parentCount is more than 1, work out if it can execute now
+                    else
+                    {
+                        canExeccuteTasks.Add(context.CallSubOrchestratorAsync<CanExecuteResult>("CanExecuteNow", new CanExecuteNowObject()
+                        {
+                            RunId = runObj.RunId,
+                            StepId = step.Key,
+                            ParentCount = step.Value,
+                            ProjectName = projectRun.ProjectName
+                        }));
+                    }
+                }
+
+                await ProcessStepCanExecuteTasks(context, projectRun, runObj, subTasks, canExeccuteTasks);
+            }
+            else
+            {
+                LogStepFail(context, log, projectRun, httpCallWithRetries, logRowKey, microflowHttpResponse, logTasks);
+            }
+        }
+
+        /// <summary>
+        /// Wait for the subStep canExeccuteTasks and process each result,
+        /// if true call "ExecuteStep", else discard the subStep/ignore
+        /// </summary>
+        private static async Task ProcessStepCanExecuteTasks(IDurableOrchestrationContext context,
+                                                             ProjectRun projectRun,
+                                                             RunObject runObj,
+                                                             List<Task> subTasks,
+                                                             List<Task<CanExecuteResult>> canExeccuteTasks)
+        {
+            for (int i = 0; i < canExeccuteTasks.Count;)
+            {
+                Task<CanExecuteResult> canExecuteTask = await Task.WhenAny(canExeccuteTasks);
+                CanExecuteResult result = canExecuteTask.Result;
+
+                if (result.CanExecute)
+                {
+                    projectRun.RunObject = new RunObject()
+                    {
+                        RunId = runObj.RunId,
+                        StepId = result.StepId
+                    };
+
+                    subTasks.Add(context.CallSubOrchestratorAsync("ExecuteStep", projectRun));
+                }
+
+                canExeccuteTasks.Remove(canExecuteTask);
             }
         }
 
@@ -148,18 +182,18 @@ namespace Microflow.FlowControl
                 case "add":
                     ctx.SetState(ctx.GetState<int>() + 1);
                     break;
-                case "reset":
-                    ctx.SetState(0);
-                    break;
+                //case "reset":
+                //    ctx.SetState(0);
+                //    break;
                 case "get":
                     ctx.Return(ctx.GetState<int>());
                     break;
                 case "subtract":
                     ctx.SetState(ctx.GetState<int>() - 1);
                     break;
-                case "delete":
-                    ctx.DeleteState();
-                    break;
+                //case "delete":
+                //    ctx.DeleteState();
+                //    break;
             }
         }
 
@@ -184,7 +218,7 @@ namespace Microflow.FlowControl
 
                 // log start of step
                 LogStepStart(context, projectRun, httpCallWithRetries, logRowKey, logTasks);
-                
+
                 // if the call out url is empty then no http call is done, use this for an empty container step
                 if (string.IsNullOrWhiteSpace(httpCallWithRetries.Url))
                 {

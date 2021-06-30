@@ -20,9 +20,9 @@ namespace Microflow.API.External
         {
             EntityId countId = new EntityId("StepCounter", projectNameStepId);
 
-            EntityStateResponse<int> reuslt = await client.ReadEntityStateAsync<int>(countId);
+            EntityStateResponse<int> result = await client.ReadEntityStateAsync<int>(countId);
 
-            return reuslt.EntityState;
+            return result.EntityState;
         }
 
         /// <summary>
