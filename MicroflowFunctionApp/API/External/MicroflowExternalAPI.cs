@@ -1,7 +1,9 @@
 ﻿using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microflow.Helpers;
 using Microflow.Models;
+using MicroflowModels;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -57,16 +59,15 @@ namespace Microflow.API.External
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "testpost")] HttpRequestMessage req)
         {
             await Task.Delay(1000);
-            var r = await req.Content.ReadAsStringAsync();
-            
-            //MicroflowPostData result = JsonSerializer.Deserialize<MicroflowPostData>(r);
+            string r = await req.Content.ReadAsStringAsync();
 
-            //if (result.StepId.Equals("1"))
-            //{
-            //    int i = 0;
-            //    int y = 5 / i;
-            //}
-            var resp = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+            MicroflowPostData result = JsonSerializer.Deserialize<MicroflowPostData>(r);
+
+            if (result.StepId.Equals("2"))
+            {
+                await Task.Delay(10000);
+            }
+            HttpResponseMessage resp = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
             //    resp.Headers.Location = new Uri("http://localhost:7071/api/testpost");
             //resp.Content = new StringContent("wappa");
             return resp;

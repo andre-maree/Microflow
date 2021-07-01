@@ -40,7 +40,7 @@ namespace Microflow.FlowControl
             catch (Exception e)
             {
                 // log to table error
-                var errorEntity = new LogErrorEntity(canExecuteNowObject.ProjectName, e.Message, canExecuteNowObject.RunId, canExecuteNowObject.StepId);
+                LogErrorEntity errorEntity = new LogErrorEntity(canExecuteNowObject.ProjectName, e.Message, canExecuteNowObject.RunId, canExecuteNowObject.StepId);
                 await context.CallActivityAsync("LogError", errorEntity);
 
                 return new CanExecuteResult() { CanExecute = false, StepId = canExecuteNowObject.StepId };

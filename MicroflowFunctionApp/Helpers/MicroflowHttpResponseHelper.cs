@@ -1,5 +1,6 @@
 ﻿using Microflow.Models;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Extensions.Primitives;
 
 namespace Microflow.Helpers
 {
@@ -21,7 +22,7 @@ namespace Microflow.Helpers
             if (statusCode != 201)
                 return new MicroflowHttpResponse() {Success = false, HttpResponseStatusCode = statusCode};
 
-            return durableHttpResponse.Headers.TryGetValue("location", out var values)
+            return durableHttpResponse.Headers.TryGetValue("location", out StringValues values)
                 ? new MicroflowHttpResponse() {Success = true, HttpResponseStatusCode = statusCode, Message = values[0]}
                 : new MicroflowHttpResponse() {Success = true, HttpResponseStatusCode = statusCode};
         }

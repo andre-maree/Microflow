@@ -18,9 +18,9 @@ namespace Microflow.API.Internal
         public static async Task<MicroflowHttpResponse> HttpCallWithCallback([OrchestrationTrigger] IDurableOrchestrationContext context,
                                                                              ILogger inLog)
         {
-            var log = context.CreateReplaySafeLogger(inLog);
+            ILogger log = context.CreateReplaySafeLogger(inLog);
 
-            var httpCall = context.GetInput<HttpCall>();
+            HttpCall httpCall = context.GetInput<HttpCall>();
 
             DurableHttpRequest durableHttpRequest = httpCall.CreateMicroflowDurableHttpRequest(context.InstanceId);
 
@@ -38,7 +38,7 @@ namespace Microflow.API.Internal
             log.LogCritical($"Waiting for callback: {Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}/api/{httpCall.CallBackAction}/{context.InstanceId}/{httpCall.RowKey}");
 
             // wait for the external event, set the timeout
-            var actionResult = await context.WaitForExternalEvent<HttpResponseMessage>(httpCall.CallBackAction, TimeSpan.FromSeconds(httpCall.ActionTimeoutSeconds));
+            HttpResponseMessage actionResult = await context.WaitForExternalEvent<HttpResponseMessage>(httpCall.CallBackAction, TimeSpan.FromSeconds(httpCall.ActionTimeoutSeconds));
 
             // check for action failed
             if (actionResult.IsSuccessStatusCode)

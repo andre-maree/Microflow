@@ -74,7 +74,7 @@ namespace Microflow.FlowControl
             {
                 HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.InternalServerError)
                 {
-                    Content = new StringContent(ex.Message + " - Project in error state, call 'prepareproject/{instanceId?}' at least once before running a project.")
+                    Content = new StringContent(ex.Message + " - Project in error state, call 'InsertOrUpdateProject' at least once before running a project.")
                 };
 
                 return resp;
@@ -101,7 +101,7 @@ namespace Microflow.FlowControl
             ILogger log = context.CreateReplaySafeLogger(inLog);
 
             // read ProjectRun payload
-            var projectRun = context.GetInput<ProjectRun>();
+            ProjectRun projectRun = context.GetInput<ProjectRun>();
 
             try
             {
@@ -138,7 +138,7 @@ namespace Microflow.FlowControl
             catch (StorageException e)
             {
                 // log to table workflow completed
-                var errorEntity = new LogErrorEntity(projectRun.ProjectName, e.Message, projectRun.RunObject.RunId);
+                LogErrorEntity errorEntity = new LogErrorEntity(projectRun.ProjectName, e.Message, projectRun.RunObject.RunId);
 
                 await context.CallActivityAsync("LogError", errorEntity);
             }
@@ -154,7 +154,7 @@ namespace Microflow.FlowControl
         /// <summary>
         /// This must be called at least once before a project runs,
         /// this is to prevent multiple concurrent instances from writing step data at project run,
-        /// call Microflow insertorupdateproject when something ischanges in the workflow, but do not always call this when corcurrent multiple workflows
+        /// call Microflow InsertOrUpdateProject when something changed in the workflow, but do not always call this when concurrent multiple workflows
         /// </summary>
         [FunctionName("Microflow_InsertOrUpdateProject")]
         public static async Task<HttpResponseMessage> SaveProject([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "InsertOrUpdateProject")] HttpRequestMessage req,

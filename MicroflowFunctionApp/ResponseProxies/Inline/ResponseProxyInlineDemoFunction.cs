@@ -16,7 +16,7 @@ namespace Microflow
         [FunctionName("httpcall")]
         public static async Task<HttpResponseMessage> HttpCall([ActivityTrigger] HttpCall httpCall)
         {
-            using (var cts = new CancellationTokenSource(httpCall.ActionTimeoutSeconds * 1000))
+            using (CancellationTokenSource cts = new CancellationTokenSource(httpCall.ActionTimeoutSeconds * 1000))
             {
                 try
                 {

@@ -17,9 +17,9 @@ namespace Microflow.FlowControl
         /// </summary>
         [FunctionName("ExecuteStep")]
         public static async Task ExecuteStep([OrchestrationTrigger] IDurableOrchestrationContext context,
-                                             ILogger inlog)
+                                             ILogger inLog)
         {
-            var log = context.CreateReplaySafeLogger(inlog);
+            ILogger log = context.CreateReplaySafeLogger(inLog);
 
             ProjectRun projectRun = context.GetInput<ProjectRun>();
 
@@ -38,7 +38,7 @@ namespace Microflow.FlowControl
 
                 httpCallWithRetries = await httpCallWithRetriesTask;
 
-                var logRowKey = MicroflowTableHelper.GetTableLogRowKeyDescendingByDate(context.CurrentUtcDateTime, context.NewGuid().ToString());
+                string logRowKey = MicroflowTableHelper.GetTableLogRowKeyDescendingByDate(context.CurrentUtcDateTime, context.NewGuid().ToString());
 
                 if (httpCallWithRetries.RetryDelaySeconds > 0)
                 {
@@ -82,7 +82,7 @@ namespace Microflow.FlowControl
                 int? stepId = httpCallWithRetries == null ? -1 : Convert.ToInt32(httpCallWithRetries.RowKey);
 
                 // log to table workflow completed
-                var errorEntity = new LogErrorEntity(projectRun.ProjectName, e.Message, runObj.RunId, stepId);
+                LogErrorEntity errorEntity = new LogErrorEntity(projectRun.ProjectName, e.Message, runObj.RunId, stepId);
                 await context.CallActivityAsync("LogError", errorEntity);
             }
         }
@@ -106,18 +106,19 @@ namespace Microflow.FlowControl
             {
                 LogStepEnd(context, log, projectRun, httpCallWithRetries, logRowKey, microflowHttpResponse, logTasks);
 
-                List<KeyValuePair<int, int>> subSteps = JsonSerializer.Deserialize<List<KeyValuePair<int, int>>>(httpCallWithRetries.SubSteps);
+                List<List<int>> subSteps = JsonSerializer.Deserialize<List<List<int>>>(httpCallWithRetries.SubSteps);
 
                 var canExeccuteTasks = new List<Task<CanExecuteResult>>();
 
                 foreach (var step in subSteps)
                 {
-                    // step.Value is parentCount
+                    // check parentCount
                     // execute immediately if parentCount is 1
-                    if (step.Value < 2)
+                    if (step[1] < 2)
                     {
-                        // step.Key is stepId
-                        projectRun.RunObject = new RunObject() { RunId = runObj.RunId, StepId = step.Key };
+                        // step[0] is stepId, step[1] is parentCount
+                        projectRun.RunObject = new RunObject() { RunId = runObj.RunId, StepId = step[0] };
+
                         subTasks.Add(context.CallSubOrchestratorAsync("ExecuteStep", projectRun));
                     }
                     // if parentCount is more than 1, work out if it can execute now
@@ -126,8 +127,8 @@ namespace Microflow.FlowControl
                         canExeccuteTasks.Add(context.CallSubOrchestratorAsync<CanExecuteResult>("CanExecuteNow", new CanExecuteNowObject()
                         {
                             RunId = runObj.RunId,
-                            StepId = step.Key,
-                            ParentCount = step.Value,
+                            StepId = step[0],
+                            ParentCount = step[1],
                             ProjectName = projectRun.ProjectName
                         }));
                     }
@@ -232,7 +233,7 @@ namespace Microflow.FlowControl
                 // wait for external event flow / callback
                 if (!string.IsNullOrWhiteSpace(httpCallWithRetries.CallBackAction))
                 {
-                    string name = "HttpCallWithCallBackOrchestrator";
+                    const string name = "HttpCallWithCallBackOrchestrator";
 
                     if (retryOptions == null)
                     {
@@ -244,7 +245,7 @@ namespace Microflow.FlowControl
                 // send and receive inline flow
                 else
                 {
-                    string name = "HttpCallOrchestrator";
+                    const string name = "HttpCallOrchestrator";
 
                     if (retryOptions == null)
                     {

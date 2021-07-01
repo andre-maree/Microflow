@@ -29,16 +29,16 @@ namespace Microflow.API.Internal
             [OrchestrationTrigger] IDurableOrchestrationContext context,
             ILogger inLog)
         {
-            var log = context.CreateReplaySafeLogger(inLog);
+            ILogger log = context.CreateReplaySafeLogger(inLog);
 
             string data = context.GetInput<string>();
             MicroflowPostData postData = JsonSerializer.Deserialize<MicroflowPostData>(data);
 
             Random random = new Random();
-            var ts = TimeSpan.FromSeconds(random.Next(30, 40));
+            TimeSpan ts = TimeSpan.FromSeconds(random.Next(30, 40));
             DateTime deadline = context.CurrentUtcDateTime.Add(ts);
 
-            using (var cts = new CancellationTokenSource())
+            using (CancellationTokenSource cts = new CancellationTokenSource())
             {
                 try
                 {

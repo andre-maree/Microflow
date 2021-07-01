@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microflow.Models;
@@ -88,6 +89,20 @@ namespace Microflow.Helpers
 
                 return newDurableHttpRequest;
             }
+        }
+
+        public static string ParseUrlMicroflowData(this HttpCall httpCall, string instanceId, string callbackUrl)
+        {
+            StringBuilder sb = new StringBuilder(httpCall.Url);
+
+            sb.Replace("<ProjectName>", httpCall.PartitionKey);
+            sb.Replace("<MainOrchestrationId>", httpCall.MainOrchestrationId);
+            sb.Replace("<SubOrchestrationId>", instanceId);
+            sb.Replace("<CallbackUrl>", callbackUrl);
+            sb.Replace("<RunId>", httpCall.RunId);
+            sb.Replace("<StepId>", httpCall.RowKey);
+
+            return sb.ToString();
         }
     }
 }

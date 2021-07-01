@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microflow.Models;
 using MicroflowModels;
+using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 
@@ -12,6 +13,12 @@ namespace Microflow.Helpers
 {
     public static class MicroflowProjectHelper
     {
+        /// <summary>
+        /// This is called from on start of workflow execution,
+        /// does the looping and calls "ExecuteStep" for each top level step,
+        /// by getting step -1 from table storage
+        /// </summary>
+        /// <returns></returns>
         public static async Task MicroflowStartProjectRun(this IDurableOrchestrationContext context, ILogger log, ProjectRun projectRun)
         {
             // do the looping
@@ -20,7 +27,7 @@ namespace Microflow.Helpers
                 // get the top container step from table storage (from PrepareWorkflow)
                 HttpCallWithRetries httpCallWithRetries = await context.CallActivityAsync<HttpCallWithRetries>("GetStep", projectRun);
 
-                var guid = context.NewGuid().ToString();
+                string guid = context.NewGuid().ToString();
 
                 projectRun.RunObject.RunId = guid;
 
@@ -29,12 +36,13 @@ namespace Microflow.Helpers
                 // pass in the current loop count so it can be used downstream/passed to the micro-services
                 projectRun.CurrentLoop = i;
 
-                List<KeyValuePair<int, int>> subSteps = JsonSerializer.Deserialize<List<KeyValuePair<int, int>>>(httpCallWithRetries.SubSteps);
-                var subTasks = new List<Task>();
+                List<List<int>> subSteps = JsonSerializer.Deserialize<List<List<int>>>(httpCallWithRetries.SubSteps);
 
-                foreach (var step in subSteps)
+                List<Task> subTasks = new List<Task>();
+
+                foreach (List<int> step in subSteps)
                 {
-                    projectRun.RunObject = new RunObject() { RunId = guid, StepId = step.Key };
+                    projectRun.RunObject = new RunObject() { RunId = guid, StepId = step[0] };
 
                     subTasks.Add(context.CallSubOrchestratorAsync("ExecuteStep", projectRun));
                 }
@@ -46,88 +54,94 @@ namespace Microflow.Helpers
         }
 
         /// <summary>
-        /// Called before a workflow executes and takes the top step and recursives it to insert step configs into table storage
+        /// Must be called at least once before a workflow creation or update,
+        /// do not call this repeatedly when running multiple concurrent instances,
+        /// only call this to create a new workflow or to update an existing 1
+        /// Saves step meta data to table storage and read during execution
         /// </summary>
         public static async Task PrepareWorkflow(this ProjectRun projectRun, List<Step> steps)
         {
-            HashSet<KeyValuePair<int, int>> hsStepCounts = new HashSet<KeyValuePair<int, int>>();
+            List<List<int>> liParentCounts = new List<List<int>>();
 
-            foreach(Step step in steps)
+            foreach (Step step in steps)
             {
                 int count = steps.Count(c => c.SubSteps.Contains(step.StepId));
-                hsStepCounts.Add(new KeyValuePair<int, int>(step.StepId, count));
+                liParentCounts.Add(new List<int>() { step.StepId, count });
             }
 
-            var tasks = new List<Task>();
-            var stepsTable = MicroflowTableHelper.GetStepsTable(projectRun.ProjectName);
+            List<Task> tasks = new List<Task>();
+            CloudTable stepsTable = MicroflowTableHelper.GetStepsTable(projectRun.ProjectName);
 
             Step stepContainer = new Step(-1, "");
             steps.Insert(0, stepContainer);
-
-            for (int i = 0; i < steps.Count; i++)
+            
+            for (int i = 1; i < steps.Count; i++)
             {
                 Step step = steps.ElementAt(i);
 
-                if (step.StepId > -1)
+                int parentCount = (liParentCounts.FirstOrDefault(s => s.ElementAt(0) == step.StepId)
+                                   ?? new List<int>() { step.StepId, 0 }).ElementAt(1);
+
+                if (parentCount == 0)
                 {
-                    int parentCount = hsStepCounts.FirstOrDefault(s => s.Key == step.StepId).Value;
-                    if (parentCount == 0)
+                    stepContainer.SubSteps.Add(step.StepId);
+                }
+
+                List<List<int>> subSteps = new List<List<int>>();
+
+                foreach (int subId in step.SubSteps)
+                {
+                    int subParentCount = (liParentCounts.FirstOrDefault(s => s.ElementAt(0) == subId)
+                                          ?? new List<int>() { step.StepId, 0 }).ElementAt(1);
+
+                    subSteps.Add(new List<int>() { subId, subParentCount });
+                }
+
+                if (step.RetryOptions != null)
+                {
+                    HttpCallWithRetries httpCallRetriesEntity = new HttpCallWithRetries(projectRun.ProjectName, step.StepId, JsonSerializer.Serialize(subSteps))
                     {
-                        stepContainer.SubSteps.Add(step.StepId);
-                    }
+                        CallBackAction = step.CallbackAction,
+                        StopOnActionFailed = step.StopOnActionFailed,
+                        Url = step.CalloutUrl,
+                        ActionTimeoutSeconds = step.ActionTimeoutSeconds,
+                        IsHttpGet = step.IsHttpGet
+                    };
 
-                    List<KeyValuePair<int, int>> substeps = new List<KeyValuePair<int, int>>();
+                    httpCallRetriesEntity.RetryDelaySeconds = step.RetryOptions.DelaySeconds;
+                    httpCallRetriesEntity.RetryMaxDelaySeconds = step.RetryOptions.MaxDelaySeconds;
+                    httpCallRetriesEntity.RetryMaxRetries = step.RetryOptions.MaxRetries;
+                    httpCallRetriesEntity.RetryTimeoutSeconds = step.RetryOptions.TimeOutSeconds;
+                    httpCallRetriesEntity.RetryBackoffCoefficient = step.RetryOptions.BackoffCoefficient;
 
-                    foreach (var sub in step.SubSteps)
+                    // TODO: batchop this 
+                    tasks.Add(httpCallRetriesEntity.InsertStep(stepsTable));
+                }
+                else
+                {
+                    HttpCall httpCallEntity = new HttpCall(projectRun.ProjectName, step.StepId, JsonSerializer.Serialize(subSteps))
                     {
-                        parentCount = hsStepCounts.FirstOrDefault(s => s.Key == sub).Value;
-                        substeps.Add(new KeyValuePair<int, int>(sub, parentCount));
-                    }
+                        CallBackAction = step.CallbackAction,
+                        StopOnActionFailed = step.StopOnActionFailed,
+                        Url = step.CalloutUrl,
+                        ActionTimeoutSeconds = step.ActionTimeoutSeconds,
+                        IsHttpGet = step.IsHttpGet
+                    };
 
-                    if (step.RetryOptions != null)
-                    {
-                        HttpCallWithRetries stentRetries = new HttpCallWithRetries(projectRun.ProjectName, step.StepId, JsonSerializer.Serialize(substeps))
-                        {
-                            CallBackAction = step.CallbackAction,
-                            StopOnActionFailed = step.StopOnActionFailed,
-                            Url = step.CalloutUrl,
-                            ActionTimeoutSeconds = step.ActionTimeoutSeconds,
-                            IsHttpGet = step.IsHttpGet
-                        };
-
-                        stentRetries.RetryDelaySeconds = step.RetryOptions.DelaySeconds;
-                        stentRetries.RetryMaxDelaySeconds = step.RetryOptions.MaxDelaySeconds;
-                        stentRetries.RetryMaxRetries = step.RetryOptions.MaxRetries;
-                        stentRetries.RetryTimeoutSeconds = step.RetryOptions.TimeOutSeconds;
-                        stentRetries.RetryBackoffCoefficient = step.RetryOptions.BackoffCoefficient;
-
-                        // TODO: batchop this 
-                        tasks.Add(stentRetries.InsertStep(stepsTable));
-                    }
-                    else
-                    {
-                        HttpCall stent = new HttpCall(projectRun.ProjectName, step.StepId, JsonSerializer.Serialize(substeps))
-                        {
-                            CallBackAction = step.CallbackAction,
-                            StopOnActionFailed = step.StopOnActionFailed,
-                            Url = step.CalloutUrl,
-                            ActionTimeoutSeconds = step.ActionTimeoutSeconds,
-                            IsHttpGet = step.IsHttpGet
-                        };
-                        
-                        // TODO: batchop this 
-                        tasks.Add(stent.InsertStep(stepsTable));
-                    }
+                    // TODO: batchop this 
+                    tasks.Add(httpCallEntity.InsertStep(stepsTable));
                 }
             }
 
-            List<KeyValuePair<int, int>> containersubsteps = new List<KeyValuePair<int, int>>();
-            foreach (var substep in stepContainer.SubSteps)
+            List<List<int>> containerSubSteps = new List<List<int>>();
+
+            foreach (int sub in stepContainer.SubSteps)
             {
-                containersubsteps.Add(new KeyValuePair<int, int>(substep, 1));
+                containerSubSteps.Add(new List<int>() { sub, 1 });
             }
 
-            HttpCall containerEntity = new HttpCall(projectRun.ProjectName, -1, JsonSerializer.Serialize(containersubsteps));
+            HttpCall containerEntity = new HttpCall(projectRun.ProjectName, -1, JsonSerializer.Serialize(containerSubSteps));
+
             tasks.Add(containerEntity.InsertStep(stepsTable));
 
             await Task.WhenAll(tasks);
@@ -137,26 +151,12 @@ namespace Microflow.Helpers
         {
             StringBuilder sb = new StringBuilder(strWorkflow);
 
-            foreach (var field in project.MergeFields)
+            foreach (KeyValuePair<string, string> field in project.MergeFields)
             {
                 sb.Replace("{" + field.Key + "}", field.Value);
             }
 
             project = JsonSerializer.Deserialize<Project>(sb.ToString());
-        }
-
-        public static string ParseUrlMicroflowData(this HttpCall httpCall, string instanceId, string callbackUrl)
-        {
-            StringBuilder sb = new StringBuilder(httpCall.Url);
-
-            sb.Replace("<ProjectName>", httpCall.PartitionKey);
-            sb.Replace("<MainOrchestrationId>", httpCall.MainOrchestrationId);
-            sb.Replace("<SubOrchestrationId>", instanceId);
-            sb.Replace("<CallbackUrl>", callbackUrl);
-            sb.Replace("<RunId>", httpCall.RunId);
-            sb.Replace("<StepId>", httpCall.RowKey);
-
-            return sb.ToString();
         }
     }
 }

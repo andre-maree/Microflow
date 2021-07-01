@@ -3,7 +3,7 @@
 namespace Microflow.Models
 {
     #region POCOs
-
+    
     /// <summary>
     /// Used to hold Microflow specific http status code results
     /// </summary>
@@ -12,13 +12,6 @@ namespace Microflow.Models
         public bool Success { get; set; }
         public int HttpResponseStatusCode { get; set; }
         public string Message { get; set; }
-    }
-
-    public class Headers
-    {
-        public string Key { get; set; }
-        public IList<string> Value { get; set; }
-
     }
       
     /// <summary>
