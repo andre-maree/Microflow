@@ -13,6 +13,16 @@ namespace Microflow.API.External
     public static class MicroflowExternalApi
     {
         /// <summary>
+        /// Call this to get the Json data of the project
+        /// </summary>
+        [FunctionName("GetProjectJson")]
+        public static async Task<string> GetProjectJson([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "getprojectjson/{projectName}")] HttpRequestMessage req,
+                                                        string projectName)
+        {
+            return MicroflowTableHelper.GetProjectAsJson(projectName); 
+        }
+
+        /// <summary>
         /// Call this to see the step count in StepCallout per project name and stepId 
         /// </summary>
         [FunctionName("GetStepCountInprogress")]

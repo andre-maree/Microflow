@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microflow.Models;
+using MicroflowModels;
 using Microsoft.Azure.Cosmos.Table;
 
 namespace Microflow.Helpers
@@ -56,25 +59,83 @@ namespace Microflow.Helpers
             await table.ExecuteAsync(mergeOperation);
         }
 
-        public static async Task<ProjectControlEntity> GetProjectControl(string projectId)
+        public static string GetProjectAsJson(string projectName)
+        {
+            List<HttpCallWithRetries> steps = GetStepsHttpCallWithRetries(projectName);
+            List<Step> outSteps = new List<Step>();
+
+            for (int i = 1; i < steps.Count; i++)
+            {
+                HttpCallWithRetries step = steps[i];
+                Step newstep = new Step()
+                {
+                    StepId = Convert.ToInt32(step.RowKey),
+                    ActionTimeoutSeconds = step.ActionTimeoutSeconds,
+                    StopOnActionFailed = step.StopOnActionFailed,
+                    CallbackAction = step.CallBackAction,
+                    IsHttpGet = step.IsHttpGet,
+                    CalloutUrl = step.Url,
+                    RetryOptions = step.RetryDelaySeconds == 0 ? null : new MicroflowRetryOptions()
+                    {
+                        BackoffCoefficient = step.RetryBackoffCoefficient,
+                        DelaySeconds = step.RetryDelaySeconds,
+                        MaxDelaySeconds = step.RetryMaxDelaySeconds,
+                        MaxRetries = step.RetryMaxRetries,
+                        TimeOutSeconds = step.RetryTimeoutSeconds
+                    }
+                };
+
+                List<int> subStepsList = new List<int>();
+                List<List<int>> stepEntList = JsonSerializer.Deserialize<List<List<int>>>(step.SubSteps);
+
+                foreach(List<int> s in stepEntList)
+                {
+                    subStepsList.Add(s[0]);
+                }
+
+                newstep.SubSteps = subStepsList;
+
+                outSteps.Add(newstep);
+            }
+
+            return JsonSerializer.Serialize(outSteps);
+        }
+
+        public static async Task<ProjectControlEntity> GetProjectControl(string projectName)
         {
             CloudTable table = GetProjectControlTable();
-            TableOperation mergeOperation = TableOperation.Retrieve<ProjectControlEntity>(projectId, "0");
+            TableOperation mergeOperation = TableOperation.Retrieve<ProjectControlEntity>(projectName, "0");
             TableResult result = await table.ExecuteAsync(mergeOperation);
             ProjectControlEntity projectControlEntity = result.Result as ProjectControlEntity;
 
             return projectControlEntity;
         }
 
-        public static async Task<int> GetState(string projectId)
+        public static async Task<int> GetState(string projectName)
         {
             CloudTable table = GetProjectControlTable();
-            TableOperation mergeOperation = TableOperation.Retrieve<ProjectControlEntity>(projectId, "0");
+            TableOperation mergeOperation = TableOperation.Retrieve<ProjectControlEntity>(projectName, "0");
             TableResult result = await table.ExecuteAsync(mergeOperation);
             ProjectControlEntity projectControlEntity = result.Result as ProjectControlEntity;
 
             // ReSharper disable once PossibleNullReferenceException
             return projectControlEntity.State;
+        }
+
+        public static List<HttpCallWithRetries> GetStepsHttpCallWithRetries(string projectName)
+        {
+            CloudTable table = GetStepsTable(projectName);
+
+            TableQuery<HttpCallWithRetries> query = new TableQuery<HttpCallWithRetries>();
+
+            List<HttpCallWithRetries> list = new List<HttpCallWithRetries>();
+            //TODO use the async version
+            foreach (HttpCallWithRetries httpCallWithRetries in table.ExecuteQuery(query))
+            {
+                list.Add(httpCallWithRetries);
+            }
+
+            return list;
         }
 
         public static async Task<HttpCallWithRetries> GetStep(this ProjectRun projectRun)
@@ -87,9 +148,9 @@ namespace Microflow.Helpers
             return stepEnt;
         }
 
-        public static List<TableEntity> GetStepEntities(this ProjectRun projectRun)
+        public static List<TableEntity> GetStepEntities(string projectName)
         {
-            CloudTable table = GetStepsTable(projectRun.ProjectName);
+            CloudTable table = GetStepsTable(projectName);
 
             TableQuery<TableEntity> query = new TableQuery<TableEntity>();
 
@@ -107,7 +168,7 @@ namespace Microflow.Helpers
         {
             CloudTable table = GetStepsTable(projectRun.ProjectName);
 
-            var steps = projectRun.GetStepEntities();
+            List<TableEntity> steps = GetStepEntities(projectRun.ProjectName);
             //TODO loop batch deletes
             if (steps.Count > 0)
             {
@@ -154,11 +215,11 @@ namespace Microflow.Helpers
             // ProjectControlTable
             CloudTable projectTable = GetProjectControlTable();
 
-            var t1 = stepsTable.CreateIfNotExistsAsync();
-            var t2 = logOrchestrationTable.CreateIfNotExistsAsync();
-            var t3 = projectTable.CreateIfNotExistsAsync();
-            var t4 = logStepsTable.CreateIfNotExistsAsync();
-            var t5 = errorsTable.CreateIfNotExistsAsync();
+            Task<bool> t1 = stepsTable.CreateIfNotExistsAsync();
+            Task<bool> t2 = logOrchestrationTable.CreateIfNotExistsAsync();
+            Task<bool> t3 = projectTable.CreateIfNotExistsAsync();
+            Task<bool> t4 = logStepsTable.CreateIfNotExistsAsync();
+            Task<bool> t5 = errorsTable.CreateIfNotExistsAsync();
 
             await t1;
             await t2;

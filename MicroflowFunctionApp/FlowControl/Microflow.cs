@@ -150,11 +150,11 @@ namespace Microflow.FlowControl
                                                              ProjectRun projectRun,
                                                              RunObject runObj,
                                                              List<Task> subTasks,
-                                                             List<Task<CanExecuteResult>> canExeccuteTasks)
+                                                             List<Task<CanExecuteResult>> canExecuteTasks)
         {
-            for (int i = 0; i < canExeccuteTasks.Count;)
+            for (int i = 0; i < canExecuteTasks.Count;)
             {
-                Task<CanExecuteResult> canExecuteTask = await Task.WhenAny(canExeccuteTasks);
+                Task<CanExecuteResult> canExecuteTask = await Task.WhenAny(canExecuteTasks);
                 CanExecuteResult result = canExecuteTask.Result;
 
                 if (result.CanExecute)
@@ -168,7 +168,7 @@ namespace Microflow.FlowControl
                     subTasks.Add(context.CallSubOrchestratorAsync("ExecuteStep", projectRun));
                 }
 
-                canExeccuteTasks.Remove(canExecuteTask);
+                canExecuteTasks.Remove(canExecuteTask);
             }
         }
 

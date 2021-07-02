@@ -28,12 +28,9 @@ namespace Microflow.FlowControl
         /// <param name="req"></param>
         /// <returns></returns>
         [FunctionName("Microflow_HttpStart")]
-        // ReSharper disable once InvalidXmlDocComment
-        public static async Task<HttpResponseMessage> HttpStart(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "start/{instanceId?}")]
-            HttpRequestMessage req,
-            // ReSharper disable once InvalidXmlDocComment
-            [DurableClient] IDurableOrchestrationClient client,
+        public static async Task<HttpResponseMessage> HttpStart([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "start/{instanceId?}")]
+                                                                HttpRequestMessage req,
+                                                                [DurableClient] IDurableOrchestrationClient client, 
                                                                 string instanceId)
         {
             // read http content
@@ -157,7 +154,8 @@ namespace Microflow.FlowControl
         /// call Microflow InsertOrUpdateProject when something changed in the workflow, but do not always call this when concurrent multiple workflows
         /// </summary>
         [FunctionName("Microflow_InsertOrUpdateProject")]
-        public static async Task<HttpResponseMessage> SaveProject([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "InsertOrUpdateProject")] HttpRequestMessage req,
+        public static async Task<HttpResponseMessage> SaveProject([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
+                                                                  Route = "InsertOrUpdateProject")] HttpRequestMessage req,
                                                                   [DurableClient] IDurableOrchestrationClient client)
         {
             // read http content
