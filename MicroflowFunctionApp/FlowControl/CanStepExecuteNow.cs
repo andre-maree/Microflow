@@ -64,9 +64,9 @@ namespace Microflow.FlowControl
                 case "get":
                     ctx.Return(ctx.GetState<int>());
                     break;
-                case "delete":
-                    ctx.DeleteState();
-                    break;
+                //case "delete":
+                //    ctx.DeleteState();
+                //    break;
             }
         }
     }

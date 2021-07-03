@@ -88,7 +88,7 @@ namespace Microflow.Models
     /// <summary>
     /// Base class for http calls
     /// </summary>
-    public class StepEntity : TableEntity
+    public class StepEntity : TableEntity, IStepEntity
     {
         public StepEntity() { }
 
@@ -99,7 +99,7 @@ namespace Microflow.Models
     /// <summary>
     /// Basic http call with no retries
     /// </summary>
-    public class HttpCall : StepEntity
+    public class HttpCall : StepEntity, IHttpCall
     {
         public HttpCall() { }
 
@@ -110,7 +110,7 @@ namespace Microflow.Models
             SubSteps = subSteps;
         }
 
-        public string Url { get; set; }
+        public string CalloutUrl { get; set; }
         public string CallBackAction { get; set; }
         public bool StopOnActionFailed { get; set; }
         public int ActionTimeoutSeconds { get; set; }
@@ -126,7 +126,7 @@ namespace Microflow.Models
     /// <summary>
     /// Http call with retries
     /// </summary>
-    public class HttpCallWithRetries : HttpCall
+    public class HttpCallWithRetries : HttpCall, IHttpCallWithRetries
     {
         public HttpCallWithRetries() { }
 

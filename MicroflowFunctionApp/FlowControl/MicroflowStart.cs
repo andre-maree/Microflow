@@ -37,7 +37,7 @@ namespace Microflow.FlowControl
             string content = await req.Content.ReadAsStringAsync();
 
             // deserialize the workflow json
-            ProjectBase projectBase = JsonSerializer.Deserialize<ProjectBase>(content);
+            MicroflowProjectBase projectBase = JsonSerializer.Deserialize<MicroflowProjectBase>(content);
 
             try
             {
@@ -162,7 +162,7 @@ namespace Microflow.FlowControl
             string strWorkflow = await req.Content.ReadAsStringAsync();
 
             // deserialize the workflow json
-            Project project = JsonSerializer.Deserialize<Project>(strWorkflow);
+            MicroflowProject project = JsonSerializer.Deserialize<MicroflowProject>(strWorkflow);
 
             try
             {

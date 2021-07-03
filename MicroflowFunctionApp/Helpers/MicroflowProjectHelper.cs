@@ -103,7 +103,7 @@ namespace Microflow.Helpers
                     {
                         CallBackAction = step.CallbackAction,
                         StopOnActionFailed = step.StopOnActionFailed,
-                        Url = step.CalloutUrl,
+                        CalloutUrl = step.CalloutUrl,
                         ActionTimeoutSeconds = step.ActionTimeoutSeconds,
                         IsHttpGet = step.IsHttpGet
                     };
@@ -123,7 +123,7 @@ namespace Microflow.Helpers
                     {
                         CallBackAction = step.CallbackAction,
                         StopOnActionFailed = step.StopOnActionFailed,
-                        Url = step.CalloutUrl,
+                        CalloutUrl = step.CalloutUrl,
                         ActionTimeoutSeconds = step.ActionTimeoutSeconds,
                         IsHttpGet = step.IsHttpGet
                     };
@@ -147,7 +147,7 @@ namespace Microflow.Helpers
             await Task.WhenAll(tasks);
         }
 
-        public static void ParseMergeFields(this string strWorkflow, ref Project project)
+        public static void ParseMergeFields(this string strWorkflow, ref MicroflowProject project)
         {
             StringBuilder sb = new StringBuilder(strWorkflow);
 
@@ -156,7 +156,7 @@ namespace Microflow.Helpers
                 sb.Replace("{" + field.Key + "}", field.Value);
             }
 
-            project = JsonSerializer.Deserialize<Project>(sb.ToString());
+            project = JsonSerializer.Deserialize<MicroflowProject>(sb.ToString());
         }
     }
 }

@@ -12,7 +12,7 @@ namespace Microflow.Helpers
 {
     public static class MicroflowHelper
     {
-        public static RetryOptions GetRetryOptions(this HttpCallWithRetries httpCallWithRetries)
+        public static RetryOptions GetRetryOptions(this IHttpCallWithRetries httpCallWithRetries)
         {
             RetryOptions ops = new RetryOptions(TimeSpan.FromSeconds(httpCallWithRetries.RetryDelaySeconds), httpCallWithRetries.RetryMaxRetries);
             ops.RetryTimeout = TimeSpan.FromSeconds(httpCallWithRetries.RetryTimeoutSeconds);
@@ -93,7 +93,7 @@ namespace Microflow.Helpers
 
         public static string ParseUrlMicroflowData(this HttpCall httpCall, string instanceId, string callbackUrl)
         {
-            StringBuilder sb = new StringBuilder(httpCall.Url);
+            StringBuilder sb = new StringBuilder(httpCall.CalloutUrl);
 
             sb.Replace("<ProjectName>", httpCall.PartitionKey);
             sb.Replace("<MainOrchestrationId>", httpCall.MainOrchestrationId);

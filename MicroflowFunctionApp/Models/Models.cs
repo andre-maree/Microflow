@@ -3,21 +3,21 @@
 namespace Microflow.Models
 {
     #region POCOs
-    
+
     /// <summary>
     /// Used to hold Microflow specific http status code results
     /// </summary>
-    public class MicroflowHttpResponse
+    public class MicroflowHttpResponse : IMicroflowHttpResponse
     {
         public bool Success { get; set; }
         public int HttpResponseStatusCode { get; set; }
         public string Message { get; set; }
     }
-      
+
     /// <summary>
     /// This is the minimalist project object that is passed during execution
     /// </summary>
-    public class ProjectRun
+    public class ProjectRun : IProjectRun
     {
         public string ProjectName { get; set; }
         public RunObject RunObject { get; set; }

@@ -74,7 +74,7 @@ namespace Microflow.Helpers
                     StopOnActionFailed = step.StopOnActionFailed,
                     CallbackAction = step.CallBackAction,
                     IsHttpGet = step.IsHttpGet,
-                    CalloutUrl = step.Url,
+                    CalloutUrl = step.CalloutUrl,
                     RetryOptions = step.RetryDelaySeconds == 0 ? null : new MicroflowRetryOptions()
                     {
                         BackoffCoefficient = step.RetryBackoffCoefficient,
@@ -88,7 +88,7 @@ namespace Microflow.Helpers
                 List<int> subStepsList = new List<int>();
                 List<List<int>> stepEntList = JsonSerializer.Deserialize<List<List<int>>>(step.SubSteps);
 
-                foreach(List<int> s in stepEntList)
+                foreach (List<int> s in stepEntList)
                 {
                     subStepsList.Add(s[0]);
                 }
@@ -169,6 +169,9 @@ namespace Microflow.Helpers
             CloudTable table = GetStepsTable(projectRun.ProjectName);
 
             List<TableEntity> steps = GetStepEntities(projectRun.ProjectName);
+
+            int count = 0;
+
             //TODO loop batch deletes
             if (steps.Count > 0)
             {
@@ -176,11 +179,22 @@ namespace Microflow.Helpers
 
                 foreach (TableEntity entity in steps)
                 {
+                    count++;
+
                     TableOperation delop = TableOperation.Delete(entity);
                     batchop.Add(delop);
+
+                    if (count % 100 == 0)
+                    {
+                        await table.ExecuteBatchAsync(batchop);
+                        batchop.Clear();
+                    }
                 }
 
-                await table.ExecuteBatchAsync(batchop);
+                if (batchop.Count > 0)
+                {
+                    await table.ExecuteBatchAsync(batchop);
+                }
             }
         }
 

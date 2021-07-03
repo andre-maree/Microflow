@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MicroflowApp", "MicroflowFu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MicroflowModels", "MicroflowModels\MicroflowModels.csproj", "{3182A6A0-38B4-4A4D-951A-E88B6602502E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MicroflowApiFunctionApp", "MicroflowApiFunctionApp\MicroflowApiFunctionApp.csproj", "{8AB66346-AF3E-496C-BFE9-C8565BC3265F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{3182A6A0-38B4-4A4D-951A-E88B6602502E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3182A6A0-38B4-4A4D-951A-E88B6602502E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3182A6A0-38B4-4A4D-951A-E88B6602502E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8AB66346-AF3E-496C-BFE9-C8565BC3265F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8AB66346-AF3E-496C-BFE9-C8565BC3265F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8AB66346-AF3E-496C-BFE9-C8565BC3265F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8AB66346-AF3E-496C-BFE9-C8565BC3265F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

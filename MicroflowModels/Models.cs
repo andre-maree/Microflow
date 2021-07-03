@@ -15,13 +15,13 @@ namespace MicroflowModels
         public string StepId { get; set; }
     }
 
-    public class ProjectBase
+    public class MicroflowProjectBase
     {
         public string ProjectName { get; set; }
         public int Loop { get; set; } = 1;
     }
 
-    public class Project : ProjectBase
+    public class MicroflowProject : MicroflowProjectBase
     {
         public List<Step> Steps { get; set; }
 
