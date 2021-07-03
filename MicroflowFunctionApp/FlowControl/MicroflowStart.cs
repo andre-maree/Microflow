@@ -30,7 +30,7 @@ namespace Microflow.FlowControl
         [FunctionName("Microflow_HttpStart")]
         public static async Task<HttpResponseMessage> HttpStart([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "start/{instanceId?}")]
                                                                 HttpRequestMessage req,
-                                                                [DurableClient] IDurableOrchestrationClient client, 
+                                                                [DurableClient] IDurableOrchestrationClient client,
                                                                 string instanceId)
         {
             // read http content
@@ -155,41 +155,65 @@ namespace Microflow.FlowControl
         /// </summary>
         [FunctionName("Microflow_InsertOrUpdateProject")]
         public static async Task<HttpResponseMessage> SaveProject([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-                                                                  Route = "InsertOrUpdateProject")] HttpRequestMessage req,
-                                                                  [DurableClient] IDurableOrchestrationClient client)
+                                                                  Route = "InsertOrUpdateProject")] HttpRequestMessage req)
         {
-            // read http content
-            string strWorkflow = await req.Content.ReadAsStringAsync();
+            string content;
 
-            // deserialize the workflow json
-            MicroflowProject project = JsonSerializer.Deserialize<MicroflowProject>(strWorkflow);
+            MicroflowProject project = null;
 
             try
             {
-                // create a project run
+                // read http content
+                content = await req.Content.ReadAsStringAsync();
+
+                // deserialize the workflow json
+                project = JsonSerializer.Deserialize<MicroflowProject>(content);
+
+                //    // create a project run
                 ProjectRun projectRun = new ProjectRun() { ProjectName = project.ProjectName, Loop = project.Loop };
 
-                // create the storage tables for the project
+                // reate the storage tables for the project
                 await MicroflowTableHelper.CreateTables(project.ProjectName);
 
-                // clear step table data
-                await projectRun.DeleteSteps();
+                //  clear step table data
+                Task delTask = projectRun.DeleteSteps();
 
-                // parse the mergefields
-                strWorkflow.ParseMergeFields(ref project);
+                //    // parse the mergefields
+                content.ParseMergeFields(ref project);
+
+                await delTask;
 
                 // prepare the workflow by persisting parent info to table storage
                 await projectRun.PrepareWorkflow(project.Steps);
 
-                return await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, Guid.NewGuid().ToString(), TimeSpan.FromSeconds(1));
+                return new HttpResponseMessage(HttpStatusCode.Accepted);
             }
             catch (StorageException e)
             {
-                return await MicroflowHelper.LogError(project.ProjectName, e);
+                HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.BadRequest)
+                {
+                    Content = new StringContent(e.Message)
+                };
+
+                return resp;
             }
             catch (Exception e)
             {
-                return await MicroflowHelper.LogError(project.ProjectName, e);
+                HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.BadRequest)
+                {
+                    Content = new StringContent(e.Message)
+                };
+
+                try
+                {
+                    await MicroflowHelper.LogError(project.ProjectName ?? "no project", e);
+                }
+                catch
+                {
+                    resp.StatusCode = HttpStatusCode.InternalServerError;
+                }
+
+                return resp;
             }
         }
     }

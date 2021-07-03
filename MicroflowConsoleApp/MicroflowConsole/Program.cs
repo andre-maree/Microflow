@@ -12,7 +12,7 @@ namespace MicroflowConsole
     {
         public static readonly HttpClient HttpClient = new HttpClient();
         private static string baseUrl = "http://localhost:7071";
-        //private static string baseUrl = "https://microflowappXXXXXXXXXXXXX.azurewebsites.net";
+        //private static string baseUrl = "https://microflowapp20210703154326.azurewebsites.net";
 
         static async Task Main(string[] args)
         {
@@ -29,9 +29,9 @@ namespace MicroflowConsole
             //var terminate = await client.PostAsync("http://localhost:7071/runtime/webhooks/durabletask/instances/39806875-9c81-4736-81c0-9be562dae71e/terminate?reason=dfgd", null);
             try
             {
-                //var workflow = Tests.CreateTestWorkflow_SimpleSteps();
+                var workflow = Tests.CreateTestWorkflow_SimpleSteps();
                 //var workflow = Tests.CreateTestWorkflow_10StepsParallel();
-                var workflow = Tests.CreateTestWorkflow_Complex1();
+                //var workflow = Tests.CreateTestWorkflow_Complex1();
                 //var workflow = Tests.CreateTestWorkflow_110Steps();
 
                 var project = new MicroflowProject()
@@ -54,7 +54,8 @@ namespace MicroflowConsole
                 var tasks = new List<Task<HttpResponseMessage>>();
 
                 // call Microflow insertorupdateproject when something ischanges in the workflow, but do not always call this when corcurrent multiple workflows
-                var result = await HttpClient.PostAsJsonAsync("http://localhost:7071/api/insertorupdateproject", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
+                var result = await HttpClient.PostAsJsonAsync(baseUrl + "/api/insertorupdateproject", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
+                var ri = await result.Content.ReadAsStringAsync();
                 // singleton workflow instance
                 //var result2 = await HttpClient.PostAsJsonAsync("http://localhost:7071/api/start/39806875-9c81-4736-81c0-9be562dae71e/", new ProjectBase() { ProjectName = "MicroflowDemo" }, new JsonSerializerOptions(JsonSerializerDefaults.General));
                 
@@ -65,9 +66,9 @@ namespace MicroflowConsole
                 //MicroflowProject microflowProject = JsonSerializer.Deserialize<MicroflowProject>(content);
 
                 ////parallel multiple workflow instances
-                for (int i = 0; i < 1; i++)
+                for (int i = 0; i < 2; i++)
                 {
-                    await Task.Delay(500);
+                    await Task.Delay(100);
                     //await posttask;
                     tasks.Add(HttpClient.PostAsJsonAsync(baseUrl + "/api/start/", new MicroflowProjectBase() { ProjectName = "MicroflowDemo" }, new JsonSerializerOptions(JsonSerializerDefaults.General)));
                 }
