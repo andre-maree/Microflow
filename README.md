@@ -1,16 +1,16 @@
 # Microflow
-Welcome to Microflow. This is a fun project that I am working on in my free time. The idea came from the business need to execute workflows in the best scalable way. Durable Functions is a great choice for this, the only drawback is that Durable Function workflows are normally hard coded by developers. This leads to a situation where workflow changes must go through the normal development life cycle (dev, test, production). What if the users designing the workflows are not developers? What if the business needs to make workflow changes quickly without the need for code changes? These are the problems that Microflow addresses, keeping the greatness of serverless Durable Functions and making the workflows dynamic for easy changeability.
+Welcome to Microflow. This is a fun project that I am working on in my free time. The idea came from the business need to execute workflows in the best scalable way. Durable Functions is a great choice for this, but a drawback might be: that Durable Function workflows are normally hard coded by developers. This leads to a situation where workflow changes must go through the normal development life cycle (dev, test, production). What if the users designing the workflows are not developers? What if the business needs to make workflow changes quickly without the need for code changes? These are the problems that Microflow addresses, keeping the greatness of serverless Durable Functions and making the workflows dynamic for easy changeability.
 
 ## Overview
-Microflow is a dynamic serverless micro-service workflow orchestration engine built with C#, .NET Core 3.1, and Azure Durable Functions. Microflow separates the workflow design from the function code so that workflows don`t have to be hard coded as with normal Durable Functions. The workflow can be designed outside of Microflow and then passed in as JSON for execution, so no code changes or deployments are needed to modify any aspect of a workflow. Microflow can be deployed to the Azure Functions Consumption or Premium plans, to an Azure App Service, or to Kubernetes.
+Microflow is a dynamic serverless micro-service workflow orchestration engine built with C#, .NET Core 3.1, and Azure Durable Functions. Microflow separates the workflow design from the function code so that workflows don`t have to be hard coded as with normal Durable Functions. The workflow can be designed outside of Microflow and then passed in as JSON for execution, so no code changes or deployments are needed to modify any aspect of a workflow. Microflow can be deployed to the Azure Functions Consumption or Premium plans, to an Azure App Service, or to Kubernetes. For ultimate scalability, deploy Microflow to a serverless hosting plan for Microflow only, then deploy your micro-services each to their own plans. Microflow can orchestrate any Api endpoint across hosting plans, other clouds, or any http endpoints.
 
 Microflow functionality:
-- dynamic json workflows separate and changeable outside of Microflow, workflows are dynamic and changeable without Microflow knowing about it
-- the micro-service implementations are cleanly separated from Microflow
+- dynamic json workflows separate and changeable outside of Microflow
+- auto scale out to 200 small virtual machines in the Consumption Plan, and to 100, 4 core CPUs, 14GB memory virtual machines in the Premium Plan
+- parent-child-sibling dependencies, parallel optimized execution, parent steps execute in parallel
+- very complex workflows can be created
 - Microflow workflow projects can run as single instances (like a risk model that should always run as 1 instance), or can run as multiple parallel overlapping instances (like ecommerce orders)
 - for custom logic like response interpretations, this can be included in Microflow, but best practice is to separate these response proxies as functions outside of Microflow, and then these will call back to Microflow
-- parent-child-sibling dependencies, parallel optimized execution, parent steps execute in parallel
-- auto scale out to 200 small virtual machines in the Consumption Plan, and to 100, 4 core CPUs, 14GB memory virtual machines in the Premium Plan
 - easily manage step configs with merge fields
 - do batch processing by looping the workflow execution with Microflow`s "Loop" setting, set up variation sets, 1 variation set per loop/batch
 - set outgoing http calls to be inline (wait for response at the point of out call), or wait asynchronously by setting CallbackAction (wait for external action/callback)
@@ -129,13 +129,14 @@ This contains 3 functions responsible starting project execution.
   * "Start" : This starts the project run by getting a list of top level steps and then calls "ExecuteStep" for each top level step.
  
 #### FlowControl
-This contains 3 classes responsible for workflow execution.
+This contains 4 classes responsible for workflow execution.
   * CanStepExecuteNow.cs : Locks and checks the parent completed count to determine if a child step can execute, all parents must be completed for a child step to       start execution. Parent steps execute in parallel.
-  * Microflow.cs : This contains the recursive function "ExecuteStep". It calls the action URL and then calls CanExecuteNow for child steps of the current step.
+  * Microflow.cs : This contains the recursive function "ExecuteStep". It instantiates a MicroflowContext object and calls it`s "RunMicroflow" method.
   * MicroflowStart.cs : This is where the workflow JSON payload is received via http post and then prepares the workflow and calls start.
- 
-#### API
-This currently contains 2 folders each with 1 class, 1 for internal and 1 for external api calls.
+  * MicroflowContext.cs : This contains the core execution code.
+
+### MicroflowApiFunctionApp
+This is an "admin" Api function app that is used to add functionality that does not impact core execution. For example to get log data or to see live in-progress step counts.
 
 ### MicroflowConsoleApp
 This console app is used to create test workflow projects and post to Microflow. After created or modifying a project, always call "Microflow_InsertOrUpdateProject" before calling the run http call "Microflow_HttpStart". After a call to "Microflow_InsertOrUpdateProject" is made, then "Microflow_HttpStart" can be called multiple times as long as the project definition stays the same.
