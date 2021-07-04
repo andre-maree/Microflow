@@ -15,7 +15,7 @@ namespace MicroflowSDK
 
             for (; fromId <= count; fromId++)
             {
-                Step step = new Step(fromId, defaultURI);
+                Step step = new Step(fromId, defaultURI, "myStep " + fromId);
                 stepsList.Add(step);
             }
 

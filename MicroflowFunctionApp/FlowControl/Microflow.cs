@@ -17,6 +17,7 @@ namespace Microflow.FlowControl
         {
             ProjectRun projectRun = context.GetInput<ProjectRun>();
             MicroflowContext microflowContext = null;
+
             try
             {
                 microflowContext = new MicroflowContext(context, projectRun, inLog);
@@ -40,7 +41,6 @@ namespace Microflow.FlowControl
             {
                 if(microflowContext != null)
                 {
-
                     string stepNumber = microflowContext.HttpCallWithRetries == null ? "-2" : microflowContext.HttpCallWithRetries.RowKey;
 
                     // log to table workflow completed

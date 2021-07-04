@@ -1,4 +1,6 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Collections.Specialized;
+using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microflow.Helpers;
@@ -44,15 +46,30 @@ namespace Microflow.API.External
         public static async Task<HttpResponseMessage> TestPost(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "testpost")] HttpRequestMessage req)
         {
-            //await Task.Delay(1000);
-            string r = await req.Content.ReadAsStringAsync();
+            await Task.Delay(1000);
 
-            MicroflowPostData result = JsonSerializer.Deserialize<MicroflowPostData>(r);
+            if (req.Method == HttpMethod.Post)
+            {
+                string r = await req.Content.ReadAsStringAsync();
 
-            //if (result.StepId.Equals("2"))
-            //{
-            //    await Task.Delay(10000);
-            //}
+                MicroflowPostData result = JsonSerializer.Deserialize<MicroflowPostData>(r);
+            }
+            else
+            {
+                NameValueCollection data = req.RequestUri.ParseQueryString();
+                MicroflowPostData postData = new MicroflowPostData()
+                {
+                    CallbackUrl = data["CallbackUrl"],
+                    MainOrchestrationId = data["MainOrchestrationId"],
+                    ProjectName = data["ProjectName"],
+                    RunId = data["RunId"],
+                    StepNumber = Convert.ToInt32(data["StepNumber"]),
+                    StepId = data["StepId"],
+                    SubOrchestrationId = data["SubOrchestrationId"]
+                };
+                    await Task.Delay(10000);
+                
+            }
             HttpResponseMessage resp = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
             //    resp.Headers.Location = new Uri("http://localhost:7071/api/testpost");
             //resp.Content = new StringContent("wappa");

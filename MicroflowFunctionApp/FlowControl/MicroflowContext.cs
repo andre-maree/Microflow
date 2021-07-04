@@ -45,6 +45,7 @@ namespace Microflow.FlowControl
         /// </summary>
         public async Task RunMicroflow()
         {
+            bool doneAdd = false;
             try
             {
                 // get the step data from table storage (from PrepareWorkflow)
@@ -71,6 +72,7 @@ namespace Microflow.FlowControl
                 EntityId countId = new EntityId("StepCounter", HttpCallWithRetries.PartitionKey + HttpCallWithRetries.RowKey);
                 // set the per step in-progress count to count+1
                 MicroflowDurableContext.SignalEntity(countId, "add");
+                doneAdd = true;
 
                 // call out to micro-service
                 // wait for external event flow / callback
@@ -109,7 +111,14 @@ namespace Microflow.FlowControl
             }
             catch (Exception ex)
             {
-                MicroflowHttpResponse = await HandleCalloutException(ex);
+                if (doneAdd)
+                {
+                    EntityId countId = new EntityId("StepCounter", HttpCallWithRetries.PartitionKey + HttpCallWithRetries.RowKey);
+                    // set the per step in-progress count to count-1
+                    MicroflowDurableContext.SignalEntity(countId, "subtract");
+                }
+
+                await HandleCalloutException(ex);
             }
         }
 
@@ -271,63 +280,44 @@ namespace Microflow.FlowControl
         /// <summary>
         /// Handle the step execution exception
         /// </summary>
-        private async Task<MicroflowHttpResponse> HandleCalloutException(Exception ex)
+        private async Task HandleCalloutException(Exception ex)
         {
             Logger.LogWarning($"Step {HttpCallWithRetries.RowKey} an error result at {DateTime.Now.ToString("HH:mm:ss")}  -  Run ID: {ProjectRun.RunObject.RunId}");
 
-            if (!HttpCallWithRetries.StopOnActionFailed)
+            if (ex.InnerException != null)
             {
-                if (ex.InnerException is TimeoutException)
-                {
-                    return new MicroflowHttpResponse()
-                    {
-                        Success = false,
-                        HttpResponseStatusCode = 408,
-                        Message = "action timeout"
-                    };
-                }
-                else
-                {
-                    return new MicroflowHttpResponse()
-                    {
-                        Success = false,
-                        HttpResponseStatusCode = 500,
-                        Message = ex.Message
-                    };
-                }
+                ex = ex.InnerException;
+            }
+
+            if (ex is TimeoutException)
+            {
+                // log step error, stop exe
+                LogTasks.Add(MicroflowDurableContext.CallActivityAsync(
+                    "LogStep",
+                    new LogStepEntity(false,
+                                      ProjectRun.ProjectName,
+                                      LogRowKey,
+                                      Convert.ToInt32(HttpCallWithRetries.RowKey),
+                                      ProjectRun.OrchestratorInstanceId,
+                                      false,
+                                      408,
+                                      "action timeout")
+                ));
             }
             else
             {
-                if (ex.InnerException is TimeoutException)
-                {
-                    // log step error, stop exe
-                    LogTasks.Add(MicroflowDurableContext.CallActivityAsync(
-                        "LogStep",
-                        new LogStepEntity(false,
-                                          ProjectRun.ProjectName,
-                                          LogRowKey,
-                                          Convert.ToInt32(HttpCallWithRetries.RowKey),
-                                          ProjectRun.OrchestratorInstanceId,
-                                          false,
-                                          408,
-                                          "action timeout")
-                    ));
-                }
-                else
-                {
-                    // log step error, stop exe
-                    LogTasks.Add(MicroflowDurableContext.CallActivityAsync(
-                        "LogStep",
-                        new LogStepEntity(false,
-                                          ProjectRun.ProjectName,
-                                          LogRowKey,
-                                          Convert.ToInt32(HttpCallWithRetries.RowKey),
-                                          ProjectRun.OrchestratorInstanceId,
-                                          false,
-                                          500,
-                                          ex.Message)
-                    ));
-                }
+                // log step error, stop exe
+                LogTasks.Add(MicroflowDurableContext.CallActivityAsync(
+                    "LogStep",
+                    new LogStepEntity(false,
+                                      ProjectRun.ProjectName,
+                                      LogRowKey,
+                                      Convert.ToInt32(HttpCallWithRetries.RowKey),
+                                      ProjectRun.OrchestratorInstanceId,
+                                      false,
+                                      500,
+                                      ex.Message)
+                ));
 
                 await Task.WhenAll(LogTasks);
 

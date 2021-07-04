@@ -89,6 +89,7 @@ namespace Microflow.API.Internal
                     MainOrchestrationId = data["MainOrchestrationId"],
                     ProjectName = data["ProjectName"],
                     RunId = data["RunId"],
+                    StepNumber = Convert.ToInt32(data["StepNumber"]),
                     StepId = data["StepId"],
                     SubOrchestrationId = data["SubOrchestrationId"]
                 };

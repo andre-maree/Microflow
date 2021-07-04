@@ -103,11 +103,12 @@ namespace Microflow.Models
     {
         public HttpCall() { }
 
-        public HttpCall(string project, string stepNumber, string subSteps)
+        public HttpCall(string project, string stepNumber, string stepId, string subSteps)
         {
             PartitionKey = project;
             RowKey = stepNumber;
             SubSteps = subSteps;
+            StepId = stepId;
         }
 
         public string CalloutUrl { get; set; }
@@ -115,6 +116,7 @@ namespace Microflow.Models
         public bool StopOnActionFailed { get; set; }
         public int ActionTimeoutSeconds { get; set; }
         public bool IsHttpGet { get; set; }
+        public string StepId { get; set; }
 
         [IgnoreProperty]
         public string RunId { get; set; }
@@ -130,11 +132,12 @@ namespace Microflow.Models
     {
         public HttpCallWithRetries() { }
 
-        public HttpCallWithRetries(string project, string stepNumber, string subSteps)
+        public HttpCallWithRetries(string project, string stepNumber, string stepId, string subSteps)
         {
             PartitionKey = project;
             RowKey = stepNumber;
             SubSteps = subSteps;
+            StepId = stepId;
         }
 
         // retry options

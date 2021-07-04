@@ -106,7 +106,7 @@ namespace Microflow.Helpers
 
                 if (step.RetryOptions != null)
                 {
-                    HttpCallWithRetries httpCallRetriesEntity = new HttpCallWithRetries(projectRun.ProjectName, step.StepNumber.ToString(), sb.ToString())
+                    HttpCallWithRetries httpCallRetriesEntity = new HttpCallWithRetries(projectRun.ProjectName, step.StepNumber.ToString(), step.StepId, sb.ToString())
                     {
                         CallBackAction = step.CallbackAction,
                         StopOnActionFailed = step.StopOnActionFailed,
@@ -126,7 +126,7 @@ namespace Microflow.Helpers
                 }
                 else
                 {
-                    HttpCall httpCallEntity = new HttpCall(projectRun.ProjectName, step.StepNumber.ToString(), sb.ToString())
+                    HttpCall httpCallEntity = new HttpCall(projectRun.ProjectName, step.StepNumber.ToString(), step.StepId, sb.ToString())
                     {
                         CallBackAction = step.CallbackAction,
                         StopOnActionFailed = step.StopOnActionFailed,
@@ -149,7 +149,7 @@ namespace Microflow.Helpers
                 sb.Append(subId).Append(',').Append("1").Append(';');
             }
 
-            HttpCall containerEntity = new HttpCall(projectRun.ProjectName, "-1", sb.ToString());
+            HttpCall containerEntity = new HttpCall(projectRun.ProjectName, "-1", null, sb.ToString());
 
             tasks.Add(containerEntity.InsertStep(stepsTable));
 

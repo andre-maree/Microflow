@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Microflow.Helpers;
 using Microflow.Models;
 using Microsoft.Azure.WebJobs;
@@ -16,11 +17,29 @@ namespace Microflow.API.Internal
         {
             HttpCall httpCall = context.GetInput<HttpCall>();
 
-            DurableHttpRequest durableHttpRequest = httpCall.CreateMicroflowDurableHttpRequest(context.InstanceId);
+            try
+            {
 
-            DurableHttpResponse durableHttpResponse = await context.CallHttpAsync(durableHttpRequest);
+                DurableHttpRequest durableHttpRequest = httpCall.CreateMicroflowDurableHttpRequest(context.InstanceId);
 
-            return durableHttpResponse.GetMicroflowResponse();
+                DurableHttpResponse durableHttpResponse = await context.CallHttpAsync(durableHttpRequest);
+
+                return durableHttpResponse.GetMicroflowResponse();
+            }
+            catch (TimeoutException)
+            {
+                if (!httpCall.StopOnActionFailed)
+                {
+                    return new MicroflowHttpResponse()
+                    {
+                        Success = false,
+                        HttpResponseStatusCode = 408,
+                        Message = $"callback action {httpCall.CallBackAction} timed out"
+                    };
+                }
+
+                throw;
+            }
         }
     }
 }

@@ -13,6 +13,7 @@ namespace MicroflowModels
         public string SubOrchestrationId { get; set; }
         public string CallbackUrl { get; set; }
         public string RunId { get; set; }
+        public int StepNumber { get; set; }
         public string StepId { get; set; }
     }
 

@@ -11,11 +11,11 @@ namespace MicroflowConsole
             // create
             List<Step> steps = ProjectManager.CreateSteps(4, 1,"{default_post_url}");
             //steps[0].IsHttpGet = true;
-            //steps[2].ActionTimeoutSeconds = 10;
+            //steps[0].ActionTimeoutSeconds = 1;
             //steps[0].CallbackAction = "approve";
             //steps[0].CalloutUrl = "http://localhost:7071/api/SleepTestOrchestrator_HttpStart";
             //steps[0].SetRetryForStep(1, 2,1);
-            //steps[0].StopOnActionFailed = false;
+            //steps[0].StopOnActionFailed = true;
 
             steps[0].AddSubSteps(steps[1].StepNumber, steps[2].StepNumber);
 

@@ -47,7 +47,8 @@ namespace Microflow.Helpers
                     ProjectName = httpCall.PartitionKey,
                     SubOrchestrationId = instanceId,
                     RunId = httpCall.RunId,
-                    StepId = httpCall.RowKey,
+                    StepId = httpCall.StepId,
+                    StepNumber = Convert.ToInt32(httpCall.RowKey),
                     MainOrchestrationId = httpCall.MainOrchestrationId,
                     CallbackUrl = callback
                 };
@@ -100,7 +101,8 @@ namespace Microflow.Helpers
             sb.Replace("<SubOrchestrationId>", instanceId);
             sb.Replace("<CallbackUrl>", callbackUrl);
             sb.Replace("<RunId>", httpCall.RunId);
-            sb.Replace("<StepId>", httpCall.RowKey);
+            sb.Replace("<StepId>", httpCall.StepId);
+            sb.Replace("<StepNumber>", httpCall.RowKey);
 
             return sb.ToString();
         }

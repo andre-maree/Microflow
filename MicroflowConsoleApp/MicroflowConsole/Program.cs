@@ -12,7 +12,7 @@ namespace MicroflowConsole
     {
         public static readonly HttpClient HttpClient = new HttpClient();
         private static string baseUrl = "http://localhost:7071";
-        //private static string baseUrl = "https://microflowapp20210703154326.azurewebsites.net";
+        //private static string baseUrl = "https://microflowappxxxxxxxxxxxxxxxxxxx.azurewebsites.net";
 
         static async Task Main(string[] args)
         {
@@ -29,10 +29,10 @@ namespace MicroflowConsole
             //var terminate = await client.PostAsync("http://localhost:7071/runtime/webhooks/durabletask/instances/39806875-9c81-4736-81c0-9be562dae71e/terminate?reason=dfgd", null);
             try
             {
-                //var workflow = Tests.CreateTestWorkflow_SimpleSteps();
+                var workflow = Tests.CreateTestWorkflow_SimpleSteps();
                 //var workflow = Tests.CreateTestWorkflow_10StepsParallel();
                 //var workflow = Tests.CreateTestWorkflow_Complex1();
-                var workflow = Tests.CreateTestWorkflow_110Steps();
+                //var workflow = Tests.CreateTestWorkflow_110Steps();
 
                 var project = new MicroflowProject()
                 {
@@ -92,14 +92,14 @@ namespace MicroflowConsole
 
         public static Dictionary<string, string> CreateMergeFields()
         {
-            string querystring = "?ProjectName=<ProjectName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&CallbackUrl=<CallbackUrl>&RunId=<RunId>&StepId=<StepId>";
+            string querystring = "?ProjectName=<ProjectName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&CallbackUrl=<CallbackUrl>&RunId=<RunId>&StepNumber=<StepNumber>";// &StepId=<StepId>";
 
         Dictionary<string, string> mergeFields = new Dictionary<string, string>();
             // use 
             //mergeFields.Add("default_post_url", "https://reqbin.com/echo/post/json" + querystring);
             // set the callout url to the new SleepTestOrchestrator http normal function url
             //mergeFields.Add("default_post_url", baseUrl + "/api/SleepTestOrchestrator_Function");// + querystring);
-            mergeFields.Add("default_post_url", baseUrl + "/api/testpost");
+            mergeFields.Add("default_post_url", baseUrl + "/api/testpost" + querystring);
 
             return mergeFields;
         }
