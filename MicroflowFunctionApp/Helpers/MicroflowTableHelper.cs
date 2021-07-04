@@ -69,7 +69,7 @@ namespace Microflow.Helpers
                 HttpCallWithRetries step = steps[i];
                 Step newstep = new Step()
                 {
-                    StepId = Convert.ToInt32(step.RowKey),
+                    StepId = step.RowKey,
                     ActionTimeoutSeconds = step.ActionTimeoutSeconds,
                     StopOnActionFailed = step.StopOnActionFailed,
                     CallbackAction = step.CallBackAction,
@@ -141,7 +141,7 @@ namespace Microflow.Helpers
         public static async Task<HttpCallWithRetries> GetStep(this ProjectRun projectRun)
         {
             CloudTable table = GetStepsTable(projectRun.ProjectName);
-            TableOperation retrieveOperation = TableOperation.Retrieve<HttpCallWithRetries>($"{projectRun.ProjectName}", $"{projectRun.RunObject.StepId}");
+            TableOperation retrieveOperation = TableOperation.Retrieve<HttpCallWithRetries>($"{projectRun.ProjectName}", $"{projectRun.RunObject.StepNumber}");
             TableResult result = await table.ExecuteAsync(retrieveOperation);
             HttpCallWithRetries stepEnt = result.Result as HttpCallWithRetries;
 
@@ -172,7 +172,6 @@ namespace Microflow.Helpers
 
             int count = 0;
 
-            //TODO loop batch deletes
             if (steps.Count > 0)
             {
                 TableBatchOperation batchop = new TableBatchOperation();

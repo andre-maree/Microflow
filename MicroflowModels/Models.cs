@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 
 namespace MicroflowModels
@@ -23,6 +24,8 @@ namespace MicroflowModels
 
     public class MicroflowProject : MicroflowProjectBase
     {
+        [DataMember(Name = "StepIdFormat", EmitDefaultValue = false)]
+        public string StepIdFormat { get; set; } = "guid";
         public List<Step> Steps { get; set; }
 
         [DataMember(Name = "MergeFields", EmitDefaultValue = false)]
@@ -35,19 +38,28 @@ namespace MicroflowModels
     {
         public Step() { }
 
-        public Step(int stepId, string calloutUrl)
+        public Step(int stepNumber, string calloutUrl, string stepId = null)
         {
-            StepId = stepId;
+            if(stepId == null)
+            {
+                StepId = $"{stepNumber}_{Guid.NewGuid()}";
+            }
+            else
+            {
+                StepId = stepId;
+            }
             CalloutUrl = calloutUrl;
+            StepNumber = stepNumber;
         }
 
-        public Step(int stepId, List<int> subSteps)
+        public Step(string stepId, List<int> subSteps)
         {
             StepId = stepId;
             SubSteps = subSteps;
         }
 
-        public int StepId { get; set; }
+        public string StepId { get; set; }
+        public int StepNumber { get; set; }
         public string CalloutUrl { get; set; }
         public string CallbackAction { get; set; }
         public bool StopOnActionFailed { get; set; } = true;

@@ -5,7 +5,6 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Microflow.FlowControl
@@ -13,6 +12,8 @@ namespace Microflow.FlowControl
     public class MicroflowContext : IMicroflowContext
     {
         public IHttpCallWithRetries HttpCallWithRetries { get => _httpCallWithRetries; set => _httpCallWithRetries = value; }
+        public IHttpCallWithRetries _httpCallWithRetries;
+
         private IDurableOrchestrationContext MicroflowDurableContext { get => _microflowContext; set => _microflowContext = value; }
         private IProjectRun ProjectRun { get => _projectRun; set => _projectRun = value; }
         private string LogRowKey => _logRowKey;
@@ -23,7 +24,6 @@ namespace Microflow.FlowControl
 
         private IDurableOrchestrationContext _microflowContext;
         private IProjectRun _projectRun;
-        public IHttpCallWithRetries _httpCallWithRetries;
         private IMicroflowHttpResponse _microflowHttpResponse;
         private IList<Task> _subStepTasks;
         private IList<Task> _logTasks;
@@ -52,11 +52,6 @@ namespace Microflow.FlowControl
 
                 HttpCallWithRetries = await httpCallWithRetriesTask;
 
-                EntityId countId = new EntityId("StepCounter", HttpCallWithRetries.PartitionKey + HttpCallWithRetries.RowKey);
-
-                // set the per step in-progress count to count+1
-                MicroflowDurableContext.SignalEntity(countId, "add");
-
                 string id = MicroflowDurableContext.NewGuid().ToString();
                 HttpCallWithRetries.RunId = ProjectRun.RunObject.RunId;
                 HttpCallWithRetries.MainOrchestrationId = ProjectRun.OrchestratorInstanceId;
@@ -71,6 +66,11 @@ namespace Microflow.FlowControl
                     MicroflowHttpResponse.Success = true;
                     MicroflowHttpResponse.HttpResponseStatusCode = -1;
                 }
+
+
+                EntityId countId = new EntityId("StepCounter", HttpCallWithRetries.PartitionKey + HttpCallWithRetries.RowKey);
+                // set the per step in-progress count to count+1
+                MicroflowDurableContext.SignalEntity(countId, "add");
 
                 // call out to micro-service
                 // wait for external event flow / callback
@@ -124,18 +124,20 @@ namespace Microflow.FlowControl
             {
                 LogStepEnd();
 
-                List<List<int>> subSteps = JsonSerializer.Deserialize<List<List<int>>>(HttpCallWithRetries.SubSteps);
+                string[] stepsAndCounts = HttpCallWithRetries.SubSteps.Split(new char[2] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 
                 var canExeccuteTasks = new List<Task<CanExecuteResult>>();
 
-                foreach (var step in subSteps)
+                for (int i = 0; i < stepsAndCounts.Length; i = i + 2)
                 {
                     // check parentCount
                     // execute immediately if parentCount is 1
-                    if (step[1] < 2)
+                    int parentCount = Convert.ToInt32(stepsAndCounts[i + 1]);
+
+                    if (parentCount < 2)
                     {
-                        // step[0] is stepId, step[1] is parentCount
-                        ProjectRun.RunObject = new RunObject() { RunId = ProjectRun.RunObject.RunId, StepId = step[0] };
+                        // stepsAndCounts[i] is stepNumber, stepsAndCounts[i + 1] is parentCount
+                        ProjectRun.RunObject = new RunObject() { RunId = ProjectRun.RunObject.RunId, StepNumber = stepsAndCounts[i] };
 
                         SubStepTasks.Add(MicroflowDurableContext.CallSubOrchestratorAsync("ExecuteStep", ProjectRun));
                     }
@@ -145,8 +147,8 @@ namespace Microflow.FlowControl
                         canExeccuteTasks.Add(MicroflowDurableContext.CallSubOrchestratorAsync<CanExecuteResult>("CanExecuteNow", new CanExecuteNowObject()
                         {
                             RunId = ProjectRun.RunObject.RunId,
-                            StepId = step[0],
-                            ParentCount = step[1],
+                            StepNumber = stepsAndCounts[i],
+                            ParentCount = parentCount,
                             ProjectName = ProjectRun.ProjectName
                         }));
                     }
@@ -176,7 +178,7 @@ namespace Microflow.FlowControl
                     ProjectRun.RunObject = new RunObject()
                     {
                         RunId = ProjectRun.RunObject.RunId,
-                        StepId = result.StepId
+                        StepNumber = result.StepNumber
                     };
 
                     SubStepTasks.Add(MicroflowDurableContext.CallSubOrchestratorAsync("ExecuteStep", ProjectRun));
@@ -220,7 +222,7 @@ namespace Microflow.FlowControl
             // log start of step
             LogTasks.Add(MicroflowDurableContext.CallActivityAsync(
                 "LogStep",
-                new LogStepEntity(true, ProjectRun.ProjectName, LogRowKey, HttpCallWithRetries.RowKey, ProjectRun.OrchestratorInstanceId)
+                new LogStepEntity(true, ProjectRun.ProjectName, LogRowKey, Convert.ToInt32(HttpCallWithRetries.RowKey), ProjectRun.OrchestratorInstanceId)
             ));
         }
 
@@ -235,7 +237,7 @@ namespace Microflow.FlowControl
                 new LogStepEntity(false,
                                   ProjectRun.ProjectName,
                                   LogRowKey,
-                                  HttpCallWithRetries.RowKey,
+                                  Convert.ToInt32(HttpCallWithRetries.RowKey),
                                   ProjectRun.OrchestratorInstanceId,
                                   MicroflowHttpResponse.Success,
                                   MicroflowHttpResponse.HttpResponseStatusCode,
@@ -258,7 +260,7 @@ namespace Microflow.FlowControl
                 new LogStepEntity(false,
                                   ProjectRun.ProjectName,
                                   LogRowKey,
-                                  HttpCallWithRetries.RowKey,
+                                  Convert.ToInt32(HttpCallWithRetries.RowKey),
                                   ProjectRun.OrchestratorInstanceId,
                                   false,
                                   MicroflowHttpResponse.HttpResponseStatusCode,
@@ -304,7 +306,7 @@ namespace Microflow.FlowControl
                         new LogStepEntity(false,
                                           ProjectRun.ProjectName,
                                           LogRowKey,
-                                          HttpCallWithRetries.RowKey,
+                                          Convert.ToInt32(HttpCallWithRetries.RowKey),
                                           ProjectRun.OrchestratorInstanceId,
                                           false,
                                           408,
@@ -319,7 +321,7 @@ namespace Microflow.FlowControl
                         new LogStepEntity(false,
                                           ProjectRun.ProjectName,
                                           LogRowKey,
-                                          HttpCallWithRetries.RowKey,
+                                          Convert.ToInt32(HttpCallWithRetries.RowKey),
                                           ProjectRun.OrchestratorInstanceId,
                                           false,
                                           500,

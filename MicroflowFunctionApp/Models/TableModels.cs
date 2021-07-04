@@ -14,16 +14,16 @@ namespace Microflow.Models
     {
         public LogErrorEntity() { }
 
-        public LogErrorEntity(string projectName, string message, string runId = null, int? stepId = null)
+        public LogErrorEntity(string projectName, int stepNumber, string message, string runId = null)
         {
             PartitionKey = projectName + "__" + runId;
             RowKey = MicroflowTableHelper.GetTableRowKeyDescendingByDate();
-            StepId = stepId;
+            StepNumber = stepNumber;
             Message = message;
             Date = DateTime.UtcNow;
         }
 
-        public int? StepId { get; set; }
+        public int StepNumber { get; set; }
         public DateTime Date { get; set; }
         public string Message { get; set; }
     }
@@ -35,11 +35,11 @@ namespace Microflow.Models
     {
         public LogStepEntity() { }
 
-        public LogStepEntity(bool isStart, string projectName, string rowKey, string stepId, string runId, bool? success = null, int? httpStatusCode = null, string message = null)
+        public LogStepEntity(bool isStart, string projectName, string rowKey, int stepNumber, string runId, bool? success = null, int? httpStatusCode = null, string message = null)
         {
             PartitionKey = projectName + "__" + runId;
             RowKey = rowKey;
-            StepId = Convert.ToInt32(stepId);
+            StepNumber = stepNumber;
             if (isStart)
                 StartDate = DateTime.UtcNow;
             else
@@ -54,7 +54,7 @@ namespace Microflow.Models
         public bool? Success { get; set; }
         public int? HttpStatusCode { get; set; }
         public string Message { get; set; }
-        public int StepId { get; set; }
+        public int StepNumber { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
     }
@@ -103,10 +103,10 @@ namespace Microflow.Models
     {
         public HttpCall() { }
 
-        public HttpCall(string project, int stepId, string subSteps)
+        public HttpCall(string project, string stepNumber, string subSteps)
         {
             PartitionKey = project;
-            RowKey = $"{stepId}";
+            RowKey = stepNumber;
             SubSteps = subSteps;
         }
 
@@ -130,10 +130,10 @@ namespace Microflow.Models
     {
         public HttpCallWithRetries() { }
 
-        public HttpCallWithRetries(string project, int stepId, string subSteps)
+        public HttpCallWithRetries(string project, string stepNumber, string subSteps)
         {
             PartitionKey = project;
-            RowKey = $"{stepId}";
+            RowKey = stepNumber;
             SubSteps = subSteps;
         }
 

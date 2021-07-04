@@ -18,7 +18,7 @@ namespace Microflow.FlowControl
             CanExecuteNowObject canExecuteNowObject = context.GetInput<CanExecuteNowObject>();
             try
             {
-                EntityId countId = new EntityId(nameof(Counter), canExecuteNowObject.RunId + canExecuteNowObject.StepId);
+                EntityId countId = new EntityId(nameof(Counter), canExecuteNowObject.RunId + canExecuteNowObject.StepNumber);
 
                 using (await context.LockAsync(countId))
                 {
@@ -29,21 +29,21 @@ namespace Microflow.FlowControl
                         // maybe needed cleanup
                         //await context.CallEntityAsync(countId, "delete");
 
-                        return new CanExecuteResult() { CanExecute = true, StepId = canExecuteNowObject.StepId };
+                        return new CanExecuteResult() { CanExecute = true, StepNumber = canExecuteNowObject.StepNumber };
                     }
 
                     await context.CallEntityAsync<int>(countId, "add");
 
-                    return new CanExecuteResult() { CanExecute = false, StepId = canExecuteNowObject.StepId };
+                    return new CanExecuteResult() { CanExecute = false, StepNumber = canExecuteNowObject.StepNumber };
                 }
             }
             catch (Exception e)
             {
                 // log to table error
-                LogErrorEntity errorEntity = new LogErrorEntity(canExecuteNowObject.ProjectName, e.Message, canExecuteNowObject.RunId, canExecuteNowObject.StepId);
+                LogErrorEntity errorEntity = new LogErrorEntity(canExecuteNowObject.ProjectName, Convert.ToInt32(canExecuteNowObject.StepNumber), e.Message, canExecuteNowObject.RunId);
                 await context.CallActivityAsync("LogError", errorEntity);
 
-                return new CanExecuteResult() { CanExecute = false, StepId = canExecuteNowObject.StepId };
+                return new CanExecuteResult() { CanExecute = false, StepNumber = canExecuteNowObject.StepNumber };
             }
         }
 

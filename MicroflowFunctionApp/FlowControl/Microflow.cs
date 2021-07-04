@@ -41,10 +41,10 @@ namespace Microflow.FlowControl
                 if(microflowContext != null)
                 {
 
-                    int? stepId = microflowContext.HttpCallWithRetries == null ? -1 : Convert.ToInt32(microflowContext.HttpCallWithRetries.RowKey);
+                    string stepNumber = microflowContext.HttpCallWithRetries == null ? "-2" : microflowContext.HttpCallWithRetries.RowKey;
 
                     // log to table workflow completed
-                    LogErrorEntity errorEntity = new LogErrorEntity(projectRun.ProjectName, e.Message, projectRun.RunObject.RunId, stepId);
+                    LogErrorEntity errorEntity = new LogErrorEntity(projectRun.ProjectName, Convert.ToInt32(stepNumber), e.Message, projectRun.RunObject.RunId);
                     await context.CallActivityAsync("LogError", errorEntity);
                 }
             }

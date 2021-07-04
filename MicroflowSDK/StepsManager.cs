@@ -10,7 +10,7 @@ namespace MicroflowSDK
         {
             foreach (var parentStep in parents)
             {
-                parentStep.SubSteps.Add(step.StepId);
+                parentStep.SubSteps.Add(step.StepNumber);
             }
         }
 
@@ -24,8 +24,8 @@ namespace MicroflowSDK
 
         public static void AddSubStepRange(this Step step, List<Step> steps, int fromId, int toId)
         {
-            List<Step> li = steps.FindAll(s => s.StepId >= fromId && s.StepId <= toId);
-            step.SubSteps.AddRange(from s in li select s.StepId);
+            List<Step> li = steps.FindAll(s => s.StepNumber >= fromId && s.StepNumber <= toId);
+            step.SubSteps.AddRange(from s in li select s.StepNumber);
         }
 
         public static void SetRetryForStep(this Step step, int delaySeconds = 5, int maxDelaySeconds = 60, int maxRetries = 5, int timeOutSeconds = 60, int backoffCoefficient = 1)

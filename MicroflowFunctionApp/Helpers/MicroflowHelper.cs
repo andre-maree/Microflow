@@ -24,7 +24,7 @@ namespace Microflow.Helpers
 
         public static async Task<HttpResponseMessage> LogError(string projectName, Exception e)
         {
-            await new LogErrorEntity(projectName, e.Message).LogError();
+            await new LogErrorEntity(projectName, -999, e.Message).LogError();
 
             HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.InternalServerError)
             {

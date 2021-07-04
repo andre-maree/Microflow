@@ -17,11 +17,11 @@ namespace MicroflowApiFunctionApp
         /// Call this to see the step count in StepCallout per project name and stepId 
         /// </summary>
         [FunctionName("GetStepCountInprogress")]
-        public static async Task<int> GetStepCountInprogress([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "getstepcountinprogress/{projectNameStepId}")] HttpRequestMessage req,
+        public static async Task<int> GetStepCountInprogress([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "getstepcountinprogress/{projectNameStepNumber}")] HttpRequestMessage req,
                                                              [DurableClient] IDurableEntityClient client,
-                                                             string projectNameStepId)
+                                                             string projectNameStepNumber)
         {
-            EntityId countId = new EntityId("StepCounter", projectNameStepId);
+            EntityId countId = new EntityId("StepCounter", projectNameStepNumber);
 
             EntityStateResponse<int> result = await client.ReadEntityStateAsync<int>(countId);
 

@@ -33,7 +33,7 @@ namespace Microflow.Models
     public class CanExecuteNowObject
     {
         public string RunId { get; set; }
-        public int StepId { get; set; }
+        public string StepNumber { get; set; }
         public int ParentCount { get; set; }
         public string ProjectName { get; set; }
     }
@@ -44,7 +44,7 @@ namespace Microflow.Models
     public class CanExecuteResult
     {
         public bool CanExecute { get; set; }
-        public int StepId { get; set; }
+        public string StepNumber { get; set; }
     }
 
     /// <summary>
@@ -53,7 +53,7 @@ namespace Microflow.Models
     public class RunObject
     {
         public string RunId { get; set; }
-        public int StepId { get; set; }
+        public string StepNumber { get; set; }
     }
 
     #endregion

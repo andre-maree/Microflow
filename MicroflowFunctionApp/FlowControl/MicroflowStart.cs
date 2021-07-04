@@ -50,7 +50,7 @@ namespace Microflow.FlowControl
                 //await MicroflowTableHelper.UpdateStatetEntity(projectBase.ProjectName, 1);
 
                 // create a new run object
-                RunObject runObj = new RunObject() { StepId = -1 };
+                RunObject runObj = new RunObject() { StepNumber = "-1" };
                 projectRun.RunObject = runObj;
 
                 if (string.IsNullOrWhiteSpace(instanceId))
@@ -58,7 +58,7 @@ namespace Microflow.FlowControl
                     instanceId = Guid.NewGuid().ToString();
                 }
 
-                projectRun.RunObject.StepId = -1;
+                projectRun.RunObject.StepNumber = "-1";
                 projectRun.OrchestratorInstanceId = instanceId;
 
                 // start
@@ -135,14 +135,14 @@ namespace Microflow.FlowControl
             catch (StorageException e)
             {
                 // log to table workflow completed
-                LogErrorEntity errorEntity = new LogErrorEntity(projectRun.ProjectName, e.Message, projectRun.RunObject.RunId);
+                LogErrorEntity errorEntity = new LogErrorEntity(projectRun.ProjectName, Convert.ToInt32(projectRun.RunObject.StepNumber), e.Message, projectRun.RunObject.RunId);
 
                 await context.CallActivityAsync("LogError", errorEntity);
             }
             catch (Exception e)
             {
                 // log to table workflow completed
-                LogErrorEntity errorEntity = new LogErrorEntity(projectRun.ProjectName, e.Message, projectRun.RunObject.RunId);
+                LogErrorEntity errorEntity = new LogErrorEntity(projectRun.ProjectName, Convert.ToInt32(projectRun.RunObject.StepNumber), e.Message, projectRun.RunObject.RunId);
 
                 await context.CallActivityAsync("LogError", errorEntity);
             }
@@ -184,7 +184,7 @@ namespace Microflow.FlowControl
                 await delTask;
 
                 // prepare the workflow by persisting parent info to table storage
-                await projectRun.PrepareWorkflow(project.Steps);
+                await projectRun.PrepareWorkflow(project.Steps, project.StepIdFormat);
 
                 return new HttpResponseMessage(HttpStatusCode.Accepted);
             }
