@@ -78,7 +78,7 @@ namespace Microflow.API.Internal
 
                 throw;
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 if (!httpCall.StopOnActionFailed)
                 {
@@ -86,7 +86,7 @@ namespace Microflow.API.Internal
                     {
                         Success = false,
                         HttpResponseStatusCode = -999,
-                        Message = $"callback action {httpCall.CallBackAction} failed"
+                        Message = $"callback action {httpCall.CallBackAction} failed - " + e.Message
                     };
                 }
 

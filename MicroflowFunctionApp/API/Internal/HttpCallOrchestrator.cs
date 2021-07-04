@@ -40,6 +40,20 @@ namespace Microflow.API.Internal
 
                 throw;
             }
+            catch (Exception e)
+            {
+                if (!httpCall.StopOnActionFailed)
+                {
+                    return new MicroflowHttpResponse()
+                    {
+                        Success = false,
+                        HttpResponseStatusCode = -999,
+                        Message = $"callback action {httpCall.CallBackAction} failed - " + e.Message
+                    };
+                }
+
+                throw;
+            }
         }
     }
 }
