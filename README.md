@@ -45,27 +45,14 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
 ## JSON Single Step with All Config:
 ```
 {
-   // StepNumber number is used internally by Microflow
-   "StepNumber":1
-   // StepId string can be set and used as a key or part of a key in the worker micro-service that is being called 
+   "StepNumber":1,
    "StepId":"MyOwnStepReference_Id_1",
-   // Worker micro-service http end-point that is called by Microflow
    "CalloutUrl":"https://reqbin.com/echo/post/json?mainorchestrationid=<mainorchestrationid>&stepid=<stepId>",
-   // When this is set Microflow will create a callback webhook and wait for this to be called,
-   // and when not set Microflow will not create and wait for a callback, but will log the htpp response and continue to the next step
    "CallbackAction":"approve",
-   // If there is any type of failure for callouts and callbacks, including timeouts, and any non-success http responses,
-   // this will stop all execution if true,
-   // and log and continue to the next step if it is false
    "StopOnActionFailed":true,
-   // Http post to micro-service endpoint if false
    "IsHttpGet":true,
-   // This is for how long an action callback will wait, 
-   // it can be set for any time span and no cloud costs are incurred during the wait
    "ActionTimeoutSeconds":30,
-   // These are the sub steps that are dependent on this step
    "SubSteps":[2,3],
-   // Set this to do retries for the micro-service end-point call
    "RetryOptions":{
       "DelaySeconds":5,
       "MaxDelaySeconds":60,
@@ -75,7 +62,16 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
    }
 }
 ```
-
+   - **StepNumber**: Used internally by Microflow, but is also settable, must be unique
+   - **StepId**: String can be set and used as a key or part of a key in the worker micro-service that is being called, must be unique
+   - **CalloutUrl**: Worker micro-service http end-point that is called by Microflow
+   - **CallbackAction**: When this is set Microflow will create a callback webhook and wait for this to be called, and when not set, Microflow will not create and wait for a callback, but will log the http response, and continue to the next step
+   - **StopOnActionFailed**: If there is any type of failure for callouts and callbacks, including timeouts, and any non-success http responses, this will stop all execution if true, and log and continue to the next step if it is false
+   - **IsHttpGet**: Http post to micro-service endpoint if false
+   - **ActionTimeoutSeconds**: This is for how long an action callback will wait, it can be set for any time span and no cloud costs are incurred during the wait
+   - **SubSteps**: These are the sub steps that are dependent on this step
+   - **RetryOptions**: Set this to do retries for the micro-service end-point call
+   
 ## JSON Workflow Example:
 This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 2 and StepId 3), and each sub step has 1 common sub step (StepId 4). This is the same structure as the included test Tests.CreateTestWorkflow_SimpleSteps(). StepId 1 has a callback action set, and StepId 3 has a retry set. There is 1 merge field set and is used as a default callout URL.
 ```
