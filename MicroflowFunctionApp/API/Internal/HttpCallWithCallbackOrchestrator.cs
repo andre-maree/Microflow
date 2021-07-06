@@ -26,16 +26,18 @@ namespace Microflow.API.Internal
 
             bool doneAdd = false;
             bool doneSubtract = false;
+            bool doneCallout = false;
             EntityId countId = new EntityId("StepCounter", httpCall.PartitionKey + httpCall.RowKey);
 
             // http call outside of Microflow, this is the micro-service api call
             try
             {
-                DurableHttpResponse durableHttpResponse = await context.CallHttpAsync(durableHttpRequest);
-
                 // set the per step in-progress count to count+1
                 context.SignalEntity(countId, "add");
                 doneAdd = true;
+
+                DurableHttpResponse durableHttpResponse = await context.CallHttpAsync(durableHttpRequest);
+                doneCallout = true;
 
                 MicroflowHttpResponse microflowHttpResponse = durableHttpResponse.GetMicroflowResponse();
 
@@ -70,20 +72,22 @@ namespace Microflow.API.Internal
                         {
                             Success = false,
                             HttpResponseStatusCode = (int)actionResult.StatusCode,
-                            Message = $"callback action {httpCall.CallBackAction} falied"
+                            Message = $"callback action {httpCall.CallBackAction} falied, StopOnActionFailed is {httpCall.StopOnActionFailed}"
                         };
                     }
                 }
             }
-            catch(TimeoutException)
+            catch (TimeoutException)
             {
-                if(!httpCall.StopOnActionFailed)
+                if (!httpCall.StopOnActionFailed)
                 {
                     return new MicroflowHttpResponse()
                     {
                         Success = false,
-                        HttpResponseStatusCode = 408,
-                        Message = $"callback action {httpCall.CallBackAction} timed out"
+                        HttpResponseStatusCode = -408,
+                        Message = doneCallout
+                        ? $"callback action {httpCall.CallBackAction} timed out, StopOnActionFailed is {httpCall.StopOnActionFailed}"
+                        : $"callout to {httpCall.CalloutUrl} timed out before spawning a callback, StopOnActionFailed is {httpCall.StopOnActionFailed}"
                     };
                 }
 
@@ -96,8 +100,10 @@ namespace Microflow.API.Internal
                     return new MicroflowHttpResponse()
                     {
                         Success = false,
-                        HttpResponseStatusCode = -999,
-                        Message = $"callback action {httpCall.CallBackAction} failed - " + e.Message
+                        HttpResponseStatusCode = -500,
+                        Message = doneCallout 
+                        ? $"callback action {httpCall.CallBackAction} failed, StopOnActionFailed is {httpCall.StopOnActionFailed} - " + e.Message
+                        : $"callout to {httpCall.CalloutUrl} failed before spawning a callback, StopOnActionFailed is {httpCall.StopOnActionFailed}"
                     };
                 }
 
@@ -105,7 +111,7 @@ namespace Microflow.API.Internal
             }
             finally
             {
-                if(doneAdd && !doneSubtract)
+                if (doneAdd && !doneSubtract)
                 {
                     // set the per step in-progress count to count-1
                     context.SignalEntity(countId, "subtract");

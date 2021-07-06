@@ -54,12 +54,12 @@ namespace Microflow.FlowControl
                 // log start of step
                 LogStepStart();
 
-                // if the call out url is empty then no http call is done, use this for an empty container step
+                // if the callout url is empty then no http call is done, use this for an empty container step
                 if (string.IsNullOrWhiteSpace(HttpCallWithRetries.CalloutUrl))
                 {
                     MicroflowHttpResponse = new MicroflowHttpResponse();
                     MicroflowHttpResponse.Success = true;
-                    MicroflowHttpResponse.HttpResponseStatusCode = -1;
+                    MicroflowHttpResponse.HttpResponseStatusCode = -404;
                 }
                 else
                 {
@@ -275,8 +275,10 @@ namespace Microflow.FlowControl
                                       Convert.ToInt32(HttpCallWithRetries.RowKey),
                                       ProjectRun.OrchestratorInstanceId,
                                       false,
-                                      408,
-                                      "action timeout")
+                                      -408,
+                                      string.IsNullOrWhiteSpace(HttpCallWithRetries.CallBackAction) 
+                                        ? "action timeout" 
+                                        : $"action {HttpCallWithRetries.CallBackAction} timed out, StopOnActionFailed is {HttpCallWithRetries.StopOnActionFailed}")
                 ));
             }
             else
@@ -289,7 +291,7 @@ namespace Microflow.FlowControl
                                       Convert.ToInt32(HttpCallWithRetries.RowKey),
                                       ProjectRun.OrchestratorInstanceId,
                                       false,
-                                      500,
+                                      -500,
                                       ex.Message)
                 ));
 

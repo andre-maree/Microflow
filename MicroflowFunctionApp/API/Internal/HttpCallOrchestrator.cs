@@ -44,8 +44,8 @@ namespace Microflow.API.Internal
                     return new MicroflowHttpResponse()
                     {
                         Success = false,
-                        HttpResponseStatusCode = 408,
-                        Message = $"callback action {httpCall.CallBackAction} timed out"
+                        HttpResponseStatusCode = -408,
+                        Message = $"inline callout to {httpCall.CalloutUrl} timed out, StopOnActionFailed is false"
                     };
                 }
 
@@ -59,7 +59,7 @@ namespace Microflow.API.Internal
                     {
                         Success = false,
                         HttpResponseStatusCode = -999,
-                        Message = $"callback action {httpCall.CallBackAction} failed - " + e.Message
+                        Message = $"inline callout to to {httpCall.CalloutUrl} failed, StopOnActionFailed is false - " + e.Message
                     };
                 }
 
