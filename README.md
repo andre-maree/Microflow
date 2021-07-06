@@ -17,13 +17,15 @@ Microflow functionality:
 - timeouts can be set per step for inline and callback
 - retry policies can be set for each step and there can also be a default retry policy for the entire workflow
 - StopOnActionFailed can be set per step to indicate for when there is a failure (not a success callback), which will make Microflow stop the workflow execution or to log the failure and continue with the workflow
+- save and retrieve Microflow project json
+- view in-step progress counts, this is more useful when running multiple concurrent instances
 - stateful and durable! Microflow leverages Durable Functions, so even when the vm crashes, Microflow will continue from where it left off, before the crash, when a new vm becomes available (Azure will do this in the background)
 - leverage the Azure serverless plans: Serverless Consumption and Premium plans
 - Microflow can run anywhere on Kubernetes when the Azure serverless environment is not available
 - Microflow is lightweight and will auto scale when there is a usage spike
 
 Microflow use cases:
-- any business workflow that needs to leverage serverless autoscaling durable stateful workflows that can run anywhere
+- any business workflow that needs to leverage serverless autoscaling durable stateful workflows
 - avoid hard coded workflows
 - use Microflow as a state-of-the-art back end for your workflow designer, the workflow is just a simple json definition
 - use the Microflow SDK to build code-based workflows outside of Microflow, and then apply changes to the workflow without the need for any deployments
