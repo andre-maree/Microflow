@@ -130,6 +130,7 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
 ```
 
 ## Microflow Post or Query String Data
+This is the data that can be sent to the worker micro-service via http post or get querystring.
 
 Http post:
 ```csharp
@@ -147,8 +148,8 @@ public class MicroflowPostData
 
 ```
 Http querystring:
-```javascript
-?ProjectName=<ProjectName>&StepNumber=<StepNumber>&StepId=<StepId>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&CallbackUrl=<CallbackUrl>&RunId=<RunId>
+```html
+?ProjectName=<ProjectName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&CallbackUrl=<CallbackUrl>&RunId=<RunId>&StepNumber=<StepNumber>&StepId=<StepId>
 ```
 
 ## Solution Description
