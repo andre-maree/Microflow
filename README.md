@@ -129,6 +129,26 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
 }
 ```
 
+## Microflow Post or Query String Data
+
+Http post:
+```csharp
+
+public class MicroflowPostData
+{
+   public string ProjectName { get; set; }
+   public string MainOrchestrationId { get; set; }
+   public string SubOrchestrationId { get; set; }
+   public string CallbackUrl { get; set; }
+   public string RunId { get; set; }
+   public int StepNumber { get; set; }
+   public string StepId { get; set; }
+}
+
+```
+Http querystring:
+"?ProjectName=<ProjectName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&CallbackUrl=<CallbackUrl>&RunId=<RunId>&StepNumber=<StepNumber>&StepId=<StepId>"
+
 ## Solution Description
 
 ### MicroflowFunctionApp
