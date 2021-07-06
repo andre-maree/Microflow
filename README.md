@@ -1,8 +1,5 @@
-# Microflow
-Welcome to Microflow. This is a fun project that I am working on in my free time. The idea came from the business need to execute workflows in the best scalable way. Durable Functions is a great choice for this, but a drawback might be: that Durable Function workflows are normally hard coded by developers. This leads to a situation where workflow changes must go through the normal development life cycle (dev, test, production). What if the users designing the workflows are not developers? What if the business needs to make workflow changes quickly without the need for code changes? These are the problems that Microflow addresses, keeping the greatness of serverless Durable Functions and making the workflows dynamic for easy changeability.
-
 ## Overview
-Microflow is a dynamic serverless micro-service workflow orchestration engine built with C#, .NET Core 3.1, and Azure Durable Functions. Microflow separates the workflow design from the function code so that workflows don`t have to be hard coded as with normal Durable Functions. The workflow can be designed outside of Microflow and then passed in as JSON for execution, so no code changes or deployments are needed to modify any aspect of a workflow. Microflow can be deployed to the Azure Functions Consumption or Premium plans, to an Azure App Service, or to Kubernetes. For ultimate scalability, deploy Microflow to a serverless hosting plan for Microflow only, then deploy your micro-services each to their own plans. Microflow can orchestrate any Api endpoint across hosting plans, other clouds, or any http endpoints.
+The idea came from the business need to execute workflows in the best scalable way. Durable Functions is a great choice for this, but a drawback might be that Durable Function workflows are usually hard coded by developers. This leads to a situation where workflow changes must go through the normal development life cycle (dev, test, production). What if the users designing the workflows are not developers? What if the business needs to make workflow changes quickly without the need for code changes? These are the problems that Microflow addresses, keeping the greatness of serverless Durable Functions and making the workflows dynamic for easy changeability. The workflow can be designed outside of Microflow and then passed in as JSON for execution, so no code changes or deployments are needed to modify any aspect of a workflow. Microflow can be deployed to the Azure Functions Consumption or Premium plans, to an Azure App Service, or to Kubernetes. For ultimate scalability, deploy Microflow to a serverless hosting plan for Microflow only, then deploy your micro-services each to their own plans. Microflow can orchestrate any Api endpoint across hosting plans, other clouds, or any http endpoints.
 
 Microflow functionality:
 - dynamic json workflows separate and changeable outside of Microflow
@@ -45,8 +42,9 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
 ## JSON Single Step with All Config:
 ```
 {
-   "StepId":1,
-   "CalloutUrl":"http://localhost:7071/api/SleepTestOrchestrator_HttpStart",
+   "StepNumber":1,
+   "StepId":"MyOwnStepReference_Id_1",
+   "CalloutUrl":"https://reqbin.com/echo/post/json?mainorchestrationid=<mainorchestrationid>&stepid=<stepId>",
    "CallbackAction":"approve",
    "StopOnActionFailed":true,
    "IsHttpGet":true,
@@ -61,7 +59,16 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
    }
 }
 ```
-
+   - **StepNumber**: Used internally by Microflow, but is also settable, must be unique
+   - **StepId**: String can be set and used as a key or part of a key in the worker micro-service that is being called, must be unique
+   - **CalloutUrl**: Worker micro-service http end-point that is called by Microflow
+   - **CallbackAction**: When this is set Microflow will create a callback webhook and wait for this to be called, and when not set, Microflow will not create and wait for a callback, but will log the http response, and continue to the next step
+   - **StopOnActionFailed**: If there is any type of failure for callouts or callbacks, including timeouts, and any non-success http responses, this will stop all execution if true, and log and continue to the next step if it is false
+   - **IsHttpGet**: Http post to micro-service endpoint if false
+   - **ActionTimeoutSeconds**: This is for how long an action callback will wait, it can be set for any time span and no cloud costs are incurred during the wait
+   - **SubSteps**: These are the sub steps that are dependent on this step
+   - **RetryOptions**: Set this to do retries for the micro-service end-point call
+   
 ## JSON Workflow Example:
 This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 2 and StepId 3), and each sub step has 1 common sub step (StepId 4). This is the same structure as the included test Tests.CreateTestWorkflow_SimpleSteps(). StepId 1 has a callback action set, and StepId 3 has a retry set. There is 1 merge field set and is used as a default callout URL.
 ```
@@ -117,6 +124,29 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
     }
   ]
 }
+```
+
+## Microflow Post or Query String Data
+This is the data that can be sent to the worker micro-service via http post or get querystring.
+
+Http post:
+```csharp
+
+public class MicroflowPostData
+{
+   public string ProjectName { get; set; }
+   public string MainOrchestrationId { get; set; }
+   public string SubOrchestrationId { get; set; }
+   public string CallbackUrl { get; set; }
+   public string RunId { get; set; }
+   public int StepNumber { get; set; }
+   public string StepId { get; set; }
+}
+
+```
+Http querystring:
+```html
+?ProjectName=<ProjectName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&CallbackUrl=<CallbackUrl>&RunId=<RunId>&StepNumber=<StepNumber>&StepId=<StepId>
 ```
 
 ## Solution Description
