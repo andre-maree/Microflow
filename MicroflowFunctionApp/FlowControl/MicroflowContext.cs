@@ -45,7 +45,6 @@ namespace Microflow.FlowControl
         /// </summary>
         public async Task RunMicroflow()
         {
-            bool doneAdd = false;
             try
             {
                 // get the step data from table storage (from PrepareWorkflow)
@@ -67,12 +66,6 @@ namespace Microflow.FlowControl
                     MicroflowHttpResponse.Success = true;
                     MicroflowHttpResponse.HttpResponseStatusCode = -1;
                 }
-
-
-                EntityId countId = new EntityId("StepCounter", HttpCallWithRetries.PartitionKey + HttpCallWithRetries.RowKey);
-                // set the per step in-progress count to count+1
-                MicroflowDurableContext.SignalEntity(countId, "add");
-                doneAdd = true;
 
                 // call out to micro-service
                 // wait for external event flow / callback
@@ -100,9 +93,6 @@ namespace Microflow.FlowControl
                     MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(name, id, HttpCallWithRetries);
                 }
 
-                // set the per step in-progress count to count-1
-                MicroflowDurableContext.SignalEntity(countId, "subtract");
-
                 SubStepTasks.Add(ProcessSubSteps());
 
                 await Task.WhenAll(LogTasks);
@@ -111,13 +101,6 @@ namespace Microflow.FlowControl
             }
             catch (Exception ex)
             {
-                if (doneAdd)
-                {
-                    EntityId countId = new EntityId("StepCounter", HttpCallWithRetries.PartitionKey + HttpCallWithRetries.RowKey);
-                    // set the per step in-progress count to count-1
-                    MicroflowDurableContext.SignalEntity(countId, "subtract");
-                }
-
                 await HandleCalloutException(ex);
             }
         }
@@ -135,7 +118,7 @@ namespace Microflow.FlowControl
 
                 string[] stepsAndCounts = HttpCallWithRetries.SubSteps.Split(new char[2] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 
-                var canExeccuteTasks = new List<Task<CanExecuteResult>>();
+                var canExecuteTasks = new List<Task<CanExecuteResult>>();
 
                 for (int i = 0; i < stepsAndCounts.Length; i = i + 2)
                 {
@@ -153,7 +136,7 @@ namespace Microflow.FlowControl
                     // if parentCount is more than 1, work out if it can execute now
                     else
                     {
-                        canExeccuteTasks.Add(MicroflowDurableContext.CallSubOrchestratorAsync<CanExecuteResult>("CanExecuteNow", new CanExecuteNowObject()
+                        canExecuteTasks.Add(MicroflowDurableContext.CallSubOrchestratorAsync<CanExecuteResult>("CanExecuteNow", new CanExecuteNowObject()
                         {
                             RunId = ProjectRun.RunObject.RunId,
                             StepNumber = stepsAndCounts[i],
@@ -163,7 +146,7 @@ namespace Microflow.FlowControl
                     }
                 }
 
-                await ProcessStepCanExecuteTasks(canExeccuteTasks);
+                await ProcessStepCanExecuteTasks(canExecuteTasks);
             }
             else
             {
@@ -199,6 +182,7 @@ namespace Microflow.FlowControl
 
         /// <summary>
         /// Durable entity to keep an in progress count for each concurrent step in the project/run
+        /// Used by HttpCallOrchestrator and HttpCallWithCallbackOrchestrator
         /// </summary>
         [FunctionName("StepCounter")]
         public static void StepCounter([EntityTrigger] IDurableEntityContext ctx)

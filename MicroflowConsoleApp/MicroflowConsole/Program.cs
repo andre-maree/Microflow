@@ -68,11 +68,11 @@ namespace MicroflowConsole
                 ////parallel multiple workflow instances
                 for (int i = 0; i < 1; i++)
                 {
-                    //await Task.Delay(100);
+                    await Task.Delay(500);
                     //await posttask;
                     tasks.Add(HttpClient.PostAsJsonAsync(baseUrl + "/api/start/", new MicroflowProjectBase() { ProjectName = "MicroflowDemo" }, new JsonSerializerOptions(JsonSerializerDefaults.General)));
                 }
-
+                //await result;
                 ////await posttask;
                 await Task.WhenAll(tasks);
 

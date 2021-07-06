@@ -24,11 +24,18 @@ namespace Microflow.API.Internal
 
             DurableHttpRequest durableHttpRequest = httpCall.CreateMicroflowDurableHttpRequest(context.InstanceId);
 
+            bool doneAdd = false;
+            bool doneSubtract = false;
+            EntityId countId = new EntityId("StepCounter", httpCall.PartitionKey + httpCall.RowKey);
+
             // http call outside of Microflow, this is the micro-service api call
-            
             try
             {
                 DurableHttpResponse durableHttpResponse = await context.CallHttpAsync(durableHttpRequest);
+
+                // set the per step in-progress count to count+1
+                context.SignalEntity(countId, "add");
+                doneAdd = true;
 
                 MicroflowHttpResponse microflowHttpResponse = durableHttpResponse.GetMicroflowResponse();
 
@@ -41,7 +48,11 @@ namespace Microflow.API.Internal
                 log.LogCritical($"Waiting for callback: {Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}/api/{httpCall.CallBackAction}/{context.InstanceId}/{httpCall.RowKey}");
                 // wait for the external event, set the timeout
                 HttpResponseMessage actionResult = await context.WaitForExternalEvent<HttpResponseMessage>(httpCall.CallBackAction, TimeSpan.FromSeconds(httpCall.ActionTimeoutSeconds));
-                
+
+                // set the per step in-progress count to count-1
+                context.SignalEntity(countId, "subtract");
+                doneSubtract = true;
+
                 // check for action failed
                 if (actionResult.IsSuccessStatusCode)
                 {
@@ -91,6 +102,14 @@ namespace Microflow.API.Internal
                 }
 
                 throw;
+            }
+            finally
+            {
+                if(doneAdd && !doneSubtract)
+                {
+                    // set the per step in-progress count to count-1
+                    context.SignalEntity(countId, "subtract");
+                }
             }
 
             throw new Exception("Unknown error for step " + httpCall.RowKey);

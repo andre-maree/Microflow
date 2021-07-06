@@ -11,6 +11,7 @@ using MicroflowModels;
 using System.Net;
 using Microflow.Models;
 using Microsoft.Azure.Cosmos.Table;
+using System.Threading;
 
 namespace Microflow.FlowControl
 {
@@ -25,8 +26,6 @@ namespace Microflow.FlowControl
         /// This is the entry point, project payload is in the http body
         /// </summary>
         /// <param name="instanceId">If an instanceId is passed in, it will run as a singleton, else it will run concurrently with each with a new instanceId</param>
-        /// <param name="req"></param>
-        /// <returns></returns>
         [FunctionName("Microflow_HttpStart")]
         public static async Task<HttpResponseMessage> HttpStart([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "start/{instanceId?}")]
                                                                 HttpRequestMessage req,
@@ -102,6 +101,37 @@ namespace Microflow.FlowControl
 
             try
             {
+                // check if project ready is true, else wait with a timer (this is a durable monitor)
+                EntityId readyToRun = new EntityId(nameof(ReadyToRun), projectRun.ProjectName);
+                DateTime deadline = context.CurrentUtcDateTime.Add(TimeSpan.FromSeconds(5));
+                var d = context.CurrentUtcDateTime.AddMinutes(30);
+
+                using (CancellationTokenSource cts = new CancellationTokenSource())
+                {
+                    try
+                    {
+                        while (context.CurrentUtcDateTime < d)
+                        {
+                            if (await context.CallEntityAsync<bool>(readyToRun, "get"))
+                            {
+                                break;
+                            }
+                            else
+                            {
+                                await context.CreateTimer(deadline, cts.Token);
+                            }
+                        }
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        log.LogCritical("========================TaskCanceledException==========================");
+                    }
+                    finally
+                    {
+                        cts.Dispose();
+                    }
+                }
+
                 // log start
                 string logRowKey = MicroflowTableHelper.GetTableLogRowKeyDescendingByDate(context.CurrentUtcDateTime, "_" + projectRun.OrchestratorInstanceId);
 
@@ -117,6 +147,7 @@ namespace Microflow.FlowControl
                 log.LogInformation($"Started orchestration with ID = '{context.InstanceId}', Project = '{projectRun.ProjectName}'");
 
                 await context.MicroflowStartProjectRun(log, projectRun);
+                
 
                 // log to table workflow completed
                 logEntity = new LogOrchestrationEntity(false,
@@ -155,22 +186,29 @@ namespace Microflow.FlowControl
         /// </summary>
         [FunctionName("Microflow_InsertOrUpdateProject")]
         public static async Task<HttpResponseMessage> SaveProject([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-                                                                  Route = "InsertOrUpdateProject")] HttpRequestMessage req)
+                                                                  Route = "InsertOrUpdateProject")] HttpRequestMessage req,
+                                                                  [DurableClient] IDurableEntityClient client)
         {
             string content;
-
             MicroflowProject project = null;
+            bool doneReadyFalse = false;
+
+            // read http content
+            content = await req.Content.ReadAsStringAsync();
+
+            // deserialize the workflow json
+            project = JsonSerializer.Deserialize<MicroflowProject>(content);
+
+            //    // create a project run
+            ProjectRun projectRun = new ProjectRun() { ProjectName = project.ProjectName, Loop = project.Loop };
+
+            EntityId readyToRun = new EntityId(nameof(ReadyToRun), projectRun.ProjectName);
 
             try
             {
-                // read http content
-                content = await req.Content.ReadAsStringAsync();
-
-                // deserialize the workflow json
-                project = JsonSerializer.Deserialize<MicroflowProject>(content);
-
-                //    // create a project run
-                ProjectRun projectRun = new ProjectRun() { ProjectName = project.ProjectName, Loop = project.Loop };
+                // set project ready to false
+                await client.SignalEntityAsync(readyToRun, "false");
+                doneReadyFalse = true;
 
                 // reate the storage tables for the project
                 await MicroflowTableHelper.CreateTables(project.ProjectName);
@@ -214,6 +252,34 @@ namespace Microflow.FlowControl
                 }
 
                 return resp;
+            }
+            finally
+            {
+                // if project ready was set to false, always set it to true
+                if(doneReadyFalse)
+                {
+                    await client.SignalEntityAsync(readyToRun, "true");
+                }
+            }
+        }
+        
+        /// <summary>
+         /// Durable entity check if the project is ready to run
+         /// </summary>
+        [FunctionName("ReadyToRun")]
+        public static void ReadyToRun([EntityTrigger] IDurableEntityContext ctx)
+        {
+            switch (ctx.OperationName.ToLowerInvariant())
+            {
+                case "true":
+                    ctx.SetState(true);
+                    break;
+                case "false":
+                    ctx.SetState(false);
+                    break;
+                case "get":
+                    ctx.Return(ctx.GetState<bool>());
+                    break;
             }
         }
     }
