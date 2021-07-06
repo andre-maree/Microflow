@@ -46,7 +46,7 @@ namespace Microflow.API.External
         public static async Task<HttpResponseMessage> TestPost(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "testpost")] HttpRequestMessage req)
         {
-            await Task.Delay(1000);
+            await Task.Delay(500);
 
             if (req.Method == HttpMethod.Post)
             {

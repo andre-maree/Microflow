@@ -18,15 +18,13 @@ namespace Microflow.FlowControl
         private IProjectRun ProjectRun { get => _projectRun; set => _projectRun = value; }
         private string LogRowKey => _logRowKey;
         private IMicroflowHttpResponse MicroflowHttpResponse { get => _microflowHttpResponse; set => _microflowHttpResponse = value; }
-        private IList<Task> SubStepTasks { get => _subStepTasks; set => _subStepTasks = value; }
-        private IList<Task> LogTasks { get => _logTasks; set => _logTasks = value; }
+        private IList<Task> MicroflowTasks { get => _microFlowTasks; set => _microFlowTasks = value; }
         private ILogger Logger { get => _logger; set => _logger = value; }
 
         private IDurableOrchestrationContext _microflowContext;
         private IProjectRun _projectRun;
         private IMicroflowHttpResponse _microflowHttpResponse;
-        private IList<Task> _subStepTasks;
-        private IList<Task> _logTasks;
+        private IList<Task> _microFlowTasks;
         private ILogger _logger;
         private readonly string _logRowKey;
 
@@ -35,8 +33,7 @@ namespace Microflow.FlowControl
             MicroflowDurableContext = microflowContext;
             ProjectRun = projectRun;
             _logRowKey = MicroflowTableHelper.GetTableLogRowKeyDescendingByDate(MicroflowDurableContext.CurrentUtcDateTime, MicroflowDurableContext.NewGuid().ToString());
-            SubStepTasks = new List<Task>();
-            LogTasks = new List<Task>();
+            MicroflowTasks = new List<Task>();
             Logger = MicroflowDurableContext.CreateReplaySafeLogger(logger);
         }
 
@@ -48,9 +45,7 @@ namespace Microflow.FlowControl
             try
             {
                 // get the step data from table storage (from PrepareWorkflow)
-                Task<HttpCallWithRetries> httpCallWithRetriesTask = MicroflowDurableContext.CallActivityAsync<HttpCallWithRetries>("GetStep", ProjectRun);
-
-                HttpCallWithRetries = await httpCallWithRetriesTask;
+                HttpCallWithRetries = await MicroflowDurableContext.CallActivityAsync<HttpCallWithRetries>("GetStep", ProjectRun);
 
                 string id = MicroflowDurableContext.NewGuid().ToString();
                 HttpCallWithRetries.RunId = ProjectRun.RunObject.RunId;
@@ -66,38 +61,38 @@ namespace Microflow.FlowControl
                     MicroflowHttpResponse.Success = true;
                     MicroflowHttpResponse.HttpResponseStatusCode = -1;
                 }
-
-                // call out to micro-service
-                // wait for external event flow / callback
-                if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.CallBackAction))
-                {
-                    const string name = "HttpCallWithCallBackOrchestrator";
-
-                    if (HttpCallWithRetries.RetryDelaySeconds > 0)
-                    {
-                        MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(name, HttpCallWithRetries.GetRetryOptions(), id, HttpCallWithRetries);
-                    }
-
-                    MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(name, id, HttpCallWithRetries);
-                }
-                // send and receive inline flow
                 else
                 {
-                    const string name = "HttpCallOrchestrator";
-
-                    if (HttpCallWithRetries.RetryDelaySeconds > 0)
+                    // call out to micro-service
+                    // wait for external event flow / callback
+                    if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.CallBackAction))
                     {
-                        MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(name, HttpCallWithRetries.GetRetryOptions(), id, HttpCallWithRetries);
-                    }
+                        const string name = "HttpCallWithCallBackOrchestrator";
 
-                    MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(name, id, HttpCallWithRetries);
+                        if (HttpCallWithRetries.RetryDelaySeconds > 0)
+                        {
+                            MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(name, HttpCallWithRetries.GetRetryOptions(), id, HttpCallWithRetries);
+                        }
+
+                        MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(name, id, HttpCallWithRetries);
+                    }
+                    // send and receive inline flow
+                    else
+                    {
+                        const string name = "HttpCallOrchestrator";
+
+                        if (HttpCallWithRetries.RetryDelaySeconds > 0)
+                        {
+                            MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(name, HttpCallWithRetries.GetRetryOptions(), id, HttpCallWithRetries);
+                        }
+
+                        MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(name, id, HttpCallWithRetries);
+                    }
                 }
 
-                SubStepTasks.Add(ProcessSubSteps());
+                MicroflowTasks.Add(ProcessSubSteps());
 
-                await Task.WhenAll(LogTasks);
-
-                await Task.WhenAll(SubStepTasks);
+                await Task.WhenAll(MicroflowTasks);
             }
             catch (Exception ex)
             {
@@ -131,7 +126,7 @@ namespace Microflow.FlowControl
                         // stepsAndCounts[i] is stepNumber, stepsAndCounts[i + 1] is parentCount
                         ProjectRun.RunObject = new RunObject() { RunId = ProjectRun.RunObject.RunId, StepNumber = stepsAndCounts[i] };
 
-                        SubStepTasks.Add(MicroflowDurableContext.CallSubOrchestratorAsync("ExecuteStep", ProjectRun));
+                        MicroflowTasks.Add(MicroflowDurableContext.CallSubOrchestratorAsync("ExecuteStep", ProjectRun));
                     }
                     // if parentCount is more than 1, work out if it can execute now
                     else
@@ -173,7 +168,7 @@ namespace Microflow.FlowControl
                         StepNumber = result.StepNumber
                     };
 
-                    SubStepTasks.Add(MicroflowDurableContext.CallSubOrchestratorAsync("ExecuteStep", ProjectRun));
+                    MicroflowTasks.Add(MicroflowDurableContext.CallSubOrchestratorAsync("ExecuteStep", ProjectRun));
                 }
 
                 canExecuteTasks.Remove(canExecuteTask);
@@ -208,24 +203,22 @@ namespace Microflow.FlowControl
         }
 
         /// <summary>
-        /// Log the start of step
+        /// Log the start of the step
         /// </summary>
         private void LogStepStart()
         {
-            // log start of step
-            LogTasks.Add(MicroflowDurableContext.CallActivityAsync(
+            MicroflowTasks.Add(MicroflowDurableContext.CallActivityAsync(
                 "LogStep",
                 new LogStepEntity(true, ProjectRun.ProjectName, LogRowKey, Convert.ToInt32(HttpCallWithRetries.RowKey), ProjectRun.OrchestratorInstanceId)
             ));
         }
 
         /// <summary>
-        /// Log the end of step
+        /// Log the end of the step
         /// </summary>
         private void LogStepEnd()
         {
-            // log end of step
-            LogTasks.Add(MicroflowDurableContext.CallActivityAsync(
+            MicroflowTasks.Add(MicroflowDurableContext.CallActivityAsync(
                 "LogStep",
                 new LogStepEntity(false,
                                   ProjectRun.ProjectName,
@@ -241,14 +234,13 @@ namespace Microflow.FlowControl
         }
 
         /// <summary>
-        /// Log the fail of step
+        /// Log a fail of the step
         /// </summary>
         private void LogStepFail()
         {
             Logger.LogError($"Step {HttpCallWithRetries.RowKey} failed at {DateTime.Now.ToString("HH:mm:ss")}  -  Run ID: {ProjectRun.RunObject.RunId}");
 
-            // log step error, stop exe
-            LogTasks.Add(MicroflowDurableContext.CallActivityAsync(
+            MicroflowTasks.Add(MicroflowDurableContext.CallActivityAsync(
                 "LogStep",
                 new LogStepEntity(false,
                                   ProjectRun.ProjectName,
@@ -275,8 +267,7 @@ namespace Microflow.FlowControl
 
             if (ex is TimeoutException)
             {
-                // log step error, stop exe
-                LogTasks.Add(MicroflowDurableContext.CallActivityAsync(
+                MicroflowTasks.Add(MicroflowDurableContext.CallActivityAsync(
                     "LogStep",
                     new LogStepEntity(false,
                                       ProjectRun.ProjectName,
@@ -290,8 +281,7 @@ namespace Microflow.FlowControl
             }
             else
             {
-                // log step error, stop exe
-                LogTasks.Add(MicroflowDurableContext.CallActivityAsync(
+                MicroflowTasks.Add(MicroflowDurableContext.CallActivityAsync(
                     "LogStep",
                     new LogStepEntity(false,
                                       ProjectRun.ProjectName,
@@ -303,7 +293,7 @@ namespace Microflow.FlowControl
                                       ex.Message)
                 ));
 
-                await Task.WhenAll(LogTasks);
+                await Task.WhenAll(MicroflowTasks);
 
                 throw ex;
             }
