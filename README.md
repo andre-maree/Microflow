@@ -148,9 +148,7 @@ public class MicroflowPostData
 ```
 Http querystring:
 ```javascript
-?ProjectName=<ProjectName>&MainOrchestrationId=<MainOrchestrationId>&
-SubOrchestrationId=<SubOrchestrationId>&CallbackUrl=<CallbackUrl>&
-RunId=<RunId>&StepNumber=<StepNumber>&StepId=<StepId>
+?ProjectName=<ProjectName>&StepNumber=<StepNumber>&StepId=<StepId>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&CallbackUrl=<CallbackUrl>&RunId=<RunId>
 ```
 
 ## Solution Description
