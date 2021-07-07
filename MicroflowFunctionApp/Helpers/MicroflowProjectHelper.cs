@@ -37,13 +37,13 @@ namespace Microflow.Helpers
                 // pass in the current loop count so it can be used downstream/passed to the micro-services
                 projectRun.CurrentLoop = i;
 
-               // List<(string StepId, int ParentCount)> subSteps = JsonSerializer.Deserialize<List<(string StepId, int ParentCount)>>(httpCallWithRetries.SubSteps);
+                // List<(string StepId, int ParentCount)> subSteps = JsonSerializer.Deserialize<List<(string StepId, int ParentCount)>>(httpCallWithRetries.SubSteps);
 
                 List<Task> subTasks = new List<Task>();
 
-                string[] stepsAndCounts = httpCallWithRetries.SubSteps.Split(new char[2]{ ',', ';'}, System.StringSplitOptions.RemoveEmptyEntries);
+                string[] stepsAndCounts = httpCallWithRetries.SubSteps.Split(new char[2] { ',', ';' }, System.StringSplitOptions.RemoveEmptyEntries);
 
-                for (int i1 = 0; i1 < stepsAndCounts.Length; i1=i1+2)
+                for (int i1 = 0; i1 < stepsAndCounts.Length; i1 = i1 + 2)
                 {
                     projectRun.RunObject = new RunObject() { RunId = guid, StepNumber = stepsAndCounts[i1] };
 
@@ -72,28 +72,24 @@ namespace Microflow.Helpers
                 liParentCounts.Add((step.StepNumber, count));
             }
 
-            List<Task> tasks = new List<Task>();
+            TableBatchOperation batch = new TableBatchOperation();
+            List<Task> batchTasks = new List<Task>();
             CloudTable stepsTable = MicroflowTableHelper.GetStepsTable(projectRun.ProjectName);
 
-            Step stepContainer = new Step(-1, "");
+            Step stepContainer = new Step(-1, null);
 
             StringBuilder sb = new StringBuilder();
 
             for (int i = 0; i < steps.Count; i++)
             {
-                sb.Clear();
                 Step step = steps.ElementAt(i);
 
-                int parentCount = liParentCounts.FirstOrDefault(s => s.StepNumber==step.StepNumber).ParentCount;
-                                   //?? new List<(string, int)>({ (step.StepNumber, 0) });
+                int parentCount = liParentCounts.FirstOrDefault(s => s.StepNumber == step.StepNumber).ParentCount;
 
                 if (parentCount == 0)
                 {
                     stepContainer.SubSteps.Add(step.StepNumber);
                 }
-
-                //List<(string StepId, int ParentCount)> subSteps = new List<(string StepId, int ParentCount)>();
-
                 foreach (int subId in step.SubSteps)
                 {
                     var rnt = liParentCounts.FirstOrDefault(s => s.StepNumber.Equals(subId));
@@ -101,7 +97,6 @@ namespace Microflow.Helpers
                     int subParentCount = liParentCounts.FirstOrDefault(s => s.StepNumber.Equals(subId)).ParentCount;
 
                     sb.Append(subId).Append(',').Append(subParentCount).Append(';');
-                    //subSteps.Add((subId, subParentCount));
                 }
 
                 if (step.RetryOptions != null)
@@ -121,8 +116,8 @@ namespace Microflow.Helpers
                     httpCallRetriesEntity.RetryTimeoutSeconds = step.RetryOptions.TimeOutSeconds;
                     httpCallRetriesEntity.RetryBackoffCoefficient = step.RetryOptions.BackoffCoefficient;
 
-                    // TODO: batchop this 
-                    tasks.Add(httpCallRetriesEntity.InsertStep(stepsTable));
+                    // batchop
+                    batch.Add(TableOperation.InsertOrReplace(httpCallRetriesEntity));
                 }
                 else
                 {
@@ -135,25 +130,31 @@ namespace Microflow.Helpers
                         IsHttpGet = step.IsHttpGet
                     };
 
-                    // TODO: batchop this 
-                    tasks.Add(httpCallEntity.InsertStep(stepsTable));
+                    // batchop
+                    batch.Add(TableOperation.InsertOrReplace(httpCallEntity));
+
+                    sb.Clear();
+                }
+
+                if (batch.Count == 100)
+                {
+                    batchTasks.Add(stepsTable.InsertBatch(batch));
+                    batch.Clear();
                 }
             }
 
-            //List<(int, int)> containerSubSteps = new List<(int, int)>();
-
-            sb.Clear();
             foreach (int subId in stepContainer.SubSteps)
             {
-                //containerSubSteps.Add((sub, 1));
-                sb.Append(subId).Append(',').Append("1").Append(';');
+                sb.Append(subId).Append(",1;");
             }
 
             HttpCall containerEntity = new HttpCall(projectRun.ProjectName, "-1", null, sb.ToString());
 
-            tasks.Add(containerEntity.InsertStep(stepsTable));
+            batch.Add(TableOperation.InsertOrReplace(containerEntity));
 
-            await Task.WhenAll(tasks);
+            batchTasks.Add(stepsTable.InsertBatch(batch));
+
+            await Task.WhenAll(batchTasks);
         }
 
         public static void ParseMergeFields(this string strWorkflow, ref MicroflowProject project)

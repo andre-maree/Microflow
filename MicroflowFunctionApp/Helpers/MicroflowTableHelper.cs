@@ -244,11 +244,19 @@ namespace Microflow.Helpers
         /// <summary>
         /// Called on start to insert needed step configs
         /// </summary>
-        public static async Task InsertStep(this HttpCall stepEnt, CloudTable table)
-        {
-            TableOperation op = TableOperation.InsertOrReplace(stepEnt);
+        //public static async Task InsertStep(this HttpCall stepEnt, CloudTable table)
+        //{
+        //    TableOperation op = TableOperation.InsertOrReplace(stepEnt);
 
-            await table.ExecuteAsync(op);
+        //    await table.ExecuteAsync(op);
+        //}
+
+        /// <summary>
+        /// Called on start to batch insert needed step configs
+        /// </summary>
+        public static async Task InsertBatch(this CloudTable table, TableBatchOperation batch)
+        {
+            await table.ExecuteBatchAsync(batch);
         }
 
         #endregion
