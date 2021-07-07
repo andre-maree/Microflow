@@ -34,10 +34,12 @@ Future enhancements:
 - gRPC communication
 - proper logging implementation
 
+
 ## Test Examples
 The code for these can be found in the console app\Tests.cs. There is also a SimpleSteps test that consists of 1 parent with 2 children and the 2 children have a common child step (See JSON Workflow Example below). This is the diagram for the 2 more complex test workflows:
 
 ![2 Test cases](https://github.com/andre-maree/Microflow/blob/master/Images/Tests.png)
+
 
 ## Single Step with All JSON Config:
 ```
@@ -68,6 +70,7 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
    - **ActionTimeoutSeconds**: This is for how long an action callback will wait, it can be set for any time span and no cloud costs are incurred during the wait
    - **SubSteps**: These are the sub steps that are dependent on this step
    - **RetryOptions**: Set this to do retries for the micro-service end-point call
+   
    
 ## JSON Workflow Example:
 This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 2 and StepId 3), and each sub step has 1 common sub step (StepId 4). This is the same structure as the included test Tests.CreateTestWorkflow_SimpleSteps(). StepId 1 has a callback action set, and StepId 3 has a retry set. There is 1 merge field set and is used as a default callout URL.
@@ -126,6 +129,7 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
 }
 ```
 
+
 ## Microflow Post or Query String Data
 This is the data that can be sent to the worker micro-service via http post or get querystring.
 
@@ -148,6 +152,7 @@ Http querystring:
 ```html
 ?ProjectName=<ProjectName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&CallbackUrl=<CallbackUrl>&RunId=<RunId>&StepNumber=<StepNumber>&StepId=<StepId>
 ```
+
 
 ## Solution Description
 
@@ -179,6 +184,7 @@ This library holds model classes that is useful outside of the Microflow functio
 ### MicroflowSDK
 This library is used to help with project workflow and steps creates.
 
+
 ## Setup Guide
 Clone the repo locally. It is advised to separate the MicroflowConsoleApp from the MicroflowFunctionApp in Visual Studio, this is to be able to run MicroflowFunctionApp separately, and then run the MicroflowConsoleApp to post workflows to it:
 
@@ -204,6 +210,7 @@ MicroflowConsoleApp Solution Nugets:<br>
 6. Then the final last log in red: "Project run MicroflowDemo completed successfully..." and "<!!! A GREAT SUCCESS !!!>"
 7. The step completions are also logged to storage table "LogSteps"
 8. Main orchestration completions are logged to storage table "LogOrchestration"
+
 
 ## Logging
 
