@@ -39,7 +39,7 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
 
 ![2 Test cases](https://github.com/andre-maree/Microflow/blob/master/Images/Tests.png)
 
-## JSON Single Step with All Config:
+## Single Step with All JSON Config:
 ```
 {
    "StepNumber":1,
@@ -77,7 +77,7 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
   "DefaultRetryOptions": null,
   "Loop": 1,
   "MergeFields": {
-    "default_post_url": "https://reqbin.com/echo/post/json?workflowid=<workflowId>stepid=<stepId>"
+    "default_post_url": "https://reqbin.com/echo/post/json?mainorchestrationid=<mainorchestrationid>&stepid=<stepId>"
   },
   "Steps": [
     {
