@@ -44,8 +44,10 @@ namespace Microflow.FlowControl
                     string stepNumber = microflowContext.HttpCallWithRetries == null ? "-2" : microflowContext.HttpCallWithRetries.RowKey;
 
                     // log to table workflow completed
-                    LogErrorEntity errorEntity = new LogErrorEntity(projectRun.ProjectName, Convert.ToInt32(stepNumber), e.Message, projectRun.RunObject.RunId);
+                    LogErrorEntity errorEntity = new LogErrorEntity(projectRun?.ProjectName, Convert.ToInt32(stepNumber), e.Message, projectRun?.RunObject?.RunId);
                     await context.CallActivityAsync("LogError", errorEntity);
+
+                    throw;
                 }
             }
         }

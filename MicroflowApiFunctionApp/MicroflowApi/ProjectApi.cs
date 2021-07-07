@@ -68,7 +68,7 @@ namespace MicroflowApiFunctionApp
 
             BlobDownloadInfo download = await blobClient.DownloadAsync();
 
-            var resp = new HttpResponseMessage(HttpStatusCode.OK);
+            HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);
             resp.Content = new StreamContent(download.Content);
 
             return resp;
@@ -93,11 +93,11 @@ namespace MicroflowApiFunctionApp
             // Get a reference to a blob
             BlobClient blobClient = containerClient.GetBlobClient(microflowProject.ProjectName);
 
-            var str = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(microflowProject));
+            byte[] str = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(microflowProject));
             
             try 
             {
-                using (var ms = new MemoryStream(str))
+                using (MemoryStream ms = new MemoryStream(str))
                   
                     await blobClient.UploadAsync(ms, overwrite: true);
             }

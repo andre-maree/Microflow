@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Microflow.Models;
 using MicroflowModels;
@@ -19,7 +20,6 @@ namespace Microflow.Helpers
         /// does the looping and calls "ExecuteStep" for each top level step,
         /// by getting step -1 from table storage
         /// </summary>
-        /// <returns></returns>
         public static async Task MicroflowStartProjectRun(this IDurableOrchestrationContext context, ILogger log, ProjectRun projectRun)
         {
             // do the looping
@@ -43,9 +43,9 @@ namespace Microflow.Helpers
 
                 string[] stepsAndCounts = httpCallWithRetries.SubSteps.Split(new char[2] { ',', ';' }, System.StringSplitOptions.RemoveEmptyEntries);
 
-                for (int i1 = 0; i1 < stepsAndCounts.Length; i1 = i1 + 2)
+                for (int j = 0; j < stepsAndCounts.Length; j += 2)
                 {
-                    projectRun.RunObject = new RunObject() { RunId = guid, StepNumber = stepsAndCounts[i1] };
+                    projectRun.RunObject = new RunObject() { RunId = guid, StepNumber = stepsAndCounts[j] };
 
                     subTasks.Add(context.CallSubOrchestratorAsync("ExecuteStep", projectRun));
                 }
@@ -53,6 +53,50 @@ namespace Microflow.Helpers
                 await Task.WhenAll(subTasks);
 
                 log.LogError($"Run ID {guid} completed successfully...");
+            }
+        }
+
+        /// <summary>
+        /// Check if project ready is true, else wait with a timer (this is a durable monitor), called from start
+        /// </summary>
+        public static async Task CheckAndWaitForReadyToRun(this IDurableOrchestrationContext context, string projectName, ILogger log)
+        {
+            EntityId readyToRun = new EntityId("ReadyToRun", projectName);
+            if (await context.CallEntityAsync<bool>(readyToRun, "get"))
+            {
+                return;
+            }
+
+            DateTime endDate = context.CurrentUtcDateTime.AddMinutes(30);
+            int count = 5;
+            int max = 20;
+
+            using (CancellationTokenSource cts = new CancellationTokenSource())
+            {
+                try
+                {
+                    while (context.CurrentUtcDateTime < endDate)
+                    {
+                        if (await context.CallEntityAsync<bool>(readyToRun, "get"))
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            DateTime deadline = context.CurrentUtcDateTime.Add(TimeSpan.FromSeconds(count < max ? count : max));
+                            await context.CreateTimer(deadline, cts.Token);
+                            count++;
+                        }
+                    }
+                }
+                catch (TaskCanceledException)
+                {
+                    log.LogCritical("========================TaskCanceledException==========================");
+                }
+                finally
+                {
+                    cts.Dispose();
+                }
             }
         }
 
@@ -153,6 +197,9 @@ namespace Microflow.Helpers
             await Task.WhenAll(batchTasks);
         }
 
+        /// <summary>
+        /// Parse all the merge fields in the project
+        /// </summary>
         public static void ParseMergeFields(this string strWorkflow, ref MicroflowProject project)
         {
             StringBuilder sb = new StringBuilder(strWorkflow);

@@ -101,36 +101,7 @@ namespace Microflow.FlowControl
 
             try
             {
-                // check if project ready is true, else wait with a timer (this is a durable monitor)
-                EntityId readyToRun = new EntityId(nameof(ReadyToRun), projectRun.ProjectName);
-                DateTime deadline = context.CurrentUtcDateTime.Add(TimeSpan.FromSeconds(5));
-                var d = context.CurrentUtcDateTime.AddMinutes(30);
-
-                using (CancellationTokenSource cts = new CancellationTokenSource())
-                {
-                    try
-                    {
-                        while (context.CurrentUtcDateTime < d)
-                        {
-                            if (await context.CallEntityAsync<bool>(readyToRun, "get"))
-                            {
-                                break;
-                            }
-                            else
-                            {
-                                await context.CreateTimer(deadline, cts.Token);
-                            }
-                        }
-                    }
-                    catch (TaskCanceledException)
-                    {
-                        log.LogCritical("========================TaskCanceledException==========================");
-                    }
-                    finally
-                    {
-                        cts.Dispose();
-                    }
-                }
+                await context.CheckAndWaitForReadyToRun(projectRun.ProjectName, log);
 
                 // log start
                 string logRowKey = MicroflowTableHelper.GetTableLogRowKeyDescendingByDate(context.CurrentUtcDateTime, "_" + projectRun.OrchestratorInstanceId);
@@ -147,7 +118,7 @@ namespace Microflow.FlowControl
                 log.LogInformation($"Started orchestration with ID = '{context.InstanceId}', Project = '{projectRun.ProjectName}'");
 
                 await context.MicroflowStartProjectRun(log, projectRun);
-                
+
 
                 // log to table workflow completed
                 logEntity = new LogOrchestrationEntity(false,
@@ -189,15 +160,13 @@ namespace Microflow.FlowControl
                                                                   Route = "InsertOrUpdateProject")] HttpRequestMessage req,
                                                                   [DurableClient] IDurableEntityClient client)
         {
-            string content;
-            MicroflowProject project = null;
             bool doneReadyFalse = false;
 
             // read http content
-            content = await req.Content.ReadAsStringAsync();
+            string content = await req.Content.ReadAsStringAsync();
 
             // deserialize the workflow json
-            project = JsonSerializer.Deserialize<MicroflowProject>(content);
+            MicroflowProject project = JsonSerializer.Deserialize<MicroflowProject>(content);
 
             //    // create a project run
             ProjectRun projectRun = new ProjectRun() { ProjectName = project.ProjectName, Loop = project.Loop };

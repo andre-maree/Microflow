@@ -57,9 +57,11 @@ namespace Microflow.FlowControl
                 // if the callout url is empty then no http call is done, use this for an empty container step
                 if (string.IsNullOrWhiteSpace(HttpCallWithRetries.CalloutUrl))
                 {
-                    MicroflowHttpResponse = new MicroflowHttpResponse();
-                    MicroflowHttpResponse.Success = true;
-                    MicroflowHttpResponse.HttpResponseStatusCode = -404;
+                    MicroflowHttpResponse = new MicroflowHttpResponse
+                    {
+                        Success = true,
+                        HttpResponseStatusCode = -404
+                    };
                 }
                 else
                 {
@@ -113,7 +115,7 @@ namespace Microflow.FlowControl
 
                 string[] stepsAndCounts = HttpCallWithRetries.SubSteps.Split(new char[2] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 
-                var canExecuteTasks = new List<Task<CanExecuteResult>>();
+                List<Task<CanExecuteResult>> canExecuteTasks = new List<Task<CanExecuteResult>>();
 
                 for (int i = 0; i < stepsAndCounts.Length; i = i + 2)
                 {
