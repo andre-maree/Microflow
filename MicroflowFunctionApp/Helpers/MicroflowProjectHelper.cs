@@ -64,6 +64,11 @@ namespace Microflow.Helpers
         /// </summary>
         public static async Task PrepareWorkflow(this ProjectRun projectRun, List<Step> steps, string StepIdFormat)
         {
+            TableBatchOperation batch = new TableBatchOperation();
+            List<Task> batchTasks = new List<Task>();
+            CloudTable stepsTable = MicroflowTableHelper.GetStepsTable(projectRun.ProjectName);
+            Step stepContainer = new Step(-1, null);
+            StringBuilder sb = new StringBuilder();
             List<(int StepNumber, int ParentCount)> liParentCounts = new List<(int, int)>();
 
             foreach (Step step in steps)
@@ -71,14 +76,6 @@ namespace Microflow.Helpers
                 int count = steps.Count(c => c.SubSteps.Contains(step.StepNumber));
                 liParentCounts.Add((step.StepNumber, count));
             }
-
-            TableBatchOperation batch = new TableBatchOperation();
-            List<Task> batchTasks = new List<Task>();
-            CloudTable stepsTable = MicroflowTableHelper.GetStepsTable(projectRun.ProjectName);
-
-            Step stepContainer = new Step(-1, null);
-
-            StringBuilder sb = new StringBuilder();
 
             for (int i = 0; i < steps.Count; i++)
             {
@@ -90,10 +87,9 @@ namespace Microflow.Helpers
                 {
                     stepContainer.SubSteps.Add(step.StepNumber);
                 }
+
                 foreach (int subId in step.SubSteps)
                 {
-                    var rnt = liParentCounts.FirstOrDefault(s => s.StepNumber.Equals(subId));
-
                     int subParentCount = liParentCounts.FirstOrDefault(s => s.StepNumber.Equals(subId)).ParentCount;
 
                     sb.Append(subId).Append(',').Append(subParentCount).Append(';');
@@ -132,9 +128,9 @@ namespace Microflow.Helpers
 
                     // batchop
                     batch.Add(TableOperation.InsertOrReplace(httpCallEntity));
-
-                    sb.Clear();
                 }
+
+                sb.Clear();
 
                 if (batch.Count == 100)
                 {
