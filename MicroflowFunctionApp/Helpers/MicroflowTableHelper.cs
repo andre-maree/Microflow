@@ -124,9 +124,11 @@ namespace Microflow.Helpers
 
         public static List<HttpCallWithRetries> GetStepsHttpCallWithRetries(string projectName)
         {
-            CloudTable table = GetStepsTable(projectName);
+            CloudTable table = GetStepsTable();
 
-            TableQuery<HttpCallWithRetries> query = new TableQuery<HttpCallWithRetries>();
+            TableQuery<HttpCallWithRetries> query = new TableQuery<HttpCallWithRetries>().Where(TableQuery.GenerateFilterCondition("PartitionKey",
+                                                                                                                   QueryComparisons.Equal,
+                                                                                                                   projectName)); 
 
             List<HttpCallWithRetries> list = new List<HttpCallWithRetries>();
             //TODO use the async version
@@ -140,7 +142,7 @@ namespace Microflow.Helpers
 
         public static async Task<HttpCallWithRetries> GetStep(this ProjectRun projectRun)
         {
-            CloudTable table = GetStepsTable(projectRun.ProjectName);
+            CloudTable table = GetStepsTable();
             TableOperation retrieveOperation = TableOperation.Retrieve<HttpCallWithRetries>($"{projectRun.ProjectName}", $"{projectRun.RunObject.StepNumber}");
             TableResult result = await table.ExecuteAsync(retrieveOperation);
             HttpCallWithRetries stepEnt = result.Result as HttpCallWithRetries;
@@ -150,10 +152,12 @@ namespace Microflow.Helpers
 
         public static List<TableEntity> GetStepEntities(string projectName)
         {
-            CloudTable table = GetStepsTable(projectName);
+            CloudTable table = GetStepsTable();
 
-            TableQuery<TableEntity> query = new TableQuery<TableEntity>();
-
+            TableQuery<TableEntity> query = new TableQuery<TableEntity>().Where(TableQuery.GenerateFilterCondition("PartitionKey",
+                                                                                                                   QueryComparisons.Equal,
+                                                                                                                   projectName));
+            
             List<TableEntity> list = new List<TableEntity>();
             //TODO use the async version
             foreach (TableEntity entity in table.ExecuteQuery(query))
@@ -166,7 +170,7 @@ namespace Microflow.Helpers
 
         public static async Task DeleteSteps(this ProjectRun projectRun)
         {
-            CloudTable table = GetStepsTable(projectRun.ProjectName);
+            CloudTable table = GetStepsTable();
 
             List<TableEntity> steps = GetStepEntities(projectRun.ProjectName);
 
@@ -197,10 +201,10 @@ namespace Microflow.Helpers
             }
         }
 
-        public static async Task UpdateStatetEntity(string projectName, int state)
+        public static async Task UpdateProjectControl(string projectName, int state, int loop = 1, string instanceId = null)
         {
             CloudTable table = GetProjectControlTable();
-            ProjectControlEntity projectControlEntity = new ProjectControlEntity(projectName, state);
+            ProjectControlEntity projectControlEntity = new ProjectControlEntity(projectName, state, loop, instanceId);
             TableOperation mergeOperation = TableOperation.InsertOrMerge(projectControlEntity);
 
             await table.ExecuteAsync(mergeOperation);
@@ -212,7 +216,7 @@ namespace Microflow.Helpers
         public static async Task CreateTables(string projectName)
         {
             // StepsMyProject for step config
-            CloudTable stepsTable = GetStepsTable(projectName);
+            CloudTable stepsTable = GetStepsTable();
 
             // MicroflowLog table
             CloudTable logOrchestrationTable = GetLogOrchestrationTable();
@@ -270,11 +274,11 @@ namespace Microflow.Helpers
             return tableClient.GetTableReference($"MicroflowLogErrors");
         }
 
-        public static CloudTable GetStepsTable(string projectName)
+        public static CloudTable GetStepsTable()
         {
             CloudTableClient tableClient = GetTableClient();
 
-            return tableClient.GetTableReference($"MicroflowSteps{projectName}");
+            return tableClient.GetTableReference($"MicroflowStepConfigs");
         }
 
         private static CloudTable GetProjectControlTable()

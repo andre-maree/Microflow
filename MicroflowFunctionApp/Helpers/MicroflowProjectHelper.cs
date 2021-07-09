@@ -110,7 +110,7 @@ namespace Microflow.Helpers
         {
             TableBatchOperation batch = new TableBatchOperation();
             List<Task> batchTasks = new List<Task>();
-            CloudTable stepsTable = MicroflowTableHelper.GetStepsTable(projectRun.ProjectName);
+            CloudTable stepsTable = MicroflowTableHelper.GetStepsTable();
             Step stepContainer = new Step(-1, null);
             StringBuilder sb = new StringBuilder();
             List<(int StepNumber, int ParentCount)> liParentCounts = new List<(int, int)>();
@@ -147,7 +147,8 @@ namespace Microflow.Helpers
                         StopOnActionFailed = step.StopOnActionFailed,
                         CalloutUrl = step.CalloutUrl,
                         ActionTimeoutSeconds = step.ActionTimeoutSeconds,
-                        IsHttpGet = step.IsHttpGet
+                        IsHttpGet = step.IsHttpGet,
+                        AsyncronousPollingEnabled = step.AsyncronousPollingEnabled
                     };
 
                     httpCallRetriesEntity.RetryDelaySeconds = step.RetryOptions.DelaySeconds;
@@ -167,7 +168,8 @@ namespace Microflow.Helpers
                         StopOnActionFailed = step.StopOnActionFailed,
                         CalloutUrl = step.CalloutUrl,
                         ActionTimeoutSeconds = step.ActionTimeoutSeconds,
-                        IsHttpGet = step.IsHttpGet
+                        IsHttpGet = step.IsHttpGet,
+                        AsyncronousPollingEnabled = step.AsyncronousPollingEnabled
                     };
 
                     // batchop

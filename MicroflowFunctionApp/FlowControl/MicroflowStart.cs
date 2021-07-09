@@ -27,26 +27,17 @@ namespace Microflow.FlowControl
         /// </summary>
         /// <param name="instanceId">If an instanceId is passed in, it will run as a singleton, else it will run concurrently with each with a new instanceId</param>
         [FunctionName("Microflow_HttpStart")]
-        public static async Task<HttpResponseMessage> HttpStart([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "start/{instanceId?}")]
+        public static async Task<HttpResponseMessage> HttpStart([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "start/{projectName}/{instanceId?}/{loop:int?}")]
                                                                 HttpRequestMessage req,
                                                                 [DurableClient] IDurableOrchestrationClient client,
-                                                                string instanceId)
+                                                                string instanceId, string projectName, int? loop)
         {
-            // read http content
-            string content = await req.Content.ReadAsStringAsync();
-
-            // deserialize the workflow json
-            MicroflowProjectBase projectBase = JsonSerializer.Deserialize<MicroflowProjectBase>(content);
-
             try
             {
                 //await client.PurgeInstanceHistoryAsync("7c828621-3e7a-44aa-96fd-c6946763cc2b");
 
                 // create a project run
-                ProjectRun projectRun = new ProjectRun() { ProjectName = projectBase.ProjectName, Loop = projectBase.Loop };
-
-                // ERROR! cant do this
-                //await MicroflowTableHelper.UpdateStatetEntity(projectBase.ProjectName, 1);
+                ProjectRun projectRun = new ProjectRun() { ProjectName = projectName, Loop = loop.GetValueOrDefault(1) };
 
                 // create a new run object
                 RunObject runObj = new RunObject() { StepNumber = "-1" };
@@ -182,11 +173,16 @@ namespace Microflow.FlowControl
                 // reate the storage tables for the project
                 await MicroflowTableHelper.CreateTables(project.ProjectName);
 
+                // upsert project control
+                Task projTask = MicroflowTableHelper.UpdateProjectControl(project.ProjectName, 0);
+
                 //  clear step table data
                 Task delTask = projectRun.DeleteSteps();
 
                 //    // parse the mergefields
                 content.ParseMergeFields(ref project);
+
+                await projTask;
 
                 await delTask;
 
@@ -225,16 +221,16 @@ namespace Microflow.FlowControl
             finally
             {
                 // if project ready was set to false, always set it to true
-                if(doneReadyFalse)
+                if (doneReadyFalse)
                 {
                     await client.SignalEntityAsync(readyToRun, "true");
                 }
             }
         }
-        
+
         /// <summary>
-         /// Durable entity check if the project is ready to run
-         /// </summary>
+        /// Durable entity check if the project is ready to run
+        /// </summary>
         [FunctionName("ReadyToRun")]
         public static void ReadyToRun([EntityTrigger] IDurableEntityContext ctx)
         {

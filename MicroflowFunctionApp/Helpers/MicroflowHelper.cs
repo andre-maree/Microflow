@@ -36,6 +36,8 @@ namespace Microflow.Helpers
 
         public static DurableHttpRequest CreateMicroflowDurableHttpRequest(this HttpCall httpCall, string instanceId)
         {
+            DurableHttpRequest newDurableHttpRequest;
+
             string callback = string.IsNullOrWhiteSpace(httpCall.CallBackAction)
                     ? ""
                     : $"{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}/api/{httpCall.CallBackAction}/{instanceId}/{httpCall.RowKey}";
@@ -55,14 +57,15 @@ namespace Microflow.Helpers
 
                 string body = JsonSerializer.Serialize(postData);
 
-                DurableHttpRequest newDurableHttpRequest = new DurableHttpRequest(
+                newDurableHttpRequest = new DurableHttpRequest(
                     method: HttpMethod.Post,
                     uri: new Uri(httpCall.ParseUrlMicroflowData(instanceId, postData.CallbackUrl)),
                     timeout: TimeSpan.FromSeconds(httpCall.ActionTimeoutSeconds),
-                    //headers: durableHttpRequest.Headers,
-                    content: body
-                    //tokenSource: durableHttpRequest.TokenSource
-                    
+                    content: body,
+                    asynchronousPatternEnabled: httpCall.AsyncronousPollingEnabled
+                //headers: durableHttpRequest.Headers,
+                //tokenSource: durableHttpRequest.TokenSource
+
                 );
 
                 // Do not copy over the x-functions-key header, as in many cases, the
@@ -70,16 +73,16 @@ namespace Microflow.Helpers
                 // and the status endpoint requires a master key.
                 //newDurableHttpRequest.Headers.Remove("x-functions-key");
 
-                return newDurableHttpRequest;
             }
             else
             {
-                DurableHttpRequest newDurableHttpRequest = new DurableHttpRequest(
+                newDurableHttpRequest = new DurableHttpRequest(
                     method: HttpMethod.Get,
                     uri: new Uri(httpCall.ParseUrlMicroflowData(instanceId, callback)),
-                    timeout: TimeSpan.FromSeconds(httpCall.ActionTimeoutSeconds)
+                    timeout: TimeSpan.FromSeconds(httpCall.ActionTimeoutSeconds),
+                    asynchronousPatternEnabled: httpCall.AsyncronousPollingEnabled
                 //headers: durableHttpRequest.Headers,
-                              //tokenSource: durableHttpRequest.TokenSource
+                //tokenSource: durableHttpRequest.TokenSource
 
                 );
 
@@ -87,13 +90,20 @@ namespace Microflow.Helpers
                 // functions key used for the initial request will be a Function-level key
                 // and the status endpoint requires a master key.
                 //newDurableHttpRequest.Headers.Remove("x-functions-key");
-
-                return newDurableHttpRequest;
             }
+
+            return newDurableHttpRequest;
         }
 
         public static string ParseUrlMicroflowData(this HttpCall httpCall, string instanceId, string callbackUrl)
         {
+            //string baseUrl = $"http://{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}";
+
+            //if (httpCall.CalloutUrl.StartsWith($"{baseUrl}/api/start/"))
+            //{
+            //    httpCall.CalloutUrl = baseUrl + "/api/callmicroflow/" + Uri.EscapeDataString(httpCall.CalloutUrl);
+            //}
+
             StringBuilder sb = new StringBuilder(httpCall.CalloutUrl);
 
             sb.Replace("<ProjectName>", httpCall.PartitionKey);

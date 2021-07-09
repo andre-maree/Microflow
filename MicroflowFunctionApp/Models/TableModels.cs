@@ -111,6 +111,7 @@ namespace Microflow.Models
             StepId = stepId;
         }
 
+        public bool AsyncronousPollingEnabled { get; set; }
         public string CalloutUrl { get; set; }
         public string CallBackAction { get; set; }
         public bool StopOnActionFailed { get; set; }
@@ -171,13 +172,15 @@ namespace Microflow.Models
     {
         public ProjectControlEntity() { }
 
-        public ProjectControlEntity(string projectId, int state)
+        public ProjectControlEntity(string projectName, int state, int loop = 1, string instanceId = null)
         {
-            PartitionKey = projectId;
-            RowKey = "0";
+            PartitionKey = projectName;
+            RowKey = instanceId ?? "0";
             State = state;
+            Loop = loop;
         }
 
+        public int Loop { get; set; }
         public int State { get; set; }
         public int PausedStepId { get; set; }
     }

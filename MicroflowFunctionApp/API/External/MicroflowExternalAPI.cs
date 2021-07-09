@@ -46,13 +46,20 @@ namespace Microflow.API.External
         public static async Task<HttpResponseMessage> TestPost(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "testpost")] HttpRequestMessage req)
         {
-            await Task.Delay(500);
+            await Task.Delay(1000);
 
             if (req.Method == HttpMethod.Post)
             {
                 string r = await req.Content.ReadAsStringAsync();
 
                 MicroflowPostData result = JsonSerializer.Deserialize<MicroflowPostData>(r);
+
+                if (result.StepNumber == 8)
+                {
+                    //HttpResponseMessage result2 = await MicroflowHttpClient.HttpClient.GetAsync($"{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}/start/");
+                    //var kgkg = 0;
+                    await Task.Delay(5000);
+                }
             }
             else
             {
@@ -70,6 +77,8 @@ namespace Microflow.API.External
                     await Task.Delay(10000);
                 
             }
+
+            
             HttpResponseMessage resp = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
             //    resp.Headers.Location = new Uri("http://localhost:7071/api/testpost");
             //resp.Content = new StringContent("wappa");
