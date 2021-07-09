@@ -76,51 +76,68 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
 This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 2 and StepId 3), and each sub step has 1 common sub step (StepId 4). This is the same structure as the included test Tests.CreateTestWorkflow_SimpleSteps(). StepId 1 has a callback action set, and StepId 3 has a retry set. There is 1 merge field set and is used as a default callout URL.
 ```
 {
+  {
   "ProjectName": "MicroflowDemo",
   "DefaultRetryOptions": null,
-  "Loop": 1,
+  "Loop": 1
+  "StepIdFormat": "guid",
   "MergeFields": {
-    "default_post_url": "https://reqbin.com/echo/post/json?mainorchestrationid=<mainorchestrationid>&stepid=<stepId>"
+    "default_post_url": "http://localhost:7071/api/testpost?ProjectName=<ProjectName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&CallbackUrl=<CallbackUrl>&RunId=<RunId>&StepNumber=<StepNumber>"
   },
   "Steps": [
     {
-      "StepId": 1,
+      "StepId": "myStep 1",
+      "StepNumber": 1,
       "CalloutUrl": "{default_post_url}",
       "CallbackAction": "approve",
       "StopOnActionFailed": true,
+      "IsHttpGet": true,
       "ActionTimeoutSeconds": 30,
-      "SubSteps": [2,3],
-      "RetryOptions": null
-    },
-    {
-      "StepId": 2,
-      "CalloutUrl": "{default_post_url}",
-      "CallbackAction": null,
-      "StopOnActionFailed": true,
-      "ActionTimeoutSeconds": 1000,
-      "SubSteps": [4],
-      "RetryOptions": null
-    },
-    {
-      "StepId": 3,
-      "CalloutUrl": "{default_post_url}",
-      "CallbackAction": null,
-      "StopOnActionFailed": true,
-      "ActionTimeoutSeconds": 1000,
-      "SubSteps": [4],
+      "SubSteps": [
+        2,
+        3
+      ],
       "RetryOptions": {
-        "DelaySeconds": 5,
-        "MaxDelaySeconds": 10,
-        "MaxRetries": 2,
-        "BackoffCoefficient": 5,
-        "TimeOutSeconds": 30
+        "DelaySeconds": 1,
+        "MaxDelaySeconds": 2,
+        "MaxRetries": 1,
+        "BackoffCoefficient": 1,
+        "TimeOutSeconds": 60
       }
     },
     {
-      "StepId": 4,
+      "StepId": "myStep 2",
+      "StepNumber": 2,
       "CalloutUrl": "{default_post_url}",
       "CallbackAction": null,
       "StopOnActionFailed": true,
+      "IsHttpGet": false,
+      "ActionTimeoutSeconds": 1000,
+      "SubSteps": [
+        4
+      ],
+      "RetryOptions": null
+    },
+    {
+      "StepId": "myStep 3",
+      "StepNumber": 3,
+      "CalloutUrl": "{default_post_url}",
+      "CallbackAction": null,
+      "StopOnActionFailed": true,
+      "IsHttpGet": false,
+      "ActionTimeoutSeconds": 1000,
+      "SubSteps": [
+        4
+      ],
+      "RetryOptions": null
+    },
+    {
+      "StepId": "myStep 4",
+      "StepNumber": 4,
+      "CalloutUrl": "{default_post_url}",
+      "CallbackAction": null,
+      "StopOnActionFailed": true,
+      "IsHttpGet": false,
       "ActionTimeoutSeconds": 1000,
       "SubSteps": [],
       "RetryOptions": null
