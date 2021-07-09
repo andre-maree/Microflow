@@ -66,7 +66,7 @@ namespace MicroflowModels
         public bool StopOnActionFailed { get; set; } = true;
         public bool IsHttpGet { get; set; }
         public int ActionTimeoutSeconds { get; set; } = 1000;
-        public bool AsyncronousPollingEnabled { get; set; } = true;
+        public bool AsynchronousPollingEnabled { get; set; } = true;
 
         [DataMember(Name = "SubSteps", EmitDefaultValue = false)]
         public List<int> SubSteps { get; set; } = new List<int>();

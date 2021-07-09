@@ -62,7 +62,7 @@ namespace Microflow.Helpers
                     uri: new Uri(httpCall.ParseUrlMicroflowData(instanceId, postData.CallbackUrl)),
                     timeout: TimeSpan.FromSeconds(httpCall.ActionTimeoutSeconds),
                     content: body,
-                    asynchronousPatternEnabled: httpCall.AsyncronousPollingEnabled
+                    asynchronousPatternEnabled: httpCall.AsynchronousPollingEnabled
                 //headers: durableHttpRequest.Headers,
                 //tokenSource: durableHttpRequest.TokenSource
 
@@ -80,7 +80,7 @@ namespace Microflow.Helpers
                     method: HttpMethod.Get,
                     uri: new Uri(httpCall.ParseUrlMicroflowData(instanceId, callback)),
                     timeout: TimeSpan.FromSeconds(httpCall.ActionTimeoutSeconds),
-                    asynchronousPatternEnabled: httpCall.AsyncronousPollingEnabled
+                    asynchronousPatternEnabled: httpCall.AsynchronousPollingEnabled
                 //headers: durableHttpRequest.Headers,
                 //tokenSource: durableHttpRequest.TokenSource
 

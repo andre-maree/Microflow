@@ -111,7 +111,7 @@ namespace Microflow.Models
             StepId = stepId;
         }
 
-        public bool AsyncronousPollingEnabled { get; set; }
+        public bool AsynchronousPollingEnabled { get; set; }
         public string CalloutUrl { get; set; }
         public string CallBackAction { get; set; }
         public bool StopOnActionFailed { get; set; }
