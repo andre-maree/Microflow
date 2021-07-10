@@ -159,19 +159,21 @@ Http post:
 
 public class MicroflowPostData
 {
+   public int StepNumber { get; set; }
+   public string StepId { get; set; }
+   // passed along and logged when a project step calls another project`s start
+   public string GlobalKey { get; set; }
    public string ProjectName { get; set; }
    public string MainOrchestrationId { get; set; }
    public string SubOrchestrationId { get; set; }
    public string CallbackUrl { get; set; }
    public string RunId { get; set; }
-   public int StepNumber { get; set; }
-   public string StepId { get; set; }
 }
 
 ```
 Http querystring:
 ```html
-?ProjectName=<ProjectName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&CallbackUrl=<CallbackUrl>&RunId=<RunId>&StepNumber=<StepNumber>&StepId=<StepId>
+?ProjectName=<ProjectName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&CallbackUrl=<CallbackUrl>&RunId=<RunId>&StepNumber=<StepNumber>&StepId=<StepId>&GlobalKey=<GlobalKey>
 ```
 
 
