@@ -12,6 +12,7 @@ Microflow functionality:
 - do batch processing by looping the workflow execution with Microflow`s "Loop" setting, set up variation sets, 1 variation set per loop/batch
 - set outgoing http calls to be inline (wait for response at the point of out call), or wait asynchronously by setting CallbackAction (wait for external action/callback)
 - set AsynchronousPollingEnabled (per step) to true and the step will poll for completion before moving on, embed other Microflow projects and wait for them; or set it to false for fire and forget, call another Microflow project and continue immediately with the next step, no waiting for completion
+- there is a global id called "GlobalKey" in the logs (orchestrations, steps, errors) that can be used to tie up cross Microflow project calls, this key is passed along for logging purposes when a Microflow project calls/embeds other Microflow projects
 - timeouts can be set per step for inline and callback
 - retry policies can be set for each step and there can also be a default retry policy for the entire workflow
 - StopOnActionFailed can be set per step to indicate for when there is a failure (not a success callback), which will make Microflow stop the workflow execution or to log the failure and continue with the workflow
