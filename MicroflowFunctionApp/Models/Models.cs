@@ -54,6 +54,7 @@ namespace Microflow.Models
     {
         public string RunId { get; set; }
         public string StepNumber { get; set; }
+        public string GlobalKey { get; set; }
     }
 
     #endregion

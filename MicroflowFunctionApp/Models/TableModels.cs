@@ -14,15 +14,17 @@ namespace Microflow.Models
     {
         public LogErrorEntity() { }
 
-        public LogErrorEntity(string projectName, int stepNumber, string message, string runId = null)
+        public LogErrorEntity(string projectName, int stepNumber, string message, string globalKey, string runId = null)
         {
             PartitionKey = projectName + "__" + runId;
             RowKey = MicroflowTableHelper.GetTableRowKeyDescendingByDate();
             StepNumber = stepNumber;
             Message = message;
             Date = DateTime.UtcNow;
+            GlobalKey = globalKey;
         }
 
+        public string GlobalKey { get; set; }
         public int StepNumber { get; set; }
         public DateTime Date { get; set; }
         public string Message { get; set; }
@@ -35,11 +37,13 @@ namespace Microflow.Models
     {
         public LogStepEntity() { }
 
-        public LogStepEntity(bool isStart, string projectName, string rowKey, int stepNumber, string runId, bool? success = null, int? httpStatusCode = null, string message = null)
+        public LogStepEntity(bool isStart, string projectName, string rowKey, int stepNumber, string mainOrchestrationId, string runId, string globalKey, bool? success = null, int? httpStatusCode = null, string message = null)
         {
-            PartitionKey = projectName + "__" + runId;
+            PartitionKey = projectName + "__" + mainOrchestrationId;
             RowKey = rowKey;
             StepNumber = stepNumber;
+            GlobalKey = globalKey;
+            RunId = runId;
             if (isStart)
                 StartDate = DateTime.UtcNow;
             else
@@ -55,6 +59,8 @@ namespace Microflow.Models
         public int? HttpStatusCode { get; set; }
         public string Message { get; set; }
         public int StepNumber { get; set; }
+        public string RunId { get; set; }
+        public string GlobalKey { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
     }
@@ -66,12 +72,13 @@ namespace Microflow.Models
     {
         public LogOrchestrationEntity() { }
 
-        public LogOrchestrationEntity(bool isStart, string projectName, string rowKey, string logMessage, DateTime date, string orchestrationId)
+        public LogOrchestrationEntity(bool isStart, string projectName, string rowKey, string logMessage, DateTime date, string orchestrationId, string globalKey)
         {
             PartitionKey = projectName;
             LogMessage = logMessage;
             RowKey = rowKey;
             OrchestrationId = orchestrationId;
+            GlobalKey = globalKey;
 
             if (isStart)
                 StartDate = date;
@@ -79,6 +86,7 @@ namespace Microflow.Models
                 EndDate = date;
         }
 
+        public string GlobalKey { get; set; }
         public string OrchestrationId { get; set; }
         public string LogMessage { get; set; }
         public DateTime? StartDate { get; set; }
@@ -110,7 +118,6 @@ namespace Microflow.Models
             SubSteps = subSteps;
             StepId = stepId;
         }
-
         public bool AsynchronousPollingEnabled { get; set; }
         public string CalloutUrl { get; set; }
         public string CallBackAction { get; set; }
@@ -118,6 +125,9 @@ namespace Microflow.Models
         public int ActionTimeoutSeconds { get; set; }
         public bool IsHttpGet { get; set; }
         public string StepId { get; set; }
+
+        //[IgnoreProperty]
+        public string GlobalKey { get; set; }
 
         [IgnoreProperty]
         public string RunId { get; set; }

@@ -61,7 +61,7 @@ namespace MicroflowConsole
                 var dr = JsonSerializer.Serialize(project);
                 var tasks = new List<Task<HttpResponseMessage>>();
 
-                project.Steps[3].CalloutUrl = baseUrl + $"/api/start/{project2.ProjectName}/?Loop=1";
+                project.Steps[3].CalloutUrl = baseUrl + $"/api/start/{project2.ProjectName}";
                 project.Steps[3].AsynchronousPollingEnabled = false;
                 // call Microflow insertorupdateproject when something ischanges in the workflow, but do not always call this when corcurrent multiple workflows
                 var result = await HttpClient.PostAsJsonAsync(baseUrl + "/api/insertorupdateproject", project, new JsonSerializerOptions(JsonSerializerDefaults.General)); 

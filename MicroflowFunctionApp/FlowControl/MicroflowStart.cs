@@ -12,6 +12,7 @@ using System.Net;
 using Microflow.Models;
 using Microsoft.Azure.Cosmos.Table;
 using System.Threading;
+using System.Collections.Specialized;
 
 namespace Microflow.FlowControl
 {
@@ -27,17 +28,30 @@ namespace Microflow.FlowControl
         /// </summary>
         /// <param name="instanceId">If an instanceId is passed in, it will run as a singleton, else it will run concurrently with each with a new instanceId</param>
         [FunctionName("Microflow_HttpStart")]
-        public static async Task<HttpResponseMessage> HttpStart([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "start/{projectName}/{instanceId?}/{loop:int?}")]
+        public static async Task<HttpResponseMessage> HttpStart([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "start/{projectName}/{instanceId?}")]
                                                                 HttpRequestMessage req,
                                                                 [DurableClient] IDurableOrchestrationClient client,
-                                                                string instanceId, string projectName, int? loop)
+                                                                string instanceId, string projectName)
         {
             try
             {
                 //await client.PurgeInstanceHistoryAsync("7c828621-3e7a-44aa-96fd-c6946763cc2b");
 
+                NameValueCollection data = req.RequestUri.ParseQueryString();
+                var input = new
+                {
+                    Loop = Convert.ToInt32(data["loop"]),
+                    GlobalKey = data["globalkey"]
+                };
+
                 // create a project run
-                ProjectRun projectRun = new ProjectRun() { ProjectName = projectName, Loop = loop.GetValueOrDefault(1) };
+                ProjectRun projectRun = new ProjectRun()
+                {
+                    ProjectName = projectName,
+                    Loop = input.Loop != 0
+                    ? input.Loop
+                    : 1
+                };
 
                 // create a new run object
                 RunObject runObj = new RunObject() { StepNumber = "-1" };
@@ -46,6 +60,15 @@ namespace Microflow.FlowControl
                 if (string.IsNullOrWhiteSpace(instanceId))
                 {
                     instanceId = Guid.NewGuid().ToString();
+                }
+
+                if (string.IsNullOrWhiteSpace(input.GlobalKey))
+                {
+                    runObj.GlobalKey = instanceId;
+                }
+                else
+                {
+                    runObj.GlobalKey = input.GlobalKey;
                 }
 
                 projectRun.RunObject.StepNumber = "-1";
@@ -102,7 +125,8 @@ namespace Microflow.FlowControl
                                                            logRowKey,
                                                            $"{Environment.MachineName} - {projectRun.ProjectName} started...",
                                                            context.CurrentUtcDateTime,
-                                                           projectRun.OrchestratorInstanceId);
+                                                           projectRun.OrchestratorInstanceId,
+                                                           projectRun.RunObject.GlobalKey);
 
                 await context.CallActivityAsync("LogOrchestration", logEntity);
 
@@ -117,7 +141,8 @@ namespace Microflow.FlowControl
                                                        logRowKey,
                                                        $"{Environment.MachineName} - {projectRun.ProjectName} completed successfully",
                                                        context.CurrentUtcDateTime,
-                                                       projectRun.OrchestratorInstanceId);
+                                                       projectRun.OrchestratorInstanceId,
+                                                       projectRun.RunObject.GlobalKey);
 
                 await context.CallActivityAsync("LogOrchestration", logEntity);
 
@@ -209,7 +234,7 @@ namespace Microflow.FlowControl
 
                 try
                 {
-                    await MicroflowHelper.LogError(project.ProjectName ?? "no project", e);
+                    await MicroflowHelper.LogError(project.ProjectName ?? "no project", projectRun.RunObject.GlobalKey, projectRun.RunObject.RunId, e);
                 }
                 catch
                 {

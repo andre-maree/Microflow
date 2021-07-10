@@ -45,7 +45,11 @@ namespace Microflow.Helpers
 
                 for (int j = 0; j < stepsAndCounts.Length; j += 2)
                 {
-                    projectRun.RunObject = new RunObject() { RunId = guid, StepNumber = stepsAndCounts[j] };
+                    projectRun.RunObject = new RunObject() { 
+                        RunId = guid, 
+                        StepNumber = stepsAndCounts[j],
+                        GlobalKey = projectRun.RunObject.GlobalKey
+                    };
 
                     subTasks.Add(context.CallSubOrchestratorAsync("ExecuteStep", projectRun));
                 }

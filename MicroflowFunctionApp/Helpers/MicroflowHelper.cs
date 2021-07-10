@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Specialized;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -22,9 +23,9 @@ namespace Microflow.Helpers
             return ops;
         }
 
-        public static async Task<HttpResponseMessage> LogError(string projectName, Exception e)
+        public static async Task<HttpResponseMessage> LogError(string projectName, string globalKey, string runId, Exception e)
         {
-            await new LogErrorEntity(projectName, -999, e.Message).LogError();
+            await new LogErrorEntity(projectName, -999, e.Message, globalKey, runId).LogError();
 
             HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.InternalServerError)
             {
@@ -37,10 +38,14 @@ namespace Microflow.Helpers
         public static DurableHttpRequest CreateMicroflowDurableHttpRequest(this HttpCall httpCall, string instanceId)
         {
             DurableHttpRequest newDurableHttpRequest;
+            string baseUrl = $"http://{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}";
+
 
             string callback = string.IsNullOrWhiteSpace(httpCall.CallBackAction)
                     ? ""
-                    : $"{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}/api/{httpCall.CallBackAction}/{instanceId}/{httpCall.RowKey}";
+                    : $"{baseUrl}/api/{httpCall.CallBackAction}/{instanceId}/{httpCall.RowKey}";
+
+            CalculateGlobalKey(httpCall, baseUrl);
 
             if (!httpCall.IsHttpGet)
             {
@@ -95,15 +100,35 @@ namespace Microflow.Helpers
             return newDurableHttpRequest;
         }
 
+
+        /// <summary>
+        /// Work out what the global key is for this call
+        /// </summary>
+        private static void CalculateGlobalKey(HttpCall httpCall, string baseUrl)
+        {
+            // check if it is call to Microflow
+            if (httpCall.CalloutUrl.StartsWith($"{baseUrl}/api/start/"))
+            {
+                // parse query string
+                NameValueCollection data = new Uri(httpCall.CalloutUrl).ParseQueryString();
+                // if there is query string data
+                if (data.Count > 0)
+                {
+                    // check if there is a global key (maybe if it is an assigned key)
+                    if (string.IsNullOrEmpty(data.Get("globalkey")))
+                    {
+                        httpCall.CalloutUrl += $"&globalkey={httpCall.GlobalKey}";
+                    }
+                }
+                else
+                {
+                    httpCall.CalloutUrl += $"?globalkey={httpCall.GlobalKey}";
+                }
+            }
+        }
+
         public static string ParseUrlMicroflowData(this HttpCall httpCall, string instanceId, string callbackUrl)
         {
-            //string baseUrl = $"http://{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}";
-
-            //if (httpCall.CalloutUrl.StartsWith($"{baseUrl}/api/start/"))
-            //{
-            //    httpCall.CalloutUrl = baseUrl + "/api/callmicroflow/" + Uri.EscapeDataString(httpCall.CalloutUrl);
-            //}
-
             StringBuilder sb = new StringBuilder(httpCall.CalloutUrl);
 
             sb.Replace("<ProjectName>", httpCall.PartitionKey);

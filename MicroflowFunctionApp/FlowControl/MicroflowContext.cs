@@ -50,6 +50,7 @@ namespace Microflow.FlowControl
                 string id = MicroflowDurableContext.NewGuid().ToString();
                 HttpCallWithRetries.RunId = ProjectRun.RunObject.RunId;
                 HttpCallWithRetries.MainOrchestrationId = ProjectRun.OrchestratorInstanceId;
+                HttpCallWithRetries.GlobalKey = ProjectRun.RunObject.GlobalKey;
 
                 // log start of step
                 LogStepStart();
@@ -126,7 +127,11 @@ namespace Microflow.FlowControl
                     if (parentCount < 2)
                     {
                         // stepsAndCounts[i] is stepNumber, stepsAndCounts[i + 1] is parentCount
-                        ProjectRun.RunObject = new RunObject() { RunId = ProjectRun.RunObject.RunId, StepNumber = stepsAndCounts[i] };
+                        ProjectRun.RunObject = new RunObject() { 
+                            RunId = ProjectRun.RunObject.RunId, 
+                            StepNumber = stepsAndCounts[i],
+                            GlobalKey = ProjectRun.RunObject.GlobalKey
+                        };
 
                         MicroflowTasks.Add(MicroflowDurableContext.CallSubOrchestratorAsync("ExecuteStep", ProjectRun));
                     }
@@ -167,7 +172,8 @@ namespace Microflow.FlowControl
                     ProjectRun.RunObject = new RunObject()
                     {
                         RunId = ProjectRun.RunObject.RunId,
-                        StepNumber = result.StepNumber
+                        StepNumber = result.StepNumber,
+                        GlobalKey = ProjectRun.RunObject.GlobalKey
                     };
 
                     MicroflowTasks.Add(MicroflowDurableContext.CallSubOrchestratorAsync("ExecuteStep", ProjectRun));
@@ -211,7 +217,13 @@ namespace Microflow.FlowControl
         {
             MicroflowTasks.Add(MicroflowDurableContext.CallActivityAsync(
                 "LogStep",
-                new LogStepEntity(true, ProjectRun.ProjectName, LogRowKey, Convert.ToInt32(HttpCallWithRetries.RowKey), ProjectRun.OrchestratorInstanceId)
+                new LogStepEntity(true,
+                                  ProjectRun.ProjectName,
+                                  LogRowKey,
+                                  Convert.ToInt32(HttpCallWithRetries.RowKey),
+                                  ProjectRun.OrchestratorInstanceId,
+                                  ProjectRun.RunObject.RunId,
+                                  ProjectRun.RunObject.GlobalKey)
             ));
         }
 
@@ -227,6 +239,8 @@ namespace Microflow.FlowControl
                                   LogRowKey,
                                   Convert.ToInt32(HttpCallWithRetries.RowKey),
                                   ProjectRun.OrchestratorInstanceId,
+                                  ProjectRun.RunObject.RunId,
+                                  ProjectRun.RunObject.GlobalKey,
                                   MicroflowHttpResponse.Success,
                                   MicroflowHttpResponse.HttpResponseStatusCode,
                                   string.IsNullOrWhiteSpace(MicroflowHttpResponse.Message) ? null : MicroflowHttpResponse.Message)
@@ -249,6 +263,8 @@ namespace Microflow.FlowControl
                                   LogRowKey,
                                   Convert.ToInt32(HttpCallWithRetries.RowKey),
                                   ProjectRun.OrchestratorInstanceId,
+                                  ProjectRun.RunObject.RunId,
+                                  ProjectRun.RunObject.GlobalKey,
                                   false,
                                   MicroflowHttpResponse.HttpResponseStatusCode,
                                   string.IsNullOrWhiteSpace(MicroflowHttpResponse.Message) ? null : MicroflowHttpResponse.Message)
@@ -276,6 +292,8 @@ namespace Microflow.FlowControl
                                       LogRowKey,
                                       Convert.ToInt32(HttpCallWithRetries.RowKey),
                                       ProjectRun.OrchestratorInstanceId,
+                                      ProjectRun.RunObject.RunId,
+                                      ProjectRun.RunObject.GlobalKey,
                                       false,
                                       -408,
                                       string.IsNullOrWhiteSpace(HttpCallWithRetries.CallBackAction) 
@@ -292,6 +310,8 @@ namespace Microflow.FlowControl
                                       LogRowKey,
                                       Convert.ToInt32(HttpCallWithRetries.RowKey),
                                       ProjectRun.OrchestratorInstanceId,
+                                      ProjectRun.RunObject.RunId,
+                                      ProjectRun.RunObject.GlobalKey,
                                       false,
                                       -500,
                                       ex.Message)
