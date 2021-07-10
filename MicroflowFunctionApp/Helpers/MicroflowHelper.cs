@@ -57,7 +57,8 @@ namespace Microflow.Helpers
                     StepId = httpCall.StepId,
                     StepNumber = Convert.ToInt32(httpCall.RowKey),
                     MainOrchestrationId = httpCall.MainOrchestrationId,
-                    CallbackUrl = callback
+                    CallbackUrl = callback,
+                    GlobalKey = httpCall.GlobalKey
                 };
 
                 string body = JsonSerializer.Serialize(postData);
@@ -138,6 +139,7 @@ namespace Microflow.Helpers
             sb.Replace("<RunId>", httpCall.RunId);
             sb.Replace("<StepId>", httpCall.StepId);
             sb.Replace("<StepNumber>", httpCall.RowKey);
+            sb.Replace("<GlobalKey>", httpCall.GlobalKey);
 
             return sb.ToString();
         }

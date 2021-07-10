@@ -57,18 +57,32 @@ namespace Microflow.FlowControl
                 RunObject runObj = new RunObject() { StepNumber = "-1" };
                 projectRun.RunObject = runObj;
 
-                if (string.IsNullOrWhiteSpace(instanceId))
+                // instanceId is set/singleton
+                if (!string.IsNullOrWhiteSpace(instanceId))
                 {
-                    instanceId = Guid.NewGuid().ToString();
+                    // globalKey is set
+                    if (!string.IsNullOrWhiteSpace(input.GlobalKey))
+                    {
+                        runObj.GlobalKey = input.GlobalKey;
+                    }
+                    else
+                    {
+                        runObj.GlobalKey = Guid.NewGuid().ToString();
+                    }
                 }
-
-                if (string.IsNullOrWhiteSpace(input.GlobalKey))
-                {
-                    runObj.GlobalKey = instanceId;
-                }
+                // instanceId is not set/multiple concurrent instances
                 else
                 {
-                    runObj.GlobalKey = input.GlobalKey;
+                    instanceId = Guid.NewGuid().ToString();
+                    // globalKey is set
+                    if (!string.IsNullOrWhiteSpace(input.GlobalKey))
+                    {
+                        runObj.GlobalKey = input.GlobalKey;
+                    }
+                    else
+                    {
+                        runObj.GlobalKey = instanceId;
+                    }
                 }
 
                 projectRun.RunObject.StepNumber = "-1";

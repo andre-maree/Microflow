@@ -126,7 +126,7 @@ namespace Microflow.Models
         public bool IsHttpGet { get; set; }
         public string StepId { get; set; }
 
-        //[IgnoreProperty]
+        [IgnoreProperty]
         public string GlobalKey { get; set; }
 
         [IgnoreProperty]

@@ -91,7 +91,8 @@ namespace Microflow.API.Internal
                     RunId = data["RunId"],
                     StepNumber = Convert.ToInt32(data["StepNumber"]),
                     StepId = data["StepId"],
-                    SubOrchestrationId = data["SubOrchestrationId"]
+                    SubOrchestrationId = data["SubOrchestrationId"],
+                    GlobalKey = data["GlobalKey"]
                 };
 
                 // Function input comes from the request content.

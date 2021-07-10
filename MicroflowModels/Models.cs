@@ -15,6 +15,7 @@ namespace MicroflowModels
         public string RunId { get; set; }
         public int StepNumber { get; set; }
         public string StepId { get; set; }
+        public string GlobalKey { get; set; }
     }
 
     public class MicroflowProjectBase
@@ -41,7 +42,7 @@ namespace MicroflowModels
 
         public Step(int stepNumber, string calloutUrl, string stepId = null)
         {
-            if(stepId == null)
+            if (stepId == null)
             {
                 StepId = $"{stepNumber}_{Guid.NewGuid()}";
             }

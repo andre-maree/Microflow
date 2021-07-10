@@ -61,8 +61,9 @@ namespace MicroflowConsole
                 var dr = JsonSerializer.Serialize(project);
                 var tasks = new List<Task<HttpResponseMessage>>();
 
+                // call microflow from microflow
                 project.Steps[3].CalloutUrl = baseUrl + $"/api/start/{project2.ProjectName}";
-                project.Steps[3].AsynchronousPollingEnabled = false;
+                //project.Steps[3].AsynchronousPollingEnabled = false;
                 // call Microflow insertorupdateproject when something ischanges in the workflow, but do not always call this when corcurrent multiple workflows
                 var result = await HttpClient.PostAsJsonAsync(baseUrl + "/api/insertorupdateproject", project, new JsonSerializerOptions(JsonSerializerDefaults.General)); 
                 var result2 = await HttpClient.PostAsJsonAsync(baseUrl + "/api/insertorupdateproject", project2, new JsonSerializerOptions(JsonSerializerDefaults.General));
@@ -76,12 +77,12 @@ namespace MicroflowConsole
                 //string content = await getprohectjson.Content.ReadAsStringAsync();
                 //MicroflowProject microflowProject = JsonSerializer.Deserialize<MicroflowProject>(content);
                 ////parallel multiple workflow instances
-                for (int i = 0; i < 1; i++)
+                for (int i = 0; i < 2; i++)
                 {
                     await Task.Delay(500);
                     //await posttask;
-                    //tasks.Add(HttpClient.PostAsJsonAsync(baseUrl + "/api/start/", new MicroflowProjectBase() { ProjectName = project.ProjectName }, new JsonSerializerOptions(JsonSerializerDefaults.General)));
                     tasks.Add(HttpClient.GetAsync(baseUrl + $"/api/start/{project.ProjectName}"));
+                    //tasks.Add(HttpClient.GetAsync(baseUrl + $"/api/start/{project.ProjectName}/33306875-9c81-4736-81c0-9be562dae777"));
                 }
                 //await result;
                 ////await posttask;
@@ -103,7 +104,7 @@ namespace MicroflowConsole
 
         public static Dictionary<string, string> CreateMergeFields()
         {
-            string querystring = "?ProjectName=<ProjectName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&CallbackUrl=<CallbackUrl>&RunId=<RunId>&StepNumber=<StepNumber>";// &StepId=<StepId>";
+            string querystring = "?ProjectName=<ProjectName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&CallbackUrl=<CallbackUrl>&RunId=<RunId>&StepNumber=<StepNumber>&GlobalKey=<GlobalKey>";// &StepId=<StepId>";
 
         Dictionary<string, string> mergeFields = new Dictionary<string, string>();
             // use 

@@ -16,7 +16,7 @@ namespace Microflow.ResponseProxies
         /// </summary>
         [FunctionName("callback")]
         public static async Task<HttpResponseMessage> RaiseEvent(
-        [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = "{action}/{orchestratorId}/{stepId}/{content?}")] HttpRequestMessage req,
+        [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = "webhook/{action}/{orchestratorId}/{stepId}/{content?}")] HttpRequestMessage req,
         [DurableClient] IDurableOrchestrationClient client, string stepId, string action, string orchestratorId, string content)
         {
             //string data = await req.Content.ReadAsStringAsync();
@@ -31,7 +31,7 @@ namespace Microflow.ResponseProxies
             
             await client.RaiseEventAsync(orchestratorId, action, resp);
 
-            return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+            return new HttpResponseMessage(HttpStatusCode.OK);
         }
     }
 }
