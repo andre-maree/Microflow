@@ -173,8 +173,7 @@ namespace Microflow.Helpers
             CloudTable table = GetStepsTable();
 
             List<TableEntity> steps = GetStepEntities(projectRun.ProjectName);
-
-            int count = 0;
+            List<Task> batchTasks = new List<Task>();
 
             if (steps.Count > 0)
             {
@@ -182,23 +181,23 @@ namespace Microflow.Helpers
 
                 foreach (TableEntity entity in steps)
                 {
-                    count++;
-
                     TableOperation delop = TableOperation.Delete(entity);
                     batchop.Add(delop);
 
-                    if (count % 100 == 0)
+                    if (batchop.Count == 100)
                     {
-                        await table.ExecuteBatchAsync(batchop);
-                        batchop.Clear();
+                        batchTasks.Add(table.ExecuteBatchAsync(batchop));
+                        batchop = new TableBatchOperation();
                     }
                 }
 
                 if (batchop.Count > 0)
                 {
-                    await table.ExecuteBatchAsync(batchop);
+                    batchTasks.Add(table.ExecuteBatchAsync(batchop));
                 }
             }
+
+            await Task.WhenAll(batchTasks);
         }
 
         public static async Task UpdateProjectControl(string projectName, int state, int loop = 1, string instanceId = null)
@@ -243,24 +242,6 @@ namespace Microflow.Helpers
             await t3;
             await t4;
             await t5;
-        }
-
-        /// <summary>
-        /// Called on start to insert needed step configs
-        /// </summary>
-        //public static async Task InsertStep(this HttpCall stepEnt, CloudTable table)
-        //{
-        //    TableOperation op = TableOperation.InsertOrReplace(stepEnt);
-
-        //    await table.ExecuteAsync(op);
-        //}
-
-        /// <summary>
-        /// Called on start to batch insert needed step configs
-        /// </summary>
-        public static async Task InsertBatch(this CloudTable table, TableBatchOperation batch)
-        {
-            await table.ExecuteBatchAsync(batch);
         }
 
         #endregion

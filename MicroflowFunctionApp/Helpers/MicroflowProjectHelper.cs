@@ -66,6 +66,7 @@ namespace Microflow.Helpers
         public static async Task CheckAndWaitForReadyToRun(this IDurableOrchestrationContext context, string projectName, ILogger log)
         {
             EntityId readyToRun = new EntityId("ReadyToRun", projectName);
+
             if (await context.CallEntityAsync<bool>(readyToRun, "get"))
             {
                 return;
@@ -184,8 +185,8 @@ namespace Microflow.Helpers
 
                 if (batch.Count == 100)
                 {
-                    batchTasks.Add(stepsTable.InsertBatch(batch));
-                    batch.Clear();
+                    batchTasks.Add(stepsTable.ExecuteBatchAsync(batch));
+                    batch = new TableBatchOperation();
                 }
             }
 
@@ -198,7 +199,7 @@ namespace Microflow.Helpers
 
             batch.Add(TableOperation.InsertOrReplace(containerEntity));
 
-            batchTasks.Add(stepsTable.InsertBatch(batch));
+            batchTasks.Add(stepsTable.ExecuteBatchAsync(batch));
 
             await Task.WhenAll(batchTasks);
         }
