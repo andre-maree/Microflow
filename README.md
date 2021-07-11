@@ -13,6 +13,7 @@ Microflow functionality:
 - set outgoing http calls to be inline (wait for response at the point of out call), or wait asynchronously by setting CallbackAction (wait for external action/callback)
 - set AsynchronousPollingEnabled (per step) to true and the step will poll for completion before moving on, embed other Microflow projects and wait for them; or set it to false for fire and forget, call another Microflow project and continue immediately with the next step, no waiting for completion
 - there is a global id called "GlobalKey" in the logs (orchestrations, steps, errors) that can be used to tie up cross Microflow project calls, this key is passed along for logging purposes when a Microflow project calls/embeds other Microflow projects
+- projects, as well as based on a GlobalKey, can be controlled via api calls for: stop, pause, and run
 - timeouts can be set per step for inline and callback
 - retry policies can be set for each step and there can also be a default retry policy for the entire workflow
 - StopOnActionFailed can be set per step to indicate for when there is a failure (not a success callback), which will make Microflow stop the workflow execution or to log the failure and continue with the workflow
@@ -31,11 +32,8 @@ Microflow use cases:
 - Microflow is open-source so feel free to modify Microflow to your needs
 
 Future enhancements:
-- workflow stop, pause, and continue
-- Azure AD authentication
-- gRPC communication
-- proper logging implementation
-
+- Azure AD authentication?
+- gRPC communication?
 
 ## Test Examples
 The code for these can be found in the console app\Tests.cs. There is also a SimpleSteps test that consists of 1 parent with 2 children and the 2 children have a common child step (See JSON Workflow Example below). This is the diagram for the 2 more complex test workflows:
