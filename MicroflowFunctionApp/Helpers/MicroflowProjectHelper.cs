@@ -63,46 +63,64 @@ namespace Microflow.Helpers
         /// <summary>
         /// Check if project ready is true, else wait with a timer (this is a durable monitor), called from start
         /// </summary>
-        public static async Task CheckAndWaitForReadyToRun(this IDurableOrchestrationContext context, string projectName, ILogger log)
+        public static async Task<bool> CheckAndWaitForReadyToRun(this IDurableOrchestrationContext context, string projectName, ILogger log, string globalKey = null)
         {
-            EntityId readyToRun = new EntityId("ReadyToRun", projectName);
+            EntityId runState = new EntityId("ProjectState", projectName);
+            Task<int> projStateTask = context.CallEntityAsync<int>(runState, "get");
 
-            if (await context.CallEntityAsync<bool>(readyToRun, "get"))
+            Task<EntityStateResponse<int>> globStateTask = null;
+
+            if (!string.IsNullOrWhiteSpace(globalKey))
             {
-                return;
+                EntityId globalStateId = new EntityId("GlobalState", globalKey);
+                globStateTask = context.CallEntityAsync<EntityStateResponse<int>>(globalStateId, "get");
             }
 
-            DateTime endDate = context.CurrentUtcDateTime.AddMinutes(30);
-            int count = 5;
-            int max = 20;
+            int projState = await projStateTask;
 
-            using (CancellationTokenSource cts = new CancellationTokenSource())
+            int globState = 0;
+            if (globStateTask != null)
             {
-                try
-                {
-                    while (context.CurrentUtcDateTime < endDate)
-                    {
-                        if (await context.CallEntityAsync<bool>(readyToRun, "get"))
-                        {
-                            break;
-                        }
-                        else
-                        {
-                            DateTime deadline = context.CurrentUtcDateTime.Add(TimeSpan.FromSeconds(count < max ? count : max));
-                            await context.CreateTimer(deadline, cts.Token);
-                            count++;
-                        }
-                    }
-                }
-                catch (TaskCanceledException)
-                {
-                    log.LogCritical("========================TaskCanceledException==========================");
-                }
-                finally
-                {
-                    cts.Dispose();
-                }
+                await globStateTask;
+                globState = globStateTask.Result.EntityState;
             }
+
+            if (projState != 0 || globState != 0)
+            {
+                return false;
+            }
+
+            return true;
+
+            //DateTime endDate = context.CurrentUtcDateTime.AddMinutes(30);
+            //int count = 5;
+            //int max = 20;
+
+            //using (CancellationTokenSource cts = new CancellationTokenSource())
+            //{
+            //    try
+            //    {
+            //        while (context.CurrentUtcDateTime < endDate)
+            //        {
+            //            DateTime deadline = context.CurrentUtcDateTime.Add(TimeSpan.FromSeconds(count < max ? count : max));
+            //            await context.CreateTimer(deadline, cts.Token);
+            //            count++;
+
+            //            if (await context.CallEntityAsync<int>(runState, "get") == 0)
+            //            {
+            //                break;
+            //            }
+            //        }
+            //    }
+            //    catch (TaskCanceledException)
+            //    {
+            //        log.LogCritical("========================TaskCanceledException==========================");
+            //    }
+            //    finally
+            //    {
+            //        cts.Dispose();
+            //    }
+            //}
         }
 
         /// <summary>

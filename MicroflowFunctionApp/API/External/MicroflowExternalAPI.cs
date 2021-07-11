@@ -24,20 +24,20 @@ namespace Microflow.API.External
         /// <summary>
         /// Called from Microflow.ExecuteStep to get the current state of the project
         /// </summary>
-        [FunctionName("GetState")]
-        public static async Task<int> GetState([ActivityTrigger] string projectId) => await MicroflowTableHelper.GetState(projectId);
+        //[FunctionName("GetState")]
+        //public static async Task<int> GetState([ActivityTrigger] string projectId) => await MicroflowTableHelper.GetState(projectId);
 
         /// <summary>
         /// Called from Microflow.ExecuteStep to get the project
         /// </summary>
-        [FunctionName("GetProjectControl")]
-        public static async Task<ProjectControlEntity> GetProjectControl([ActivityTrigger] string projectId) => await MicroflowTableHelper.GetProjectControl(projectId);
+        //[FunctionName("GetProjectControl")]
+        //public static async Task<ProjectControlEntity> GetProjectControl([ActivityTrigger] string projectId) => await MicroflowTableHelper.GetProjectControl(projectId);
 
         /// <summary>
         /// 
         /// </summary>
-        [FunctionName("Pause")]
-        public static async Task Pause([ActivityTrigger] ProjectControlEntity projectControlEntity) => await projectControlEntity.Pause();
+        //[FunctionName("Pause")]
+        //public static async Task Pause([ActivityTrigger] ProjectControlEntity projectControlEntity) => await projectControlEntity.Pause();
 
         /// <summary>
         /// use this to test some things like causing an exception
@@ -54,11 +54,11 @@ namespace Microflow.API.External
 
                 MicroflowPostData result = JsonSerializer.Deserialize<MicroflowPostData>(r);
 
-                if (result.StepNumber == 8)
+                if (result.StepNumber == 39 && result.ProjectName.Equals("xxx"))
                 {
                     //HttpResponseMessage result2 = await MicroflowHttpClient.HttpClient.GetAsync($"{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}/start/");
                     //var kgkg = 0;
-                    await Task.Delay(5000);
+                    await Task.Delay(120000);
                 }
             }
             else

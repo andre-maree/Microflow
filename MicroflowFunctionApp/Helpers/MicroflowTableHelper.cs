@@ -51,13 +51,13 @@ namespace Microflow.Helpers
             await table.ExecuteAsync(mergeOperation);
         }
 
-        public static async Task Pause(this ProjectControlEntity projectControlEntity)
-        {
-            CloudTable table = GetProjectControlTable();
-            TableOperation mergeOperation = TableOperation.Merge(projectControlEntity);
+        //public static async Task Pause(this ProjectControlEntity projectControlEntity)
+        //{
+        //    CloudTable table = GetProjectControlTable();
+        //    TableOperation mergeOperation = TableOperation.Merge(projectControlEntity);
 
-            await table.ExecuteAsync(mergeOperation);
-        }
+        //    await table.ExecuteAsync(mergeOperation);
+        //}
 
         public static string GetProjectAsJson(string projectName)
         {
@@ -101,26 +101,26 @@ namespace Microflow.Helpers
             return JsonSerializer.Serialize(outSteps);
         }
 
-        public static async Task<ProjectControlEntity> GetProjectControl(string projectName)
-        {
-            CloudTable table = GetProjectControlTable();
-            TableOperation mergeOperation = TableOperation.Retrieve<ProjectControlEntity>(projectName, "0");
-            TableResult result = await table.ExecuteAsync(mergeOperation);
-            ProjectControlEntity projectControlEntity = result.Result as ProjectControlEntity;
+        //public static async Task<ProjectControlEntity> GetProjectControl(string projectName)
+        //{
+        //    CloudTable table = GetProjectControlTable();
+        //    TableOperation mergeOperation = TableOperation.Retrieve<ProjectControlEntity>(projectName, "0");
+        //    TableResult result = await table.ExecuteAsync(mergeOperation);
+        //    ProjectControlEntity projectControlEntity = result.Result as ProjectControlEntity;
 
-            return projectControlEntity;
-        }
+        //    return projectControlEntity;
+        //}
 
-        public static async Task<int> GetState(string projectName)
-        {
-            CloudTable table = GetProjectControlTable();
-            TableOperation mergeOperation = TableOperation.Retrieve<ProjectControlEntity>(projectName, "0");
-            TableResult result = await table.ExecuteAsync(mergeOperation);
-            ProjectControlEntity projectControlEntity = result.Result as ProjectControlEntity;
+        //public static async Task<int> GetState(string projectName)
+        //{
+        //    CloudTable table = GetProjectControlTable();
+        //    TableOperation mergeOperation = TableOperation.Retrieve<ProjectControlEntity>(projectName, "0");
+        //    TableResult result = await table.ExecuteAsync(mergeOperation);
+        //    ProjectControlEntity projectControlEntity = result.Result as ProjectControlEntity;
 
-            // ReSharper disable once PossibleNullReferenceException
-            return projectControlEntity.State;
-        }
+        //    // ReSharper disable once PossibleNullReferenceException
+        //    return projectControlEntity.State;
+        //}
 
         public static List<HttpCallWithRetries> GetStepsHttpCallWithRetries(string projectName)
         {
@@ -200,14 +200,14 @@ namespace Microflow.Helpers
             await Task.WhenAll(batchTasks);
         }
 
-        public static async Task UpdateProjectControl(string projectName, int state, int loop = 1, string instanceId = null)
-        {
-            CloudTable table = GetProjectControlTable();
-            ProjectControlEntity projectControlEntity = new ProjectControlEntity(projectName, state, loop, instanceId);
-            TableOperation mergeOperation = TableOperation.InsertOrMerge(projectControlEntity);
+        //public static async Task UpdateProjectControl(string projectName, int state, int loop = 1, string instanceId = null)
+        //{
+        //    CloudTable table = GetProjectControlTable();
+        //    ProjectControlEntity projectControlEntity = new ProjectControlEntity(projectName, state, loop, instanceId);
+        //    TableOperation mergeOperation = TableOperation.InsertOrMerge(projectControlEntity);
 
-            await table.ExecuteAsync(mergeOperation);
-        }
+        //    await table.ExecuteAsync(mergeOperation);
+        //}
 
         /// <summary>
         /// Called on start to create needed tables
@@ -229,17 +229,17 @@ namespace Microflow.Helpers
             //var delLogTableTask = await logTable.DeleteIfExistsAsync();
 
             // ProjectControlTable
-            CloudTable projectTable = GetProjectControlTable();
+            //CloudTable projectTable = GetProjectControlTable();
 
             Task<bool> t1 = stepsTable.CreateIfNotExistsAsync();
             Task<bool> t2 = logOrchestrationTable.CreateIfNotExistsAsync();
-            Task<bool> t3 = projectTable.CreateIfNotExistsAsync();
+            //Task<bool> t3 = projectTable.CreateIfNotExistsAsync();
             Task<bool> t4 = logStepsTable.CreateIfNotExistsAsync();
             Task<bool> t5 = errorsTable.CreateIfNotExistsAsync();
 
             await t1;
             await t2;
-            await t3;
+            //await t3;
             await t4;
             await t5;
         }
@@ -262,12 +262,12 @@ namespace Microflow.Helpers
             return tableClient.GetTableReference($"MicroflowStepConfigs");
         }
 
-        private static CloudTable GetProjectControlTable()
-        {
-            CloudTableClient tableClient = GetTableClient();
+        //private static CloudTable GetProjectControlTable()
+        //{
+        //    CloudTableClient tableClient = GetTableClient();
 
-            return tableClient.GetTableReference($"MicroflowProjectControl");
-        }
+        //    return tableClient.GetTableReference($"MicroflowProjectControl");
+        //}
 
         private static CloudTable GetLogOrchestrationTable()
         {

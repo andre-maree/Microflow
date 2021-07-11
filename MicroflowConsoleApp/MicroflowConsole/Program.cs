@@ -66,9 +66,9 @@ namespace MicroflowConsole
                 project.Steps[0].CalloutUrl = baseUrl + $"/api/start/{project2.ProjectName}";
                 //project.Steps[3].AsynchronousPollingEnabled = false;
                 // call Microflow insertorupdateproject when something ischanges in the workflow, but do not always call this when corcurrent multiple workflows
-                var result = HttpClient.PostAsJsonAsync(baseUrl + "/api/insertorupdateproject", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
+                //var result = HttpClient.PostAsJsonAsync(baseUrl + "/api/insertorupdateproject/global_test_key", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
                 //project.Steps[0].CalloutUrl = project.Steps[5].CalloutUrl;
-                var result2 = HttpClient.PostAsJsonAsync(baseUrl + "/api/insertorupdateproject", project2, new JsonSerializerOptions(JsonSerializerDefaults.General));
+                //var result2 = HttpClient.PostAsJsonAsync(baseUrl + "/api/insertorupdateproject/global_test_key", project2, new JsonSerializerOptions(JsonSerializerDefaults.General));
                 //var content = await result.Content.ReadAsStringAsync();
                 // singleton workflow instance
                 //var result2 = await HttpClient.PostAsJsonAsync("http://localhost:7071/api/start/39806875-9c81-4736-81c0-9be562dae71e/", new ProjectBase() { ProjectName = "MicroflowDemo" }, new JsonSerializerOptions(JsonSerializerDefaults.General));
@@ -79,13 +79,15 @@ namespace MicroflowConsole
                 //string content = await getprohectjson.Content.ReadAsStringAsync();
                 //MicroflowProject microflowProject = JsonSerializer.Deserialize<MicroflowProject>(content);
                 ////parallel multiple workflow instances
-                await result;
-                await result2;
+
+                //await result;
+                //await result2;
+
                 for (int i = 0; i < 1; i++)
                 {
                     await Task.Delay(500);
                     //await posttask;
-                    tasks.Add(HttpClient.GetAsync(baseUrl + $"/api/start/{project.ProjectName}"));
+                    tasks.Add(HttpClient.GetAsync(baseUrl + $"/api/start/{project.ProjectName}?globalkey=global_test_key"));
                     //tasks.Add(HttpClient.GetAsync(baseUrl + $"/api/start/{project.ProjectName}/33306875-9c81-4736-81c0-9be562dae777"));
                 }
                 //await result;

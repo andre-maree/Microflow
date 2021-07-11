@@ -178,22 +178,22 @@ namespace Microflow.Models
     /// <summary>
     /// This is used to store higher level project execution state data
     /// </summary>
-    public class ProjectControlEntity : TableEntity
-    {
-        public ProjectControlEntity() { }
+    //public class ProjectControlEntity : TableEntity
+    //{
+    //    public ProjectControlEntity() { }
 
-        public ProjectControlEntity(string projectName, int state, int loop = 1, string instanceId = null)
-        {
-            PartitionKey = projectName;
-            RowKey = instanceId ?? "0";
-            State = state;
-            Loop = loop;
-        }
+    //    public ProjectControlEntity(string projectName, int state, int loop = 1, string instanceId = null)
+    //    {
+    //        PartitionKey = projectName;
+    //        RowKey = instanceId ?? "0";
+    //        State = state;
+    //        Loop = loop;
+    //    }
 
-        public int Loop { get; set; }
-        public int State { get; set; }
-        public int PausedStepId { get; set; }
-    }
+    //    public int Loop { get; set; }
+    //    public int State { get; set; }
+    //    public int PausedStepId { get; set; }
+    //}
 
     #endregion
 }
