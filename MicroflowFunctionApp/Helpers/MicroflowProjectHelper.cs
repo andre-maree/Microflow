@@ -9,9 +9,7 @@ using System.Threading.Tasks;
 using Microflow.Models;
 using MicroflowModels;
 using Microsoft.Azure.Cosmos.Table;
-using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 
 namespace Microflow.Helpers
@@ -26,165 +24,11 @@ namespace Microflow.Helpers
         }
 
         /// <summary>
-        /// Pause, run, or stop the project, cmd can be "run", "pause", or "stop"
-        /// </summary>
-        [FunctionName("Microflow_ProjectControl")]
-        public static async Task<HttpResponseMessage> ProjectControl([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-                                                                  Route = "ProjectControl/{cmd}/{projectName}")] HttpRequestMessage req,
-                                                                  [DurableClient] IDurableEntityClient client, string projectName, string cmd)
-        {
-            EntityId runStateId = new EntityId(nameof(ProjectState), projectName);
-
-            if (cmd.Equals("pause", StringComparison.OrdinalIgnoreCase))
-            {
-                await client.SignalEntityAsync(runStateId, "pause");
-            }
-            else if (cmd.Equals("run", StringComparison.OrdinalIgnoreCase))
-            {
-                await client.SignalEntityAsync(runStateId, "ready");
-            }
-            else if (cmd.Equals("stop", StringComparison.OrdinalIgnoreCase))
-            {
-                await client.SignalEntityAsync(runStateId, "stop");
-            }
-
-            return new HttpResponseMessage(HttpStatusCode.OK);
-        }
-
-        /// <summary>
-        /// Pause, run, or stop all with the same global key, cmd can be "run", "pause", or "stop"
-        /// </summary>
-        [FunctionName("Microflow_GlobalControl")]
-        public static async Task<HttpResponseMessage> GlobalControl([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-                                                                  Route = "GlobalControl/{cmd}/{globalKey}")] HttpRequestMessage req,
-                                                                  [DurableClient] IDurableEntityClient client, string globalKey, string cmd)
-        {
-            EntityId runStateId = new EntityId(nameof(GlobalState), globalKey);
-
-            if (cmd.Equals("pause", StringComparison.OrdinalIgnoreCase))
-            {
-                await client.SignalEntityAsync(runStateId, "pause");
-            }
-            else if (cmd.Equals("run", StringComparison.OrdinalIgnoreCase))
-            {
-                await client.SignalEntityAsync(runStateId, "ready");
-            }
-            else if (cmd.Equals("stop", StringComparison.OrdinalIgnoreCase))
-            {
-                await client.SignalEntityAsync(runStateId, "stop");
-            }
-
-            return new HttpResponseMessage(HttpStatusCode.OK);
-        }
-
-        /// <summary>
-        /// Durable entity check and set if the global state
-        /// </summary>
-        [FunctionName("GlobalState")]
-        public static void GlobalState([EntityTrigger] IDurableEntityContext ctx)
-        {
-            switch (ctx.OperationName)
-            {
-                case "ready":
-                    ctx.SetState(0);
-                    break;
-                case "pause":
-                    ctx.SetState(1);
-                    break;
-                case "stop":
-                    ctx.SetState(2);
-                    break;
-                case "get":
-                    ctx.Return(ctx.GetState<int>());
-                    break;
-            }
-        }
-
-        /// <summary>
-        /// Durable entity check and set project state
-        /// </summary>
-        [FunctionName("ProjectState")]
-        public static void ProjectState([EntityTrigger] IDurableEntityContext ctx)
-        {
-            switch (ctx.OperationName)
-            {
-                case "ready":
-                    ctx.SetState(0);
-                    break;
-                case "pause":
-                    ctx.SetState(1);
-                    break;
-                case "stop":
-                    ctx.SetState(2);
-                    break;
-                case "get":
-                    ctx.Return(ctx.GetState<int>());
-                    break;
-            }
-        }
-
-        /// <summary>
-        /// This must be called at least once before a project runs,
-        /// this is to prevent multiple concurrent instances from writing step data at project run,
-        /// call Microflow InsertOrUpdateProject when something changed in the workflow, but do not always call this when concurrent multiple workflows
-        /// </summary>
-        [FunctionName("Microflow_InsertOrUpdateProject")]
-        public static async Task<HttpResponseMessage> SaveProject([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-                                                                  Route = "InsertOrUpdateProject/{globalKey?}")] HttpRequestMessage req,
-                                                                  [DurableClient] IDurableEntityClient client, string globalKey)
-        {
-            return await InserOrUpdateProject(req, client, globalKey);
-        }
-
-        /// <summary>
-        /// Get global state
-        /// </summary>
-        [FunctionName("getGlobalState")]
-        public static async Task<HttpResponseMessage> GetGlobalState([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-                                                                  Route = "GlobalState/{globalKey}")] HttpRequestMessage req,
-                                                                  [DurableClient] IDurableEntityClient client, string globalKey)
-        {
-            EntityId globalStateId = new EntityId(nameof(GlobalState), globalKey);
-            Task<EntityStateResponse<int>> stateTask = client.ReadEntityStateAsync<int>(globalStateId);
-
-            HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);
-
-            await stateTask;
-
-            resp.Content = new StringContent(stateTask.Result.EntityState.ToString());
-
-            return resp;
-        }
-
-        /// <summary>
-        /// Get project state
-        /// </summary>
-        [FunctionName("getProjectState")]
-        public static async Task<HttpResponseMessage> GetProjectState([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-                                                                  Route = "ProjectState/{projectName}")] HttpRequestMessage req,
-                                                                  [DurableClient] IDurableEntityClient client, string projectName)
-        {
-            EntityId runStateId = new EntityId(nameof(ProjectState), projectName);
-            Task<EntityStateResponse<int>> stateTask = client.ReadEntityStateAsync<int>(runStateId);
-
-            HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);
-
-            await stateTask;
-
-            resp.Content = new StringContent(stateTask.Result.EntityState.ToString());
-
-            return resp;
-        }
-
-        /// <summary>
         /// From the api call
         /// </summary>
-        private static async Task<HttpResponseMessage> InserOrUpdateProject(HttpRequestMessage req, IDurableEntityClient client, string globalKey)
+        public static async Task<HttpResponseMessage> InserOrUpdateProject(this IDurableEntityClient client, string content, string globalKey)
         {
             bool doneReadyFalse = false;
-
-            // read http content
-            string content = await req.Content.ReadAsStringAsync();
 
             // deserialize the workflow json
             MicroflowProject project = JsonSerializer.Deserialize<MicroflowProject>(content);
@@ -192,7 +36,7 @@ namespace Microflow.Helpers
             //    // create a project run
             ProjectRun projectRun = new ProjectRun() { ProjectName = project.ProjectName, Loop = project.Loop };
 
-            EntityId projStateId = new EntityId(nameof(ProjectState), projectRun.ProjectName);
+            EntityId projStateId = new EntityId("ProjectState", projectRun.ProjectName);
 
             try
             {
@@ -200,7 +44,7 @@ namespace Microflow.Helpers
 
                 if (!string.IsNullOrWhiteSpace(globalKey))
                 {
-                    EntityId globalStateId = new EntityId(nameof(GlobalState), globalKey);
+                    EntityId globalStateId = new EntityId("GlobalState", globalKey);
                     globStateTask = client.ReadEntityStateAsync<int>(globalStateId);
                 }
                 // do not do anything, wait for the stopped project to be ready
