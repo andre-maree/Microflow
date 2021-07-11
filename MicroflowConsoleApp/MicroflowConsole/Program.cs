@@ -30,10 +30,10 @@ namespace MicroflowConsole
             try
             {
                 //var workflow = Tests.CreateTestWorkflow_SimpleSteps();
-                //var workflow = Tests.CreateTestWorkflow_10StepsParallel();
-                //var workflow2 = Tests.CreateTestWorkflow_Complex1();
-                var workflow = Tests.CreateTestWorkflow_110Steps();
-                var workflow2 = Tests.CreateTestWorkflow_110Steps();
+                var workflow = Tests.CreateTestWorkflow_10StepsParallel();
+                var workflow2 = Tests.CreateTestWorkflow_Complex1();
+                //var workflow = Tests.CreateTestWorkflow_110Steps();
+                //var workflow2 = Tests.CreateTestWorkflow_110Steps();
 
                 var project = new MicroflowProject()
                 {
@@ -63,7 +63,7 @@ namespace MicroflowConsole
                 var tasks = new List<Task<HttpResponseMessage>>();
 
                 // call microflow from microflow
-                project.Steps[0].CalloutUrl = baseUrl + $"/api/start/{project2.ProjectName}";
+                project.Steps[4].CalloutUrl = baseUrl + $"/api/start/{project2.ProjectName}";
                 //project.Steps[3].AsynchronousPollingEnabled = false;
                 // call Microflow insertorupdateproject when something ischanges in the workflow, but do not always call this when corcurrent multiple workflows
                 var result = HttpClient.PostAsJsonAsync(baseUrl + "/api/insertorupdateproject/global_test_key", project, new JsonSerializerOptions(JsonSerializerDefaults.General));

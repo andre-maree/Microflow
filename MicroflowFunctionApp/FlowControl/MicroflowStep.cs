@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Microflow.FlowControl
 {
-    public static class Microflow
+    public static class MicroflowStep
     {
         /// <summary>
         /// Recursive step execution and sub-step can execute now calculations
