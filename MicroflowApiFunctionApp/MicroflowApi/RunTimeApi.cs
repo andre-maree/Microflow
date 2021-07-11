@@ -1,12 +1,9 @@
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Microflow.Models;
+using Microflow.Helpers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.Azure.WebJobs.Host;
-using Microsoft.Extensions.Logging;
 
 namespace MicroflowApiFunctionApp
 {
@@ -21,7 +18,7 @@ namespace MicroflowApiFunctionApp
                                                              [DurableClient] IDurableEntityClient client,
                                                              string projectNameStepNumber)
         {
-            EntityId countId = new EntityId("StepCounter", projectNameStepNumber);
+            EntityId countId = new EntityId(MicroflowEntities.StepCounter, projectNameStepNumber);
 
             EntityStateResponse<int> result = await client.ReadEntityStateAsync<int>(countId);
 

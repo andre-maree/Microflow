@@ -19,20 +19,20 @@ namespace Microflow.API.Internal
 
             bool doneAdd = false;
             bool doneSubtract = false;
-            EntityId countId = new EntityId("StepCounter", httpCall.PartitionKey + httpCall.RowKey);
+            EntityId countId = new EntityId(MicroflowEntities.StepCounter, httpCall.PartitionKey + httpCall.RowKey);
 
             try
             {
                 DurableHttpRequest durableHttpRequest = httpCall.CreateMicroflowDurableHttpRequest(context.InstanceId);
 
                 // set the per step in-progress count to count+1
-                context.SignalEntity(countId, "add");
+                context.SignalEntity(countId, MicroflowCounterKeys.Add);
                 doneAdd = true;
 
                 DurableHttpResponse durableHttpResponse = await context.CallHttpAsync(durableHttpRequest);
 
                 // set the per step in-progress count to count-1
-                context.SignalEntity(countId, "subtract");
+                context.SignalEntity(countId, MicroflowCounterKeys.Subtract);
                 doneSubtract = true;
 
                 return durableHttpResponse.GetMicroflowResponse();
@@ -70,7 +70,7 @@ namespace Microflow.API.Internal
                 if (doneAdd && !doneSubtract)
                 {
                     // set the per step in-progress count to count-1
-                    context.SignalEntity(countId, "subtract");
+                    context.SignalEntity(countId, MicroflowCounterKeys.Subtract);
                 }
             }
         }

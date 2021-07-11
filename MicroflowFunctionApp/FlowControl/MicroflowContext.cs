@@ -5,6 +5,7 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microflow.FlowControl
@@ -37,10 +38,76 @@ namespace Microflow.FlowControl
             Logger = MicroflowDurableContext.CreateReplaySafeLogger(logger);
         }
 
+        public async Task RunMicroflow()
+        {
+            EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectStateId, ProjectRun.ProjectName);
+            EntityId globalStateId = new EntityId(MicroflowStateKeys.GlobalStateId, ProjectRun.RunObject.GlobalKey);
+            Task<int> projStateTask = MicroflowDurableContext.CallEntityAsync<int>(projStateId, MicroflowControlKeys.Read);
+            Task<int> globalSateTask = MicroflowDurableContext.CallEntityAsync<int>(globalStateId, MicroflowControlKeys.Read);
+            int projState = await projStateTask;
+            int globalState = await globalSateTask;
+
+            if (projState == 0 && globalState == 0)
+            {
+                MicroflowContext microflowContext = new MicroflowContext(MicroflowDurableContext, ProjectRun, Logger);
+
+                // call out to micro-services orchestration
+                await microflowContext.RunMicroflowStep();
+            }
+            else if (projState == 1 || globalState == 1)
+            {
+                DateTime endDate = MicroflowDurableContext.CurrentUtcDateTime.AddDays(7);
+                int count = 15;
+                int max = 60;
+
+                using (CancellationTokenSource cts = new CancellationTokenSource())
+                {
+                    try
+                    {
+                        while (MicroflowDurableContext.CurrentUtcDateTime < endDate)
+                        {
+                            //context.SetCustomStatus("paused");
+
+                            DateTime deadline = MicroflowDurableContext.CurrentUtcDateTime.Add(TimeSpan.FromSeconds(count < max ? count : max));
+                            await MicroflowDurableContext.CreateTimer(deadline, cts.Token);
+                            count++;
+
+                            projStateTask = MicroflowDurableContext.CallEntityAsync<int>(projStateId, MicroflowControlKeys.Read);
+                            globalSateTask = MicroflowDurableContext.CallEntityAsync<int>(globalStateId, MicroflowControlKeys.Read);
+                            projState = await projStateTask;
+                            globalState = await globalSateTask;
+
+                            if (projState != 1 && globalState != 1)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        Logger.LogCritical("========================TaskCanceledException==========================");
+                    }
+                    finally
+                    {
+                        cts.Dispose();
+                    }
+                }
+
+                //context.SetCustomStatus("running");
+                if (projState == 0 && globalState == 0)
+                {
+                    MicroflowContext microflowContext = new MicroflowContext(MicroflowDurableContext, ProjectRun, Logger);
+
+                    // call out to micro-services orchestration
+                    await microflowContext.RunMicroflowStep();
+                }
+            }
+        }
+
         /// <summary>
         /// Do the step callout and process sub steps
         /// </summary>
-        public async Task RunMicroflow()
+        private async Task RunMicroflowStep()
         {
             try
             {
@@ -187,21 +254,21 @@ namespace Microflow.FlowControl
         /// Durable entity to keep an in progress count for each concurrent step in the project/run
         /// Used by HttpCallOrchestrator and HttpCallWithCallbackOrchestrator
         /// </summary>
-        [FunctionName("StepCounter")]
+        [FunctionName(MicroflowEntities.StepCounter)]
         public static void StepCounter([EntityTrigger] IDurableEntityContext ctx)
         {
             switch (ctx.OperationName.ToLowerInvariant())
             {
-                case "add":
+                case MicroflowCounterKeys.Add:
                     ctx.SetState(ctx.GetState<int>() + 1);
                     break;
                 //case "reset":
                 //    ctx.SetState(0);
                 //    break;
-                case "get":
+                case MicroflowCounterKeys.Read:
                     ctx.Return(ctx.GetState<int>());
                     break;
-                case "subtract":
+                case MicroflowCounterKeys.Subtract:
                     ctx.SetState(ctx.GetState<int>() - 1);
                     break;
                     //case "delete":

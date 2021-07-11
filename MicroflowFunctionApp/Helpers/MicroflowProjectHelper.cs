@@ -18,9 +18,9 @@ namespace Microflow.Helpers
     {
         public static void SetProjectStateReady(this IDurableOrchestrationContext context, ProjectRun projectRun)
         {
-            EntityId projStateId = new EntityId("ProjectState", projectRun.ProjectName);
+            EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectStateId, projectRun.ProjectName);
 
-            context.SignalEntity(projStateId, "ready");
+            context.SignalEntity(projStateId, MicroflowControlKeys.Ready);
         }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace Microflow.Helpers
             //    // create a project run
             ProjectRun projectRun = new ProjectRun() { ProjectName = project.ProjectName, Loop = project.Loop };
 
-            EntityId projStateId = new EntityId("ProjectState", projectRun.ProjectName);
+            EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectStateId, projectRun.ProjectName);
 
             try
             {
@@ -44,7 +44,7 @@ namespace Microflow.Helpers
 
                 if (!string.IsNullOrWhiteSpace(globalKey))
                 {
-                    EntityId globalStateId = new EntityId("GlobalState", globalKey);
+                    EntityId globalStateId = new EntityId(MicroflowStateKeys.GlobalStateId, globalKey);
                     globStateTask = client.ReadEntityStateAsync<int>(globalStateId);
                 }
                 // do not do anything, wait for the stopped project to be ready
@@ -63,7 +63,7 @@ namespace Microflow.Helpers
                 }
 
                 // set project ready to false
-                await client.SignalEntityAsync(projStateId, "pause");
+                await client.SignalEntityAsync(projStateId, MicroflowControlKeys.Pause);
                 doneReadyFalse = true;
 
                 // reate the storage tables for the project
@@ -119,7 +119,7 @@ namespace Microflow.Helpers
                 // if project ready was set to false, always set it to true
                 if (doneReadyFalse)
                 {
-                    await client.SignalEntityAsync(projStateId, "ready");
+                    await client.SignalEntityAsync(projStateId, MicroflowControlKeys.Ready);
                 }
             }
         }
@@ -175,15 +175,15 @@ namespace Microflow.Helpers
         /// </summary>
         public static async Task<bool> CheckAndWaitForReadyToRun(this IDurableOrchestrationContext context, string projectName, ILogger log, string globalKey = null)
         {
-            EntityId runState = new EntityId("ProjectState", projectName);
-            Task<int> projStateTask = context.CallEntityAsync<int>(runState, "get");
+            EntityId runState = new EntityId(MicroflowStateKeys.ProjectStateId, projectName);
+            Task<int> projStateTask = context.CallEntityAsync<int>(runState, MicroflowControlKeys.Read);
 
             Task<EntityStateResponse<int>> globStateTask = null;
 
             if (!string.IsNullOrWhiteSpace(globalKey))
             {
-                EntityId globalStateId = new EntityId("GlobalState", globalKey);
-                globStateTask = context.CallEntityAsync<EntityStateResponse<int>>(globalStateId, "get");
+                EntityId globalStateId = new EntityId(MicroflowStateKeys.GlobalStateId, globalKey);
+                globStateTask = context.CallEntityAsync<EntityStateResponse<int>>(globalStateId, MicroflowControlKeys.Read);
             }
 
             int projState = await projStateTask;

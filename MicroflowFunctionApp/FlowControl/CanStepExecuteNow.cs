@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Microflow.Helpers;
 using Microflow.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
@@ -18,11 +19,11 @@ namespace Microflow.FlowControl
             CanExecuteNowObject canExecuteNowObject = context.GetInput<CanExecuteNowObject>();
             try
             {
-                EntityId countId = new EntityId(nameof(Counter), canExecuteNowObject.RunId + canExecuteNowObject.StepNumber);
+                EntityId countId = new EntityId(MicroflowEntities.CanExecuteNowCounter, canExecuteNowObject.RunId + canExecuteNowObject.StepNumber);
 
                 using (await context.LockAsync(countId))
                 {
-                    int parentCompletedCount = await context.CallEntityAsync<int>(countId, "get");
+                    int parentCompletedCount = await context.CallEntityAsync<int>(countId, MicroflowCounterKeys.Read);
 
                     if (parentCompletedCount + 1 >= canExecuteNowObject.ParentCount)
                     {
@@ -32,7 +33,7 @@ namespace Microflow.FlowControl
                         return new CanExecuteResult() { CanExecute = true, StepNumber = canExecuteNowObject.StepNumber };
                     }
 
-                    await context.CallEntityAsync<int>(countId, "add");
+                    await context.CallEntityAsync<int>(countId, MicroflowCounterKeys.Add);
 
                     return new CanExecuteResult() { CanExecute = false, StepNumber = canExecuteNowObject.StepNumber };
                 }
@@ -50,18 +51,18 @@ namespace Microflow.FlowControl
         /// <summary>
         /// Durable entity to keep a count for each run and each step in the run
         /// </summary>
-        [FunctionName("Counter")]
-        public static void Counter([EntityTrigger] IDurableEntityContext ctx)
+        [FunctionName(MicroflowEntities.CanExecuteNowCounter)]
+        public static void CanExecuteNowCounter([EntityTrigger] IDurableEntityContext ctx)
         {
             switch (ctx.OperationName.ToLowerInvariant())
             {
-                case "add":
+                case MicroflowCounterKeys.Add:
                     ctx.SetState(ctx.GetState<int>() + 1);
                     break;
                 //case "reset":
                 //    ctx.SetState(0);
                 //    break;
-                case "get":
+                case MicroflowCounterKeys.Read:
                     ctx.Return(ctx.GetState<int>());
                     break;
                 //case "delete":

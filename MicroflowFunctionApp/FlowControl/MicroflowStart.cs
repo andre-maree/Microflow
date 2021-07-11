@@ -110,17 +110,17 @@ namespace Microflow.FlowControl
         {
             EntityId runStateId = new EntityId(nameof(ProjectState), projectName);
 
-            if (cmd.Equals("pause", StringComparison.OrdinalIgnoreCase))
+            if (cmd.Equals(MicroflowControlKeys.Pause, StringComparison.OrdinalIgnoreCase))
             {
-                await client.SignalEntityAsync(runStateId, "pause");
+                await client.SignalEntityAsync(runStateId, MicroflowControlKeys.Pause);
             }
-            else if (cmd.Equals("run", StringComparison.OrdinalIgnoreCase))
+            else if (cmd.Equals(MicroflowControlKeys.Ready, StringComparison.OrdinalIgnoreCase))
             {
-                await client.SignalEntityAsync(runStateId, "ready");
+                await client.SignalEntityAsync(runStateId, MicroflowControlKeys.Pause);
             }
-            else if (cmd.Equals("stop", StringComparison.OrdinalIgnoreCase))
+            else if (cmd.Equals(MicroflowControlKeys.Stop, StringComparison.OrdinalIgnoreCase))
             {
-                await client.SignalEntityAsync(runStateId, "stop");
+                await client.SignalEntityAsync(runStateId, MicroflowControlKeys.Stop);
             }
 
             return new HttpResponseMessage(HttpStatusCode.OK);
@@ -136,17 +136,17 @@ namespace Microflow.FlowControl
         {
             EntityId runStateId = new EntityId(nameof(GlobalState), globalKey);
 
-            if (cmd.Equals("pause", StringComparison.OrdinalIgnoreCase))
+            if (cmd.Equals(MicroflowControlKeys.Pause, StringComparison.OrdinalIgnoreCase))
             {
-                await client.SignalEntityAsync(runStateId, "pause");
+                await client.SignalEntityAsync(runStateId, MicroflowControlKeys.Pause);
             }
-            else if (cmd.Equals("run", StringComparison.OrdinalIgnoreCase))
+            else if (cmd.Equals(MicroflowControlKeys.Ready, StringComparison.OrdinalIgnoreCase))
             {
-                await client.SignalEntityAsync(runStateId, "ready");
+                await client.SignalEntityAsync(runStateId, MicroflowControlKeys.Ready);
             }
-            else if (cmd.Equals("stop", StringComparison.OrdinalIgnoreCase))
+            else if (cmd.Equals(MicroflowControlKeys.Stop, StringComparison.OrdinalIgnoreCase))
             {
-                await client.SignalEntityAsync(runStateId, "stop");
+                await client.SignalEntityAsync(runStateId, MicroflowControlKeys.Stop);
             }
 
             return new HttpResponseMessage(HttpStatusCode.OK);
@@ -155,44 +155,35 @@ namespace Microflow.FlowControl
         /// <summary>
         /// Durable entity check and set if the global state
         /// </summary>
-        [FunctionName("GlobalState")]
+        [FunctionName(MicroflowStateKeys.GlobalStateId)]
         public static void GlobalState([EntityTrigger] IDurableEntityContext ctx)
         {
-            switch (ctx.OperationName)
-            {
-                case "ready":
-                    ctx.SetState(0);
-                    break;
-                case "pause":
-                    ctx.SetState(1);
-                    break;
-                case "stop":
-                    ctx.SetState(2);
-                    break;
-                case "get":
-                    ctx.Return(ctx.GetState<int>());
-                    break;
-            }
+            ctx.ResolveState();
         }
 
         /// <summary>
         /// Durable entity check and set project state
         /// </summary>
-        [FunctionName("ProjectState")]
+        [FunctionName(MicroflowStateKeys.ProjectStateId)]
         public static void ProjectState([EntityTrigger] IDurableEntityContext ctx)
+        {
+            ctx.ResolveState();
+        }
+
+        private static void ResolveState(this IDurableEntityContext ctx)
         {
             switch (ctx.OperationName)
             {
-                case "ready":
+                case MicroflowControlKeys.Ready:
                     ctx.SetState(0);
                     break;
-                case "pause":
+                case MicroflowControlKeys.Pause:
                     ctx.SetState(1);
                     break;
-                case "stop":
+                case MicroflowControlKeys.Stop:
                     ctx.SetState(2);
                     break;
-                case "get":
+                case MicroflowControlKeys.Read:
                     ctx.Return(ctx.GetState<int>());
                     break;
             }
