@@ -345,7 +345,7 @@ namespace Microflow.FlowControl
         /// </summary>
         [FunctionName("Microflow_ProjectControl")]
         public static async Task<HttpResponseMessage> ProjectControl([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-                                                                  Route = "ProjectControl/{projectName}/{cmd}")] HttpRequestMessage req,
+                                                                  Route = "ProjectControl/{cmd}/{projectName}")] HttpRequestMessage req,
                                                               [DurableClient] IDurableEntityClient client, string projectName, string cmd)
         {
             EntityId runStateId = new EntityId(nameof(ProjectState), projectName);
@@ -371,7 +371,7 @@ namespace Microflow.FlowControl
         /// </summary>
         [FunctionName("Microflow_GlobalControl")]
         public static async Task<HttpResponseMessage> GlobalControl([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-                                                                  Route = "GlobalControl/{globalKey}/{cmd}")] HttpRequestMessage req,
+                                                                  Route = "GlobalControl/{cmd}/{globalKey}")] HttpRequestMessage req,
                                                                   [DurableClient] IDurableEntityClient client, string globalKey, string cmd)
         {
             EntityId runStateId = new EntityId(nameof(GlobalState), globalKey);
