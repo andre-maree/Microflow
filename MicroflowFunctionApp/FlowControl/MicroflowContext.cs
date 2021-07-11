@@ -49,10 +49,8 @@ namespace Microflow.FlowControl
 
             if (projState == 0 && globalState == 0)
             {
-                MicroflowContext microflowContext = new MicroflowContext(MicroflowDurableContext, ProjectRun, Logger);
-
                 // call out to micro-services orchestration
-                await microflowContext.RunMicroflowStep();
+                await RunMicroflowStep();
             }
             else if (projState == 1 || globalState == 1)
             {
@@ -96,10 +94,8 @@ namespace Microflow.FlowControl
                 //context.SetCustomStatus("running");
                 if (projState == 0 && globalState == 0)
                 {
-                    MicroflowContext microflowContext = new MicroflowContext(MicroflowDurableContext, ProjectRun, Logger);
-
                     // call out to micro-services orchestration
-                    await microflowContext.RunMicroflowStep();
+                    await RunMicroflowStep();
                 }
             }
         }
