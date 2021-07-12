@@ -64,7 +64,7 @@ namespace MicroflowConsole
 
                 // call microflow from microflow
                 project.Steps[4].CalloutUrl = baseUrl + $"/api/start/{project2.ProjectName}";
-                //project.Steps[3].AsynchronousPollingEnabled = false;
+                //project.Steps[4].AsynchronousPollingEnabled = false;
                 // call Microflow insertorupdateproject when something ischanges in the workflow, but do not always call this when corcurrent multiple workflows
                 var result = HttpClient.PostAsJsonAsync(baseUrl + "/api/insertorupdateproject/global_test_key", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
                 //project.Steps[0].CalloutUrl = project.Steps[5].CalloutUrl;
@@ -114,10 +114,10 @@ namespace MicroflowConsole
 
         Dictionary<string, string> mergeFields = new Dictionary<string, string>();
             // use 
-            //mergeFields.Add("default_post_url", "https://reqbin.com/echo/post/json" + querystring);
+            mergeFields.Add("default_post_url", "https://reqbin.com/echo/post/json");// + querystring);
             // set the callout url to the new SleepTestOrchestrator http normal function url
             //mergeFields.Add("default_post_url", baseUrl + "/api/SleepTestOrchestrator_Function");// + querystring);
-            mergeFields.Add("default_post_url", baseUrl + "/api/testpost" + querystring);
+            //mergeFields.Add("default_post_url", baseUrl + "/api/testpost" + querystring);
 
             return mergeFields;
         }

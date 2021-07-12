@@ -59,6 +59,7 @@ namespace Microflow.Helpers
         //    await table.ExecuteAsync(mergeOperation);
         //}
 
+        // TODO: moce out to api app
         public static string GetProjectAsJson(string projectName)
         {
             List<HttpCallWithRetries> steps = GetStepsHttpCallWithRetries(projectName);

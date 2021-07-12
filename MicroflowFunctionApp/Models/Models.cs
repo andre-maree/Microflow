@@ -25,6 +25,7 @@ namespace Microflow.Models
         public int Loop { get; set; } = 1;
         public int CurrentLoop { get; set; } = 1;
         public string OrchestratorInstanceId { get; set; }
+        public string BaseUrl { get; set; }
     }
 
     /// <summary>
