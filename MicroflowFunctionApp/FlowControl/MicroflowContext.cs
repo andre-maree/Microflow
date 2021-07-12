@@ -12,32 +12,30 @@ namespace Microflow.FlowControl
 {
     public class MicroflowContext : IMicroflowContext
     {
-        public IHttpCallWithRetries HttpCallWithRetries { get => _httpCallWithRetries; set => _httpCallWithRetries = value; }
-        public IHttpCallWithRetries _httpCallWithRetries;
+        public IHttpCallWithRetries HttpCallWithRetries { get; set; }
 
-        private IDurableOrchestrationContext MicroflowDurableContext { get => _microflowContext; set => _microflowContext = value; }
-        private IProjectRun ProjectRun { get => _projectRun; set => _projectRun = value; }
-        private string LogRowKey => _logRowKey;
-        private IMicroflowHttpResponse MicroflowHttpResponse { get => _microflowHttpResponse; set => _microflowHttpResponse = value; }
-        private IList<Task> MicroflowTasks { get => _microFlowTasks; set => _microFlowTasks = value; }
-        private ILogger Logger { get => _logger; set => _logger = value; }
+        private IDurableOrchestrationContext MicroflowDurableContext { get; set; }
+        private IProjectRun ProjectRun { get; set; }
+        private IMicroflowHttpResponse MicroflowHttpResponse { get; set; }
+        private IList<Task> MicroflowTasks { get; set; }
+        private ILogger Logger { get; set; }
+        private string LogRowKey { get; }
 
-        private IDurableOrchestrationContext _microflowContext;
-        private IProjectRun _projectRun;
-        private IMicroflowHttpResponse _microflowHttpResponse;
-        private IList<Task> _microFlowTasks;
-        private ILogger _logger;
-        private readonly string _logRowKey;
-
+        /// <summary>
+        /// MicroflowContext contructor creates all needed class properties used in step execution
+        /// </summary>
         public MicroflowContext(IDurableOrchestrationContext microflowContext, IProjectRun projectRun, ILogger logger)
         {
             MicroflowDurableContext = microflowContext;
             ProjectRun = projectRun;
-            _logRowKey = MicroflowTableHelper.GetTableLogRowKeyDescendingByDate(MicroflowDurableContext.CurrentUtcDateTime, MicroflowDurableContext.NewGuid().ToString());
+            LogRowKey = MicroflowTableHelper.GetTableLogRowKeyDescendingByDate(MicroflowDurableContext.CurrentUtcDateTime, MicroflowDurableContext.NewGuid().ToString());
             MicroflowTasks = new List<Task>();
             Logger = MicroflowDurableContext.CreateReplaySafeLogger(logger);
         }
 
+        /// <summary>
+        /// Main entry point for step execution
+        /// </summary>
         public async Task RunMicroflow()
         {
             EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectStateId, ProjectRun.ProjectName);
@@ -47,16 +45,21 @@ namespace Microflow.FlowControl
             int projState = await projStateTask;
             int globalState = await globalSateTask;
 
+            // check project and global states, run step if both states are ready
             if (projState == 0 && globalState == 0)
             {
                 // call out to micro-services orchestration
                 await RunMicroflowStep();
             }
+            // if project or global key state is paused, then pause this step, and wait and poll states by timer
             else if (projState == 1 || globalState == 1)
             {
+                // 7 days in paused state till exit
                 DateTime endDate = MicroflowDurableContext.CurrentUtcDateTime.AddDays(7);
+                // start interval seconds
                 int count = 15;
-                int max = 60;
+                // max interval seconds
+                int max = 300; // 5 mins
 
                 using (CancellationTokenSource cts = new CancellationTokenSource())
                 {
@@ -64,17 +67,17 @@ namespace Microflow.FlowControl
                     {
                         while (MicroflowDurableContext.CurrentUtcDateTime < endDate)
                         {
-                            //context.SetCustomStatus("paused");
-
                             DateTime deadline = MicroflowDurableContext.CurrentUtcDateTime.Add(TimeSpan.FromSeconds(count < max ? count : max));
                             await MicroflowDurableContext.CreateTimer(deadline, cts.Token);
                             count++;
 
+                            // timer wait completed, refresh pause states
                             projStateTask = MicroflowDurableContext.CallEntityAsync<int>(projStateId, MicroflowControlKeys.Read);
                             globalSateTask = MicroflowDurableContext.CallEntityAsync<int>(globalStateId, MicroflowControlKeys.Read);
                             projState = await projStateTask;
                             globalState = await globalSateTask;
 
+                            // check pause states, exit while if not paused
                             if (projState != 1 && globalState != 1)
                             {
                                 break;
@@ -91,7 +94,7 @@ namespace Microflow.FlowControl
                     }
                 }
 
-                //context.SetCustomStatus("running");
+                // if project and global key state is ready, then continue to run step
                 if (projState == 0 && globalState == 0)
                 {
                     // call out to micro-services orchestration
@@ -114,6 +117,7 @@ namespace Microflow.FlowControl
                 HttpCallWithRetries.RunId = ProjectRun.RunObject.RunId;
                 HttpCallWithRetries.MainOrchestrationId = ProjectRun.OrchestratorInstanceId;
                 HttpCallWithRetries.GlobalKey = ProjectRun.RunObject.GlobalKey;
+                HttpCallWithRetries.BaseUrl = ProjectRun.BaseUrl;
 
                 // log start of step
                 LogStepStart();
@@ -181,7 +185,7 @@ namespace Microflow.FlowControl
 
                 List<Task<CanExecuteResult>> canExecuteTasks = new List<Task<CanExecuteResult>>();
 
-                for (int i = 0; i < stepsAndCounts.Length; i = i + 2)
+                for (int i = 0; i < stepsAndCounts.Length; i += 2)
                 {
                     // check parentCount
                     // execute immediately if parentCount is 1
@@ -190,8 +194,9 @@ namespace Microflow.FlowControl
                     if (parentCount < 2)
                     {
                         // stepsAndCounts[i] is stepNumber, stepsAndCounts[i + 1] is parentCount
-                        ProjectRun.RunObject = new RunObject() { 
-                            RunId = ProjectRun.RunObject.RunId, 
+                        ProjectRun.RunObject = new RunObject()
+                        {
+                            RunId = ProjectRun.RunObject.RunId,
                             StepNumber = stepsAndCounts[i],
                             GlobalKey = ProjectRun.RunObject.GlobalKey
                         };
@@ -225,7 +230,8 @@ namespace Microflow.FlowControl
         /// </summary>
         private async Task ProcessStepCanExecuteTasks(IList<Task<CanExecuteResult>> canExecuteTasks)
         {
-            for (int i = 0; i < canExecuteTasks.Count;)
+            // when a task compltes, process it and remove it from the task list
+            while (canExecuteTasks.Count > 0)
             {
                 Task<CanExecuteResult> canExecuteTask = await Task.WhenAny(canExecuteTasks);
                 CanExecuteResult result = canExecuteTask.Result;
@@ -253,7 +259,7 @@ namespace Microflow.FlowControl
         [FunctionName(MicroflowEntities.StepCounter)]
         public static void StepCounter([EntityTrigger] IDurableEntityContext ctx)
         {
-            switch (ctx.OperationName.ToLowerInvariant())
+            switch (ctx.OperationName)
             {
                 case MicroflowCounterKeys.Add:
                     ctx.SetState(ctx.GetState<int>() + 1);
@@ -309,7 +315,7 @@ namespace Microflow.FlowControl
                                   string.IsNullOrWhiteSpace(MicroflowHttpResponse.Message) ? null : MicroflowHttpResponse.Message)
             ));
 
-            Logger.LogWarning($"Step {HttpCallWithRetries.RowKey} done at {DateTime.Now.ToString("HH:mm:ss")}  -  Run ID: {ProjectRun.RunObject.RunId}");
+            Logger.LogWarning($"Step {HttpCallWithRetries.RowKey} done at {MicroflowDurableContext.CurrentUtcDateTime.ToString("HH:mm:ss")}  -  Run ID: {ProjectRun.RunObject.RunId}");
         }
 
         /// <summary>
@@ -317,7 +323,7 @@ namespace Microflow.FlowControl
         /// </summary>
         private void LogStepFail()
         {
-            Logger.LogError($"Step {HttpCallWithRetries.RowKey} failed at {DateTime.Now.ToString("HH:mm:ss")}  -  Run ID: {ProjectRun.RunObject.RunId}");
+            Logger.LogError($"Step {HttpCallWithRetries.RowKey} failed at {MicroflowDurableContext.CurrentUtcDateTime.ToString("HH:mm:ss")}  -  Run ID: {ProjectRun.RunObject.RunId}");
 
             MicroflowTasks.Add(MicroflowDurableContext.CallActivityAsync(
                 "LogStep",
@@ -339,7 +345,7 @@ namespace Microflow.FlowControl
         /// </summary>
         private async Task HandleCalloutException(Exception ex)
         {
-            Logger.LogWarning($"Step {HttpCallWithRetries.RowKey} an error result at {DateTime.Now.ToString("HH:mm:ss")}  -  Run ID: {ProjectRun.RunObject.RunId}");
+            Logger.LogWarning($"Step {HttpCallWithRetries.RowKey} an error result at {MicroflowDurableContext.CurrentUtcDateTime.ToString("HH:mm:ss")}  -  Run ID: {ProjectRun.RunObject.RunId}");
 
             if (ex.InnerException != null)
             {
@@ -359,8 +365,8 @@ namespace Microflow.FlowControl
                                       ProjectRun.RunObject.GlobalKey,
                                       false,
                                       -408,
-                                      string.IsNullOrWhiteSpace(HttpCallWithRetries.CallBackAction) 
-                                        ? "action timeout" 
+                                      string.IsNullOrWhiteSpace(HttpCallWithRetries.CallBackAction)
+                                        ? "callout timeout"
                                         : $"action {HttpCallWithRetries.CallBackAction} timed out, StopOnActionFailed is {HttpCallWithRetries.StopOnActionFailed}")
                 ));
             }

@@ -7,6 +7,7 @@
         string OrchestratorInstanceId { get; set; }
         int PausedStepId { get; set; }
         string ProjectName { get; set; }
+        string BaseUrl { get; set; }
         RunObject RunObject { get; set; }
     }
 }

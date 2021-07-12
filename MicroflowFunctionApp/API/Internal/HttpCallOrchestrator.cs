@@ -7,7 +7,7 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 
 namespace Microflow.API.Internal
 {
-    public static class MicroflowInternalAPI
+    public static class MicroflowInternalApi
     {
         /// <summary>
         /// Inline http call, wait for response

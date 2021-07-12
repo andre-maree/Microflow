@@ -135,7 +135,7 @@ namespace Microflow.Helpers
             for (int i = 1; i <= projectRun.Loop; i++)
             {
                 // get the top container step from table storage (from PrepareWorkflow)
-                HttpCallWithRetries httpCallWithRetries = await context.CallActivityAsync<HttpCallWithRetries>("GetStep", projectRun);
+                Task<HttpCallWithRetries> httpTask = context.CallActivityAsync<HttpCallWithRetries>("GetStep", projectRun);
 
                 string guid = context.NewGuid().ToString();
 
@@ -146,11 +146,11 @@ namespace Microflow.Helpers
                 // pass in the current loop count so it can be used downstream/passed to the micro-services
                 projectRun.CurrentLoop = i;
 
-                // List<(string StepId, int ParentCount)> subSteps = JsonSerializer.Deserialize<List<(string StepId, int ParentCount)>>(httpCallWithRetries.SubSteps);
-
                 List<Task> subTasks = new List<Task>();
 
-                string[] stepsAndCounts = httpCallWithRetries.SubSteps.Split(new char[2] { ',', ';' }, System.StringSplitOptions.RemoveEmptyEntries);
+                HttpCallWithRetries httpCallWithRetries = await httpTask;
+
+                string[] stepsAndCounts = httpCallWithRetries.SubSteps.Split(new char[2] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 
                 for (int j = 0; j < stepsAndCounts.Length; j += 2)
                 {
@@ -175,9 +175,9 @@ namespace Microflow.Helpers
         /// </summary>
         public static async Task<bool> CheckAndWaitForReadyToRun(this IDurableOrchestrationContext context, string projectName, ILogger log, string globalKey = null)
         {
-            EntityId runState = new EntityId(MicroflowStateKeys.ProjectStateId, projectName);
-            Task<int> projStateTask = context.CallEntityAsync<int>(runState, MicroflowControlKeys.Read);
+            EntityId runStateId = new EntityId(MicroflowStateKeys.ProjectStateId, projectName);
 
+            Task<int> projStateTask = context.CallEntityAsync<int>(runStateId, MicroflowControlKeys.Read);
             Task<EntityStateResponse<int>> globStateTask = null;
 
             if (!string.IsNullOrWhiteSpace(globalKey))
@@ -187,12 +187,12 @@ namespace Microflow.Helpers
             }
 
             int projState = await projStateTask;
-
             int globState = 0;
+
             if (globStateTask != null)
             {
-                await globStateTask;
-                globState = globStateTask.Result.EntityState;
+                EntityStateResponse<int> globStateRes = await globStateTask;
+                globState = globStateRes.EntityState;
             }
 
             if (projState != 0 || globState != 0)

@@ -134,6 +134,9 @@ namespace Microflow.Models
 
         [IgnoreProperty]
         public string MainOrchestrationId { get; set; }
+
+        [IgnoreProperty]
+        public string BaseUrl { get; set; }
     }
 
     /// <summary>

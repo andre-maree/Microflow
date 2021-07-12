@@ -16,14 +16,14 @@ namespace Microflow.Helpers
         public static async Task StartMicroflowProject(this IDurableOrchestrationContext context, ILogger log, ProjectRun projectRun)
         {
             // log start
-            string logRowKey = MicroflowTableHelper.GetTableLogRowKeyDescendingByDate(context.CurrentUtcDateTime, "_" + projectRun.OrchestratorInstanceId);
+            string logRowKey = MicroflowTableHelper.GetTableLogRowKeyDescendingByDate(context.CurrentUtcDateTime, $"_{projectRun.OrchestratorInstanceId}");
 
-            LogOrchestrationEntity logEntity = await context.LogOrchestrationStartAsync(log, projectRun, logRowKey);
+            await context.LogOrchestrationStartAsync(log, projectRun, logRowKey);
 
             await context.MicroflowStartProjectRun(log, projectRun);
 
             // log to table workflow completed
-            context.LogOrchestrationEnd(projectRun, logRowKey, out logEntity, out Task logTask);
+            Task logTask = context.LogOrchestrationEnd(projectRun, logRowKey);
 
             context.SetProjectStateReady(projectRun);
 
@@ -91,25 +91,25 @@ namespace Microflow.Helpers
             return projectRun;
         }
 
-        public static void LogOrchestrationEnd(this IDurableOrchestrationContext context, ProjectRun projectRun, string logRowKey, out LogOrchestrationEntity logEntity, out Task logTask)
+        public static async Task LogOrchestrationEnd(this IDurableOrchestrationContext context, ProjectRun projectRun, string logRowKey)
         {
-            logEntity = new LogOrchestrationEntity(false,
+            var logEntity = new LogOrchestrationEntity(false,
                                                                    projectRun.ProjectName,
                                                                    logRowKey,
-                                                                   $"{Environment.MachineName} - {projectRun.ProjectName} completed successfully",
+                                                                   $"{projectRun.ProjectName} completed successfully",
                                                                    context.CurrentUtcDateTime,
                                                                    projectRun.OrchestratorInstanceId,
                                                                    projectRun.RunObject.GlobalKey);
 
-            logTask = context.CallActivityAsync("LogOrchestration", logEntity);
+            await context.CallActivityAsync("LogOrchestration", logEntity);
         }
 
-        public static async Task<LogOrchestrationEntity> LogOrchestrationStartAsync(this IDurableOrchestrationContext context, ILogger log, ProjectRun projectRun, string logRowKey)
+        public static async Task LogOrchestrationStartAsync(this IDurableOrchestrationContext context, ILogger log, ProjectRun projectRun, string logRowKey)
         {
             LogOrchestrationEntity logEntity = new LogOrchestrationEntity(true,
                                                                        projectRun.ProjectName,
                                                                        logRowKey,
-                                                                       $"{Environment.MachineName} - {projectRun.ProjectName} started...",
+                                                                       $"{projectRun.ProjectName} started...",
                                                                        context.CurrentUtcDateTime,
                                                                        projectRun.OrchestratorInstanceId,
                                                                        projectRun.RunObject.GlobalKey);
@@ -117,8 +117,6 @@ namespace Microflow.Helpers
             await context.CallActivityAsync("LogOrchestration", logEntity);
 
             log.LogInformation($"Started orchestration with ID = '{context.InstanceId}', Project = '{projectRun.ProjectName}'");
-
-            return logEntity;
         }
     }
 }

@@ -54,7 +54,7 @@ namespace Microflow.FlowControl
         [FunctionName(MicroflowEntities.CanExecuteNowCounter)]
         public static void CanExecuteNowCounter([EntityTrigger] IDurableEntityContext ctx)
         {
-            switch (ctx.OperationName.ToLowerInvariant())
+            switch (ctx.OperationName)
             {
                 case MicroflowCounterKeys.Add:
                     ctx.SetState(ctx.GetState<int>() + 1);

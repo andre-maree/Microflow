@@ -35,7 +35,7 @@ namespace Microflow.Helpers
         public static DurableHttpRequest CreateMicroflowDurableHttpRequest(this HttpCall httpCall, string instanceId)
         {
             DurableHttpRequest newDurableHttpRequest;
-            string baseUrl = $"http://{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}";
+            string baseUrl = httpCall.BaseUrl;
 
 
             string callback = string.IsNullOrWhiteSpace(httpCall.CallBackAction)

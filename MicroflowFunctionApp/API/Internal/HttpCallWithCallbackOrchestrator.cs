@@ -47,7 +47,7 @@ namespace Microflow.API.Internal
 
                 // TODO: always use https
 
-                log.LogCritical($"Waiting for callback: {Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}/api/webhook/{httpCall.CallBackAction}/{context.InstanceId}/{httpCall.RowKey}");
+                log.LogCritical($"Waiting for callback: {httpCall.BaseUrl}/api/webhook/{httpCall.CallBackAction}/{context.InstanceId}/{httpCall.RowKey}");
                 // wait for the external event, set the timeout
                 HttpResponseMessage actionResult = await context.WaitForExternalEvent<HttpResponseMessage>(httpCall.CallBackAction, TimeSpan.FromSeconds(httpCall.ActionTimeoutSeconds));
 
@@ -58,7 +58,7 @@ namespace Microflow.API.Internal
                 // check for action failed
                 if (actionResult.IsSuccessStatusCode)
                 {
-                    log.LogWarning($"Step {httpCall.RowKey} callback action {httpCall.CallBackAction} successful at {DateTime.Now.ToString("HH:mm:ss")}");
+                    log.LogWarning($"Step {httpCall.RowKey} callback action {httpCall.CallBackAction} successful at {context.CurrentUtcDateTime.ToString("HH:mm:ss")}");
 
                     microflowHttpResponse.HttpResponseStatusCode = (int)actionResult.StatusCode;
 
@@ -118,7 +118,7 @@ namespace Microflow.API.Internal
                 }
             }
 
-            throw new Exception("Unknown error for step " + httpCall.RowKey);
+            return null;
         }
     }
 }
