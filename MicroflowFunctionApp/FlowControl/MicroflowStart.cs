@@ -65,6 +65,7 @@ namespace Microflow.FlowControl
         /// This is called from Microflow_HttpStart, it does the looping and calls the ExecuteStep sub orchestration passing in the top step
         /// </summary>
         /// <returns></returns>
+        [Deterministic]
         [FunctionName("Start")]
         public static async Task Start([OrchestrationTrigger] IDurableOrchestrationContext context,
                                        ILogger inLog)

@@ -54,11 +54,11 @@ namespace Microflow.API.External
 
                 MicroflowPostData result = JsonSerializer.Deserialize<MicroflowPostData>(r);
 
-                if (result.StepNumber == 39 && result.ProjectName.Equals("xxx"))
+                if ((result.StepNumber == 9 || result.StepNumber == 8 || result.StepNumber == 10) && result.ProjectName.Equals("xxx"))
                 {
                     //HttpResponseMessage result2 = await MicroflowHttpClient.HttpClient.GetAsync($"{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}/start/");
                     //var kgkg = 0;
-                    await Task.Delay(120000);
+                    await Task.Delay(9000);
                 }
             }
             else

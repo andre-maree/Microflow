@@ -12,6 +12,7 @@ namespace Microflow.FlowControl
         /// <summary>
         /// Recursive step execution and sub-step can execute now calculations
         /// </summary>
+        [Deterministic]
         [FunctionName("ExecuteStep")]
         public static async Task ExecuteStep([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger inLog)
         {

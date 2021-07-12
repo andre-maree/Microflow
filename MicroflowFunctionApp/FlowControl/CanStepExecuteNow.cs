@@ -13,6 +13,7 @@ namespace Microflow.FlowControl
         /// Calculate if a step is ready to execute by locking and counting the completed parents - for each run and each step in the run
         /// </summary>
         /// <returns>Bool to indicate if this step request can be executed or not</returns>
+        [Deterministic]
         [FunctionName("CanExecuteNow")]
         public static async Task<CanExecuteResult> CanExecuteNow([OrchestrationTrigger] IDurableOrchestrationContext context)
         {

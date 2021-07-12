@@ -13,6 +13,7 @@ namespace Microflow.Helpers
         /// Start a new project run
         /// </summary>
         /// <returns></returns>
+        [Deterministic]
         public static async Task StartMicroflowProject(this IDurableOrchestrationContext context, ILogger log, ProjectRun projectRun)
         {
             // log start
@@ -91,6 +92,7 @@ namespace Microflow.Helpers
             return projectRun;
         }
 
+        [Deterministic]
         public static async Task LogOrchestrationEnd(this IDurableOrchestrationContext context, ProjectRun projectRun, string logRowKey)
         {
             var logEntity = new LogOrchestrationEntity(false,
@@ -104,6 +106,7 @@ namespace Microflow.Helpers
             await context.CallActivityAsync("LogOrchestration", logEntity);
         }
 
+        [Deterministic]
         public static async Task LogOrchestrationStartAsync(this IDurableOrchestrationContext context, ILogger log, ProjectRun projectRun, string logRowKey)
         {
             LogOrchestrationEntity logEntity = new LogOrchestrationEntity(true,

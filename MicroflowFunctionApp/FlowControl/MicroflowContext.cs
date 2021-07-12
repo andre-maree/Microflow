@@ -36,6 +36,7 @@ namespace Microflow.FlowControl
         /// <summary>
         /// Main entry point for step execution
         /// </summary>
+        [Deterministic]
         public async Task RunMicroflow()
         {
             EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectStateId, ProjectRun.ProjectName);
@@ -59,7 +60,7 @@ namespace Microflow.FlowControl
                 // start interval seconds
                 int count = 15;
                 // max interval seconds
-                int max = 300; // 5 mins
+                const int max = 300; // 5 mins
 
                 using (CancellationTokenSource cts = new CancellationTokenSource())
                 {
@@ -106,6 +107,7 @@ namespace Microflow.FlowControl
         /// <summary>
         /// Do the step callout and process sub steps
         /// </summary>
+        [Deterministic]
         private async Task RunMicroflowStep()
         {
             try
@@ -175,6 +177,7 @@ namespace Microflow.FlowControl
         /// if substep parentCount = 1 call "ExecuteStep" immediately,
         /// else call "CanExecuteNow" to check concurrent parentCountCompleted
         /// </summary>
+        [Deterministic]
         private async Task ProcessSubSteps()
         {
             if (MicroflowHttpResponse.Success || !HttpCallWithRetries.StopOnActionFailed)
@@ -228,6 +231,7 @@ namespace Microflow.FlowControl
         /// Wait for the subStep canExeccuteTasks and process each result,
         /// if true call "ExecuteStep", else discard the subStep/ignore
         /// </summary>
+        [Deterministic]
         private async Task ProcessStepCanExecuteTasks(IList<Task<CanExecuteResult>> canExecuteTasks)
         {
             // when a task compltes, process it and remove it from the task list
@@ -282,6 +286,7 @@ namespace Microflow.FlowControl
         /// <summary>
         /// Log the start of the step
         /// </summary>
+        [Deterministic]
         private void LogStepStart()
         {
             MicroflowTasks.Add(MicroflowDurableContext.CallActivityAsync(
@@ -299,6 +304,7 @@ namespace Microflow.FlowControl
         /// <summary>
         /// Log the end of the step
         /// </summary>
+        [Deterministic]
         private void LogStepEnd()
         {
             MicroflowTasks.Add(MicroflowDurableContext.CallActivityAsync(
@@ -321,6 +327,7 @@ namespace Microflow.FlowControl
         /// <summary>
         /// Log a fail of the step
         /// </summary>
+        [Deterministic]
         private void LogStepFail()
         {
             Logger.LogError($"Step {HttpCallWithRetries.RowKey} failed at {MicroflowDurableContext.CurrentUtcDateTime.ToString("HH:mm:ss")}  -  Run ID: {ProjectRun.RunObject.RunId}");
@@ -343,6 +350,7 @@ namespace Microflow.FlowControl
         /// <summary>
         /// Handle the step execution exception
         /// </summary>
+        [Deterministic]
         private async Task HandleCalloutException(Exception ex)
         {
             Logger.LogWarning($"Step {HttpCallWithRetries.RowKey} an error result at {MicroflowDurableContext.CurrentUtcDateTime.ToString("HH:mm:ss")}  -  Run ID: {ProjectRun.RunObject.RunId}");

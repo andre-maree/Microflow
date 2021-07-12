@@ -12,7 +12,7 @@ namespace MicroflowConsole
     {
         public static readonly HttpClient HttpClient = new HttpClient();
         private static string baseUrl = "http://localhost:7071";
-        //private static string baseUrl = "https://microflowappxxxxxxxxxxxxxxxxxxx.azurewebsites.net";
+        //private static string baseUrl = "https://microflowappxxxxxxxxxxxxxxxxx.azurewebsites.net";
 
         static async Task Main(string[] args)
         {
@@ -114,10 +114,10 @@ namespace MicroflowConsole
 
         Dictionary<string, string> mergeFields = new Dictionary<string, string>();
             // use 
-            mergeFields.Add("default_post_url", "https://reqbin.com/echo/post/json");// + querystring);
+            //mergeFields.Add("default_post_url", "https://reqbin.com/echo/post/json");// + querystring);
             // set the callout url to the new SleepTestOrchestrator http normal function url
             //mergeFields.Add("default_post_url", baseUrl + "/api/SleepTestOrchestrator_Function");// + querystring);
-            //mergeFields.Add("default_post_url", baseUrl + "/api/testpost" + querystring);
+            mergeFields.Add("default_post_url", baseUrl + "/api/testpost" + querystring);
 
             return mergeFields;
         }

@@ -14,6 +14,7 @@ namespace Microflow.API.Internal
         /// <summary>
         /// Does the call out and then waits for the callback
         /// </summary>
+        [Deterministic]
         [FunctionName("HttpCallWithCallbackOrchestrator")]
         public static async Task<MicroflowHttpResponse> HttpCallWithCallback([OrchestrationTrigger] IDurableOrchestrationContext context,
                                                                              ILogger inLog)
@@ -47,7 +48,7 @@ namespace Microflow.API.Internal
 
                 // TODO: always use https
 
-                log.LogCritical($"Waiting for callback: {httpCall.BaseUrl}/api/webhook/{httpCall.CallBackAction}/{context.InstanceId}/{httpCall.RowKey}");
+                log.LogCritical($"Waiting for callback: https://{httpCall.BaseUrl}/api/webhook/{httpCall.CallBackAction}/{context.InstanceId}/{httpCall.RowKey}");
                 // wait for the external event, set the timeout
                 HttpResponseMessage actionResult = await context.WaitForExternalEvent<HttpResponseMessage>(httpCall.CallBackAction, TimeSpan.FromSeconds(httpCall.ActionTimeoutSeconds));
 

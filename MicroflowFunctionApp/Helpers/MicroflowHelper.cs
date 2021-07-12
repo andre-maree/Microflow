@@ -40,10 +40,11 @@ namespace Microflow.Helpers
         /// <summary>
         /// Work out what the global key is for this call
         /// </summary>
-        public static void CalculateGlobalKey(this HttpCall httpCall, string baseUrl)
+        [Deterministic]
+        public static void CalculateGlobalKey(this HttpCall httpCall)
         {
             // check if it is call to Microflow
-            if (httpCall.CalloutUrl.StartsWith($"{baseUrl}/api/start/"))
+            if (httpCall.CalloutUrl.StartsWith($"{httpCall.BaseUrl}/api/start/"))
             {
                 // parse query string
                 NameValueCollection data = new Uri(httpCall.CalloutUrl).ParseQueryString();
@@ -62,6 +63,7 @@ namespace Microflow.Helpers
                 }
             }
         }
+
         public static RetryOptions GetRetryOptions(this IHttpCallWithRetries httpCallWithRetries)
         {
             RetryOptions ops = new RetryOptions(TimeSpan.FromSeconds(httpCallWithRetries.RetryDelaySeconds), httpCallWithRetries.RetryMaxRetries);

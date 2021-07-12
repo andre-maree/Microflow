@@ -16,6 +16,7 @@ namespace Microflow.Helpers
 {
     public static class MicroflowProjectHelper
     {
+        [Deterministic]
         public static void SetProjectStateReady(this IDurableOrchestrationContext context, ProjectRun projectRun)
         {
             EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectStateId, projectRun.ProjectName);
@@ -129,6 +130,7 @@ namespace Microflow.Helpers
         /// does the looping and calls "ExecuteStep" for each top level step,
         /// by getting step -1 from table storage
         /// </summary>
+        [Deterministic]
         public static async Task MicroflowStartProjectRun(this IDurableOrchestrationContext context, ILogger log, ProjectRun projectRun)
         {
             // do the looping
@@ -173,6 +175,7 @@ namespace Microflow.Helpers
         /// <summary>
         /// Check if project ready is true, else wait with a timer (this is a durable monitor), called from start
         /// </summary>
+        [Deterministic]
         public static async Task<bool> CheckAndWaitForReadyToRun(this IDurableOrchestrationContext context, string projectName, ILogger log, string globalKey = null)
         {
             EntityId runStateId = new EntityId(MicroflowStateKeys.ProjectStateId, projectName);

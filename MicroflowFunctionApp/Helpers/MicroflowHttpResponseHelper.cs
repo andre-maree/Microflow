@@ -14,6 +14,7 @@ namespace Microflow.Helpers
         /// <summary>
         /// Used to handle callout responses
         /// </summary>
+        [Deterministic]
         public static MicroflowHttpResponse GetMicroflowResponse(this DurableHttpResponse durableHttpResponse)
         {
             int statusCode = (int)durableHttpResponse.StatusCode;
@@ -32,17 +33,16 @@ namespace Microflow.Helpers
                 : new MicroflowHttpResponse() {Success = true, HttpResponseStatusCode = statusCode};
         }
 
+        [Deterministic]
         public static DurableHttpRequest CreateMicroflowDurableHttpRequest(this HttpCall httpCall, string instanceId)
         {
             DurableHttpRequest newDurableHttpRequest;
-            string baseUrl = httpCall.BaseUrl;
-
 
             string callback = string.IsNullOrWhiteSpace(httpCall.CallBackAction)
                     ? ""
-                    : $"{baseUrl}/api/{httpCall.CallBackAction}/{instanceId}/{httpCall.RowKey}";
+                    : $"{httpCall.BaseUrl}/api/{httpCall.CallBackAction}/{instanceId}/{httpCall.RowKey}";
 
-            httpCall.CalculateGlobalKey(baseUrl);
+            httpCall.CalculateGlobalKey();
 
             if (!httpCall.IsHttpGet)
             {
@@ -98,6 +98,7 @@ namespace Microflow.Helpers
             return newDurableHttpRequest;
         }
 
+        [Deterministic]
         public static string ParseUrlMicroflowData(this HttpCall httpCall, string instanceId, string callbackUrl)
         {
             StringBuilder sb = new StringBuilder(httpCall.CalloutUrl);

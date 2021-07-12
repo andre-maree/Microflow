@@ -24,6 +24,7 @@ namespace Microflow.API.Internal
         /// <summary>
         /// Sleep for between random min and max seconds
         /// </summary>
+        [Deterministic]
         [FunctionName("SleepTestOrchestrator")]
         public static async Task SleepTestMethod(
             [OrchestrationTrigger] IDurableOrchestrationContext context,
