@@ -40,7 +40,7 @@ namespace Microflow.Helpers
 
             string callback = string.IsNullOrWhiteSpace(httpCall.CallBackAction)
                     ? ""
-                    : $"{httpCall.BaseUrl}/api/{httpCall.CallBackAction}/{instanceId}/{httpCall.RowKey}";
+                    : $"{httpCall.BaseUrl}/api/webhook/{httpCall.CallBackAction}/{instanceId}/{httpCall.RowKey}";
 
             httpCall.CalculateGlobalKey();
 

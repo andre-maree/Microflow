@@ -29,9 +29,9 @@ namespace MicroflowConsole
             //var terminate = await client.PostAsync("http://localhost:7071/runtime/webhooks/durabletask/instances/39806875-9c81-4736-81c0-9be562dae71e/terminate?reason=dfgd", null);
             try
             {
-                //var workflow = Tests.CreateTestWorkflow_SimpleSteps();
-                var workflow = Tests.CreateTestWorkflow_10StepsParallel();
-                var workflow2 = Tests.CreateTestWorkflow_Complex1();
+                var workflow = Tests.CreateTestWorkflow_SimpleSteps();
+                //var workflow = Tests.CreateTestWorkflow_10StepsParallel();
+                //var workflow2 = Tests.CreateTestWorkflow_Complex1();
                 //var workflow = Tests.CreateTestWorkflow_110Steps();
                 //var workflow2 = Tests.CreateTestWorkflow_110Steps();
 
@@ -46,7 +46,7 @@ namespace MicroflowConsole
                 var project2 = new MicroflowProject()
                 {
                     ProjectName = "yyy",
-                    Steps = workflow2,
+                    Steps = workflow,
                     Loop = 1,
                     MergeFields = CreateMergeFields()
                 };
@@ -63,12 +63,12 @@ namespace MicroflowConsole
                 var tasks = new List<Task<HttpResponseMessage>>();
 
                 // call microflow from microflow
-                project.Steps[4].CalloutUrl = baseUrl + $"/api/start/{project2.ProjectName}";
+                //project.Steps[0].CalloutUrl = baseUrl + $"/api/start/{project2.ProjectName}";
                 //project.Steps[4].AsynchronousPollingEnabled = false;
                 // call Microflow insertorupdateproject when something ischanges in the workflow, but do not always call this when corcurrent multiple workflows
                 var result = HttpClient.PostAsJsonAsync(baseUrl + "/api/insertorupdateproject/global_test_key", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
                 //project.Steps[0].CalloutUrl = project.Steps[5].CalloutUrl;
-                var result2 = HttpClient.PostAsJsonAsync(baseUrl + "/api/insertorupdateproject/global_test_key", project2, new JsonSerializerOptions(JsonSerializerDefaults.General));
+                //var result2 = HttpClient.PostAsJsonAsync(baseUrl + "/api/insertorupdateproject/global_test_key", project2, new JsonSerializerOptions(JsonSerializerDefaults.General));
                 //var content = await result.Content.ReadAsStringAsync();
                 // singleton workflow instance
                 //var result2 = await HttpClient.PostAsJsonAsync("http://localhost:7071/api/start/39806875-9c81-4736-81c0-9be562dae71e/", new ProjectBase() { ProjectName = "MicroflowDemo" }, new JsonSerializerOptions(JsonSerializerDefaults.General));
@@ -81,7 +81,7 @@ namespace MicroflowConsole
                 ////parallel multiple workflow instances
 
                 await result;
-                await result2;
+                //await result2;
 
                 for (int i = 0; i < 1; i++)
                 {
@@ -116,8 +116,8 @@ namespace MicroflowConsole
             // use 
             //mergeFields.Add("default_post_url", "https://reqbin.com/echo/post/json");// + querystring);
             // set the callout url to the new SleepTestOrchestrator http normal function url
-            //mergeFields.Add("default_post_url", baseUrl + "/api/SleepTestOrchestrator_Function");// + querystring);
-            mergeFields.Add("default_post_url", baseUrl + "/api/testpost" + querystring);
+            mergeFields.Add("default_post_url", baseUrl + "/api/SleepTestOrchestrator_Function");// + querystring);
+            //mergeFields.Add("default_post_url", baseUrl + "/api/testpost" + querystring);
 
             return mergeFields;
         }

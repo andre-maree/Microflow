@@ -58,7 +58,7 @@ namespace Microflow.API.Internal
             // test if the callback is done, do the call back if there is 1
             if (!string.IsNullOrWhiteSpace(postData.CallbackUrl))
             {
-                DurableHttpRequest req = new DurableHttpRequest(HttpMethod.Get, new Uri("http://" + postData.CallbackUrl));
+                DurableHttpRequest req = new DurableHttpRequest(HttpMethod.Get, new Uri(postData.CallbackUrl));
 
                 await context.CallHttpAsync(req);
             }
