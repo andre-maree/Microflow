@@ -24,6 +24,16 @@ Microflow functionality:
 - Microflow can run anywhere on Kubernetes when the Azure serverless environment is not available
 - Microflow is lightweight and will auto scale when there is a usage spike
 
+Controlling Execution with the Microflow Api calls: Ready, Pause, and Stop:
+cmd is 1 of the following commands: "ready", "pause", or "stop":
+
+- Microflow_GlobalControl: http://localhost:7071/api/GlobalControl/{cmd}/{globalKey}
+- Microflow_ProjectControl: http://localhost:7071/api/ProjectControl/{cmd}/{projectName}
+
+and to get states:
+- getGlobalState: http://localhost:7071/api/GlobalState/{globalKey}
+- getProjectState: http://localhost:7071/api/ProjectState/{projectName}
+
 Microflow use cases:
 - any business workflow that needs to leverage serverless autoscaling durable stateful workflows
 - avoid hard coded workflows
