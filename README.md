@@ -61,6 +61,7 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
    "AsynchronousPollingEnabled":"true",
    "StopOnActionFailed":true,
    "IsHttpGet":true,
+   "CalloutTimeoutSeconds": 15,
    "ActionTimeoutSeconds":30,
    "SubSteps":[2,3],
    "RetryOptions":{
@@ -79,6 +80,7 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
    - **AsynchronousPollingEnabled**: set this to true and the step will poll for completion before moving on/embed other Microflow projects and wait for them; or set it to false for fire and forget/call another Microflow project and continue immediately with the next step, no waiting for completion
    - **StopOnActionFailed**: If there is any type of failure for callouts or callbacks, including timeouts, and any non-success http responses, this will stop all execution if true, and log and continue to the next step if it is false
    - **IsHttpGet**: Http post to micro-service endpoint if false
+   - **CalloutTimeoutSeconds**: This is for how long to wait for the http callout, no cloud costs are incurred during the wait
    - **ActionTimeoutSeconds**: This is for how long an action callback will wait, it can be set for any time span and no cloud costs are incurred during the wait
    - **SubSteps**: These are the sub steps that are dependent on this step
    - **RetryOptions**: Set this to do retries for the micro-service end-point call
