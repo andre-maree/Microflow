@@ -1,9 +1,9 @@
 using System;
 using System.Threading.Tasks;
-using Microflow.Helpers;
 using Microflow.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using static Microflow.Helpers.Constants;
 
 namespace Microflow.FlowControl
 {
@@ -14,7 +14,7 @@ namespace Microflow.FlowControl
         /// </summary>
         /// <returns>Bool to indicate if this step request can be executed or not</returns>
         [Deterministic]
-        [FunctionName("CanExecuteNow")]
+        [FunctionName(CallNames.CanExecuteNow)]
         public static async Task<CanExecuteResult> CanExecuteNow([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
             CanExecuteNowObject canExecuteNowObject = context.GetInput<CanExecuteNowObject>();
@@ -43,7 +43,7 @@ namespace Microflow.FlowControl
             {
                 // log to table error
                 LogErrorEntity errorEntity = new LogErrorEntity(canExecuteNowObject.ProjectName, Convert.ToInt32(canExecuteNowObject.StepNumber), e.Message, canExecuteNowObject.RunId);
-                await context.CallActivityAsync("LogError", errorEntity);
+                await context.CallActivityAsync(CallNames.LogError, errorEntity);
 
                 return new CanExecuteResult() { CanExecute = false, StepNumber = canExecuteNowObject.StepNumber };
             }

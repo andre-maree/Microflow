@@ -9,6 +9,7 @@ using Microflow.Helpers;
 using System.Net;
 using Microflow.Models;
 using Microsoft.Azure.Cosmos.Table;
+using static Microflow.Helpers.Constants;
 
 namespace Microflow.FlowControl
 {
@@ -35,7 +36,10 @@ namespace Microflow.FlowControl
 
                 ProjectRun projectRun = MicroflowStartupHelper.CreateStartupProjectRun(req.RequestUri.ParseQueryString(), ref instanceId, projectName);
                 string baseUrl = $"{Environment.GetEnvironmentVariable("BaseUrl")}";
-                projectRun.BaseUrl = baseUrl.EndsWith('/') ? baseUrl.Remove(baseUrl.Length - 1) : baseUrl;
+                projectRun.BaseUrl = baseUrl.EndsWith('/') 
+                    ? baseUrl.Remove(baseUrl.Length - 1) 
+                    : baseUrl;
+
                 // start
                 await client.StartNewAsync("Start", instanceId, projectRun);
 
@@ -88,99 +92,22 @@ namespace Microflow.FlowControl
             catch (StorageException e)
             {
                 // log to table workflow completed
-                LogErrorEntity errorEntity = new LogErrorEntity(projectRun.ProjectName, Convert.ToInt32(projectRun.RunObject.StepNumber), e.Message, projectRun.RunObject.RunId);
+                LogErrorEntity errorEntity = new LogErrorEntity(projectRun.ProjectName,
+                                                                Convert.ToInt32(projectRun.RunObject.StepNumber),
+                                                                e.Message,
+                                                                projectRun.RunObject.RunId);
 
-                await context.CallActivityAsync("LogError", errorEntity);
+                await context.CallActivityAsync(CallNames.LogError, errorEntity);
             }
             catch (Exception e)
             {
                 // log to table workflow completed
-                LogErrorEntity errorEntity = new LogErrorEntity(projectRun.ProjectName, Convert.ToInt32(projectRun.RunObject.StepNumber), e.Message, projectRun.RunObject.RunId);
+                LogErrorEntity errorEntity = new LogErrorEntity(projectRun.ProjectName,
+                                                                Convert.ToInt32(projectRun.RunObject.StepNumber),
+                                                                e.Message,
+                                                                projectRun.RunObject.RunId);
 
-                await context.CallActivityAsync("LogError", errorEntity);
-            }
-        }
-
-
-        /// <summary>
-        /// Pause, run, or stop the project, cmd can be "run", "pause", or "stop"
-        /// </summary>
-        [FunctionName("Microflow_ProjectControl")]
-        public static async Task<HttpResponseMessage> ProjectControl([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-                                                                  Route = "ProjectControl/{cmd}/{projectName}")] HttpRequestMessage req,
-                                                                  [DurableClient] IDurableEntityClient client, string projectName, string cmd)
-        {
-            return await SetRunState(client, nameof(ProjectState), projectName, cmd);
-        }
-
-        /// <summary>
-        /// Pause, run, or stop all with the same global key, cmd can be "run", "pause", or "stop"
-        /// </summary>
-        [FunctionName("Microflow_GlobalControl")]
-        public static async Task<HttpResponseMessage> GlobalControl([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-                                                                  Route = "GlobalControl/{cmd}/{globalKey}")] HttpRequestMessage req,
-                                                                  [DurableClient] IDurableEntityClient client, string globalKey, string cmd)
-        {
-            return await SetRunState(client, nameof(GlobalState), globalKey, cmd);
-        }
-
-        private static async Task<HttpResponseMessage> SetRunState(IDurableEntityClient client, string stateEntityId, string globalKey, string cmd)
-        {
-            EntityId runStateId = new EntityId(stateEntityId, globalKey);
-
-            if (cmd.Equals(MicroflowControlKeys.Pause, StringComparison.OrdinalIgnoreCase))
-            {
-                await client.SignalEntityAsync(runStateId, MicroflowControlKeys.Pause);
-            }
-            else if (cmd.Equals(MicroflowControlKeys.Ready, StringComparison.OrdinalIgnoreCase))
-            {
-                await client.SignalEntityAsync(runStateId, MicroflowControlKeys.Ready);
-            }
-            else if (cmd.Equals(MicroflowControlKeys.Stop, StringComparison.OrdinalIgnoreCase))
-            {
-                await client.SignalEntityAsync(runStateId, MicroflowControlKeys.Stop);
-            }
-
-            return new HttpResponseMessage(HttpStatusCode.OK);
-        }
-
-        /// <summary>
-        /// Durable entity check and set if the global state
-        /// </summary>
-        [FunctionName(MicroflowStateKeys.GlobalStateId)]
-        public static void GlobalState([EntityTrigger] IDurableEntityContext ctx)
-        {
-            ctx.RunState();
-        }
-
-        /// <summary>
-        /// Durable entity check and set project state
-        /// </summary>
-        [FunctionName(MicroflowStateKeys.ProjectStateId)]
-        public static void ProjectState([EntityTrigger] IDurableEntityContext ctx)
-        {
-            ctx.RunState();
-        }
-
-        /// <summary>
-        /// For project and global key states
-        /// </summary>
-        private static void RunState(this IDurableEntityContext ctx)
-        {
-            switch (ctx.OperationName)
-            {
-                case MicroflowControlKeys.Ready:
-                    ctx.SetState(MicroflowStates.Ready);
-                    break;
-                case MicroflowControlKeys.Pause:
-                    ctx.SetState(MicroflowStates.Paused);
-                    break;
-                case MicroflowControlKeys.Stop:
-                    ctx.SetState(MicroflowStates.Stopped);
-                    break;
-                case MicroflowControlKeys.Read:
-                    ctx.Return(ctx.GetState<int>());
-                    break;
+                await context.CallActivityAsync(CallNames.LogError, errorEntity);
             }
         }
 

@@ -6,10 +6,11 @@ using System;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using static Microflow.Helpers.Constants;
 
 namespace Microflow.Helpers
 {
-    public static class MicroflowHttpResponseHelper
+    public static class MicroflowHttpHelper
     {
         /// <summary>
         /// Used to handle callout responses
@@ -40,7 +41,7 @@ namespace Microflow.Helpers
 
             string callback = string.IsNullOrWhiteSpace(httpCall.CallBackAction)
                     ? ""
-                    : $"{httpCall.BaseUrl}/webhook/{httpCall.CallBackAction}/{instanceId}/{httpCall.RowKey}";
+                    : $"{httpCall.BaseUrl}/{CallNames.CallBackBase}/{httpCall.CallBackAction}/{instanceId}/{httpCall.RowKey}";
 
             httpCall.CalculateGlobalKey();
 

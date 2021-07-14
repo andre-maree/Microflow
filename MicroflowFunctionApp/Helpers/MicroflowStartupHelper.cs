@@ -1,39 +1,11 @@
 ﻿using Microflow.Models;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Specialized;
-using System.Threading.Tasks;
 
 namespace Microflow.Helpers
 {
     public static class MicroflowStartupHelper
     {
-        /// <summary>
-        /// Start a new project run
-        /// </summary>
-        /// <returns></returns>
-        [Deterministic]
-        public static async Task StartMicroflowProject(this IDurableOrchestrationContext context, ILogger log, ProjectRun projectRun)
-        {
-            // log start
-            string logRowKey = MicroflowTableHelper.GetTableLogRowKeyDescendingByDate(context.CurrentUtcDateTime, $"_{projectRun.OrchestratorInstanceId}");
-
-            await context.LogOrchestrationStartAsync(log, projectRun, logRowKey);
-
-            await context.MicroflowStartProjectRun(log, projectRun);
-
-            // log to table workflow completed
-            Task logTask = context.LogOrchestrationEnd(projectRun, logRowKey);
-
-            context.SetProjectStateReady(projectRun);
-
-            await logTask;
-            // done
-            log.LogError($"Project run {projectRun.ProjectName} completed successfully...");
-            log.LogError("<<<<<<<<<<<<<<<<<<<<<<<<<-----> !!! A GREAT SUCCESS  !!! <----->>>>>>>>>>>>>>>>>>>>>>>>>");
-        }
-
         /// <summary>
         /// Create a new ProjectRun for stratup, set GlobalKey
         /// </summary>
@@ -90,36 +62,6 @@ namespace Microflow.Helpers
             projectRun.OrchestratorInstanceId = instanceId;
 
             return projectRun;
-        }
-
-        [Deterministic]
-        public static async Task LogOrchestrationEnd(this IDurableOrchestrationContext context, ProjectRun projectRun, string logRowKey)
-        {
-            var logEntity = new LogOrchestrationEntity(false,
-                                                                   projectRun.ProjectName,
-                                                                   logRowKey,
-                                                                   $"{projectRun.ProjectName} completed successfully",
-                                                                   context.CurrentUtcDateTime,
-                                                                   projectRun.OrchestratorInstanceId,
-                                                                   projectRun.RunObject.GlobalKey);
-
-            await context.CallActivityAsync("LogOrchestration", logEntity);
-        }
-
-        [Deterministic]
-        public static async Task LogOrchestrationStartAsync(this IDurableOrchestrationContext context, ILogger log, ProjectRun projectRun, string logRowKey)
-        {
-            LogOrchestrationEntity logEntity = new LogOrchestrationEntity(true,
-                                                                       projectRun.ProjectName,
-                                                                       logRowKey,
-                                                                       $"{projectRun.ProjectName} started...",
-                                                                       context.CurrentUtcDateTime,
-                                                                       projectRun.OrchestratorInstanceId,
-                                                                       projectRun.RunObject.GlobalKey);
-
-            await context.CallActivityAsync("LogOrchestration", logEntity);
-
-            log.LogInformation($"Started orchestration with ID = '{context.InstanceId}', Project = '{projectRun.ProjectName}'");
         }
     }
 }

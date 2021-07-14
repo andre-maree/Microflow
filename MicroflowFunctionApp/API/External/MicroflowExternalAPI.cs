@@ -9,6 +9,7 @@ using MicroflowModels;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
+using static Microflow.Helpers.Constants;
 
 namespace Microflow.API.External
 {
@@ -18,7 +19,7 @@ namespace Microflow.API.External
         /// <summary>
         /// Called from Microflow.ExecuteStep to get the current step table config
         /// </summary>
-        [FunctionName("GetStep")]
+        [FunctionName(CallNames.GetStep)]
         public static async Task<IHttpCallWithRetries> GetStep([ActivityTrigger] ProjectRun projectRun) => await projectRun.GetStep();
 
         /// <summary>

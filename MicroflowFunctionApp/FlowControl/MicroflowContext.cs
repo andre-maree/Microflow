@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using static Microflow.Helpers.Constants;
 
 namespace Microflow.FlowControl
 {
@@ -113,7 +114,7 @@ namespace Microflow.FlowControl
             try
             {
                 // get the step data from table storage (from PrepareWorkflow)
-                HttpCallWithRetries = await MicroflowDurableContext.CallActivityAsync<HttpCallWithRetries>("GetStep", ProjectRun);
+                HttpCallWithRetries = await MicroflowDurableContext.CallActivityAsync<HttpCallWithRetries>(CallNames.GetStep, ProjectRun);
 
                 string id = MicroflowDurableContext.NewGuid().ToString();
                 HttpCallWithRetries.RunId = ProjectRun.RunObject.RunId;
@@ -184,7 +185,7 @@ namespace Microflow.FlowControl
             {
                 LogStepEnd();
 
-                string[] stepsAndCounts = HttpCallWithRetries.SubSteps.Split(new char[2] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                string[] stepsAndCounts = HttpCallWithRetries.SubSteps.Split(Splitter, StringSplitOptions.RemoveEmptyEntries);
 
                 List<Task<CanExecuteResult>> canExecuteTasks = new List<Task<CanExecuteResult>>();
 
@@ -204,12 +205,12 @@ namespace Microflow.FlowControl
                             GlobalKey = ProjectRun.RunObject.GlobalKey
                         };
 
-                        MicroflowTasks.Add(MicroflowDurableContext.CallSubOrchestratorAsync("ExecuteStep", ProjectRun));
+                        MicroflowTasks.Add(MicroflowDurableContext.CallSubOrchestratorAsync(CallNames.ExecuteStep, ProjectRun));
                     }
                     // if parentCount is more than 1, work out if it can execute now
                     else
                     {
-                        canExecuteTasks.Add(MicroflowDurableContext.CallSubOrchestratorAsync<CanExecuteResult>("CanExecuteNow", new CanExecuteNowObject()
+                        canExecuteTasks.Add(MicroflowDurableContext.CallSubOrchestratorAsync<CanExecuteResult>(CallNames.CanExecuteNow, new CanExecuteNowObject()
                         {
                             RunId = ProjectRun.RunObject.RunId,
                             StepNumber = stepsAndCounts[i],
@@ -249,7 +250,7 @@ namespace Microflow.FlowControl
                         GlobalKey = ProjectRun.RunObject.GlobalKey
                     };
 
-                    MicroflowTasks.Add(MicroflowDurableContext.CallSubOrchestratorAsync("ExecuteStep", ProjectRun));
+                    MicroflowTasks.Add(MicroflowDurableContext.CallSubOrchestratorAsync(CallNames.ExecuteStep, ProjectRun));
                 }
 
                 canExecuteTasks.Remove(canExecuteTask);
@@ -290,7 +291,7 @@ namespace Microflow.FlowControl
         private void LogStepStart()
         {
             MicroflowTasks.Add(MicroflowDurableContext.CallActivityAsync(
-                "LogStep",
+                CallNames.LogStep,
                 new LogStepEntity(true,
                                   ProjectRun.ProjectName,
                                   LogRowKey,
@@ -308,7 +309,7 @@ namespace Microflow.FlowControl
         private void LogStepEnd()
         {
             MicroflowTasks.Add(MicroflowDurableContext.CallActivityAsync(
-                "LogStep",
+                CallNames.LogStep,
                 new LogStepEntity(false,
                                   ProjectRun.ProjectName,
                                   LogRowKey,
@@ -333,7 +334,7 @@ namespace Microflow.FlowControl
             Logger.LogError($"Step {HttpCallWithRetries.RowKey} failed at {MicroflowDurableContext.CurrentUtcDateTime.ToString("HH:mm:ss")}  -  Run ID: {ProjectRun.RunObject.RunId}");
 
             MicroflowTasks.Add(MicroflowDurableContext.CallActivityAsync(
-                "LogStep",
+                CallNames.LogStep,
                 new LogStepEntity(false,
                                   ProjectRun.ProjectName,
                                   LogRowKey,
@@ -363,7 +364,7 @@ namespace Microflow.FlowControl
             if (ex is TimeoutException)
             {
                 MicroflowTasks.Add(MicroflowDurableContext.CallActivityAsync(
-                    "LogStep",
+                    CallNames.LogStep,
                     new LogStepEntity(false,
                                       ProjectRun.ProjectName,
                                       LogRowKey,
@@ -381,7 +382,7 @@ namespace Microflow.FlowControl
             else
             {
                 MicroflowTasks.Add(MicroflowDurableContext.CallActivityAsync(
-                    "LogStep",
+                    CallNames.LogStep,
                     new LogStepEntity(false,
                                       ProjectRun.ProjectName,
                                       LogRowKey,

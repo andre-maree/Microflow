@@ -1,10 +1,10 @@
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Microflow.Helpers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
+using static Microflow.Helpers.Constants;
 
 namespace MicroflowApiFunctionApp
 {

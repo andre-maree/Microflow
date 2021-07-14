@@ -4,6 +4,7 @@ using Microflow.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
+using static Microflow.Helpers.Constants;
 
 namespace Microflow.FlowControl
 {
@@ -13,7 +14,7 @@ namespace Microflow.FlowControl
         /// Recursive step execution and sub-step can execute now calculations
         /// </summary>
         [Deterministic]
-        [FunctionName("ExecuteStep")]
+        [FunctionName(CallNames.ExecuteStep)]
         public static async Task ExecuteStep([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger inLog)
         {
             ProjectRun projectRun = context.GetInput<ProjectRun>();
@@ -33,7 +34,7 @@ namespace Microflow.FlowControl
 
                     // log to table workflow completed
                     LogErrorEntity errorEntity = new LogErrorEntity(projectRun?.ProjectName, Convert.ToInt32(stepNumber), e.Message, projectRun?.RunObject?.RunId);
-                    await context.CallActivityAsync("LogError", errorEntity);
+                    await context.CallActivityAsync(CallNames.LogError, errorEntity);
 
                     throw;
                 }
