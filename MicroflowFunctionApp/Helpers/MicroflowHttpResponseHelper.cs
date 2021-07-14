@@ -40,7 +40,7 @@ namespace Microflow.Helpers
 
             string callback = string.IsNullOrWhiteSpace(httpCall.CallBackAction)
                     ? ""
-                    : $"{httpCall.BaseUrl}/api/webhook/{httpCall.CallBackAction}/{instanceId}/{httpCall.RowKey}";
+                    : $"{httpCall.BaseUrl}/webhook/{httpCall.CallBackAction}/{instanceId}/{httpCall.RowKey}";
 
             httpCall.CalculateGlobalKey();
 
@@ -63,7 +63,7 @@ namespace Microflow.Helpers
                 newDurableHttpRequest = new DurableHttpRequest(
                     method: HttpMethod.Post,
                     uri: new Uri(httpCall.ParseUrlMicroflowData(instanceId, postData.CallbackUrl)),
-                    timeout: TimeSpan.FromSeconds(httpCall.ActionTimeoutSeconds),
+                    timeout: TimeSpan.FromSeconds(httpCall.CalloutTimeoutSeconds),
                     content: body,
                     asynchronousPatternEnabled: httpCall.AsynchronousPollingEnabled
                 //headers: durableHttpRequest.Headers,
@@ -82,7 +82,7 @@ namespace Microflow.Helpers
                 newDurableHttpRequest = new DurableHttpRequest(
                     method: HttpMethod.Get,
                     uri: new Uri(httpCall.ParseUrlMicroflowData(instanceId, callback)),
-                    timeout: TimeSpan.FromSeconds(httpCall.ActionTimeoutSeconds),
+                    timeout: TimeSpan.FromSeconds(httpCall.CalloutTimeoutSeconds),
                     asynchronousPatternEnabled: httpCall.AsynchronousPollingEnabled
                 //headers: durableHttpRequest.Headers,
                 //tokenSource: durableHttpRequest.TokenSource

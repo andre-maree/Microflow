@@ -110,22 +110,7 @@ namespace Microflow.FlowControl
                                                                   Route = "ProjectControl/{cmd}/{projectName}")] HttpRequestMessage req,
                                                                   [DurableClient] IDurableEntityClient client, string projectName, string cmd)
         {
-            EntityId runStateId = new EntityId(nameof(ProjectState), projectName);
-
-            if (cmd.Equals(MicroflowControlKeys.Pause, StringComparison.OrdinalIgnoreCase))
-            {
-                await client.SignalEntityAsync(runStateId, MicroflowControlKeys.Pause);
-            }
-            else if (cmd.Equals(MicroflowControlKeys.Ready, StringComparison.OrdinalIgnoreCase))
-            {
-                await client.SignalEntityAsync(runStateId, MicroflowControlKeys.Pause);
-            }
-            else if (cmd.Equals(MicroflowControlKeys.Stop, StringComparison.OrdinalIgnoreCase))
-            {
-                await client.SignalEntityAsync(runStateId, MicroflowControlKeys.Stop);
-            }
-
-            return new HttpResponseMessage(HttpStatusCode.OK);
+            return await SetRunState(client, nameof(ProjectState), projectName, cmd);
         }
 
         /// <summary>
@@ -136,7 +121,12 @@ namespace Microflow.FlowControl
                                                                   Route = "GlobalControl/{cmd}/{globalKey}")] HttpRequestMessage req,
                                                                   [DurableClient] IDurableEntityClient client, string globalKey, string cmd)
         {
-            EntityId runStateId = new EntityId(nameof(GlobalState), globalKey);
+            return await SetRunState(client, nameof(GlobalState), globalKey, cmd);
+        }
+
+        private static async Task<HttpResponseMessage> SetRunState(IDurableEntityClient client, string stateEntityId, string globalKey, string cmd)
+        {
+            EntityId runStateId = new EntityId(stateEntityId, globalKey);
 
             if (cmd.Equals(MicroflowControlKeys.Pause, StringComparison.OrdinalIgnoreCase))
             {
@@ -160,7 +150,7 @@ namespace Microflow.FlowControl
         [FunctionName(MicroflowStateKeys.GlobalStateId)]
         public static void GlobalState([EntityTrigger] IDurableEntityContext ctx)
         {
-            ctx.ResolveState();
+            ctx.RunState();
         }
 
         /// <summary>
@@ -169,21 +159,24 @@ namespace Microflow.FlowControl
         [FunctionName(MicroflowStateKeys.ProjectStateId)]
         public static void ProjectState([EntityTrigger] IDurableEntityContext ctx)
         {
-            ctx.ResolveState();
+            ctx.RunState();
         }
 
-        private static void ResolveState(this IDurableEntityContext ctx)
+        /// <summary>
+        /// For project and global key states
+        /// </summary>
+        private static void RunState(this IDurableEntityContext ctx)
         {
             switch (ctx.OperationName)
             {
                 case MicroflowControlKeys.Ready:
-                    ctx.SetState(0);
+                    ctx.SetState(MicroflowStates.Ready);
                     break;
                 case MicroflowControlKeys.Pause:
-                    ctx.SetState(1);
+                    ctx.SetState(MicroflowStates.Paused);
                     break;
                 case MicroflowControlKeys.Stop:
-                    ctx.SetState(2);
+                    ctx.SetState(MicroflowStates.Stopped);
                     break;
                 case MicroflowControlKeys.Read:
                     ctx.Return(ctx.GetState<int>());
@@ -202,46 +195,6 @@ namespace Microflow.FlowControl
                                                                   [DurableClient] IDurableEntityClient client, string globalKey)
         {
             return await client.InserOrUpdateProject(await req.Content.ReadAsStringAsync(), globalKey);
-        }
-
-        /// <summary>
-        /// Get global state
-        /// </summary>
-        [FunctionName("getGlobalState")]
-        public static async Task<HttpResponseMessage> GetGlobalState([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-                                                                  Route = "GlobalState/{globalKey}")] HttpRequestMessage req,
-                                                                  [DurableClient] IDurableEntityClient client, string globalKey)
-        {
-            EntityId globalStateId = new EntityId(nameof(GlobalState), globalKey);
-            Task<EntityStateResponse<int>> stateTask = client.ReadEntityStateAsync<int>(globalStateId);
-
-            HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);
-
-            await stateTask;
-
-            resp.Content = new StringContent(stateTask.Result.EntityState.ToString());
-
-            return resp;
-        }
-
-        /// <summary>
-        /// Get project state
-        /// </summary>
-        [FunctionName("getProjectState")]
-        public static async Task<HttpResponseMessage> GetProjectState([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-                                                                  Route = "ProjectState/{projectName}")] HttpRequestMessage req,
-                                                                  [DurableClient] IDurableEntityClient client, string projectName)
-        {
-            EntityId runStateId = new EntityId(nameof(ProjectState), projectName);
-            Task<EntityStateResponse<int>> stateTask = client.ReadEntityStateAsync<int>(runStateId);
-
-            HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);
-
-            await stateTask;
-
-            resp.Content = new StringContent(stateTask.Result.EntityState.ToString());
-
-            return resp;
         }
     }
 }

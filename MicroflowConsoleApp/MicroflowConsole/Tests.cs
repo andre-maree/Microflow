@@ -13,15 +13,15 @@ namespace MicroflowConsole
             //steps[0].IsHttpGet = true;
             //steps[0].ActionTimeoutSeconds = 30;
             //steps[0].CallbackAction = "approve";
-            //steps[0].CalloutUrl = "http://localhost:7071/api/SleepTestOrchestrator_HttpStart";
+            //steps[0].CalloutUrl = "http://localhost:7071/SleepTestOrchestrator_HttpStart";
             //steps[0].SetRetryForStep(1, 2, 1);
             //steps[0].StopOnActionFailed = true;
-
+            steps[0].CalloutTimeoutSeconds = 10;
             steps[0].AddSubSteps(steps[1].StepNumber, steps[2].StepNumber);
 
             steps[3].AddParentSteps(steps[1], steps[2]);
 
-            steps[0].CallbackAction = "approve"; 
+            //steps[0].CallbackAction = "approve"; 
             //steps[1].CallbackAction = "approve"; 
             //steps[2].CallbackAction = "approve"; 
             //steps[3].CallbackAction = "approve";

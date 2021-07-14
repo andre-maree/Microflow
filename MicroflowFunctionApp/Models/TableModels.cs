@@ -123,6 +123,7 @@ namespace Microflow.Models
         public string CallBackAction { get; set; }
         public bool StopOnActionFailed { get; set; }
         public int ActionTimeoutSeconds { get; set; }
+        public int CalloutTimeoutSeconds { get; set; }
         public bool IsHttpGet { get; set; }
         public string StepId { get; set; }
 

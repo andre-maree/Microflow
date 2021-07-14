@@ -47,13 +47,13 @@ namespace Microflow.FlowControl
             int globalState = await globalSateTask;
 
             // check project and global states, run step if both states are ready
-            if (projState == 0 && globalState == 0)
+            if (projState == MicroflowStates.Ready && globalState == MicroflowStates.Ready)
             {
                 // call out to micro-services orchestration
                 await RunMicroflowStep();
             }
             // if project or global key state is paused, then pause this step, and wait and poll states by timer
-            else if (projState == 1 || globalState == 1)
+            else if (projState == MicroflowStates.Paused || globalState == MicroflowStates.Paused)
             {
                 // 7 days in paused state till exit
                 DateTime endDate = MicroflowDurableContext.CurrentUtcDateTime.AddDays(7);
@@ -79,7 +79,7 @@ namespace Microflow.FlowControl
                             globalState = await globalSateTask;
 
                             // check pause states, exit while if not paused
-                            if (projState != 1 && globalState != 1)
+                            if (projState != MicroflowStates.Paused && globalState != MicroflowStates.Paused)
                             {
                                 break;
                             }
@@ -96,7 +96,7 @@ namespace Microflow.FlowControl
                 }
 
                 // if project and global key state is ready, then continue to run step
-                if (projState == 0 && globalState == 0)
+                if (projState == MicroflowStates.Ready && globalState == MicroflowStates.Ready)
                 {
                     // call out to micro-services orchestration
                     await RunMicroflowStep();

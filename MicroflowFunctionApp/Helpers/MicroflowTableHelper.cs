@@ -59,7 +59,7 @@ namespace Microflow.Helpers
         //    await table.ExecuteAsync(mergeOperation);
         //}
 
-        // TODO: moce out to api app
+        // TODO: move out to api app
         public static string GetProjectAsJson(string projectName)
         {
             List<HttpCallWithRetries> steps = GetStepsHttpCallWithRetries(projectName);
@@ -72,6 +72,7 @@ namespace Microflow.Helpers
                 {
                     StepId = step.RowKey,
                     ActionTimeoutSeconds = step.ActionTimeoutSeconds,
+                    CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
                     StopOnActionFailed = step.StopOnActionFailed,
                     CallbackAction = step.CallBackAction,
                     IsHttpGet = step.IsHttpGet,

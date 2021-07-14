@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microflow.Helpers;
@@ -26,45 +27,43 @@ namespace MicroflowApiFunctionApp
         }
 
         /// <summary>
-        /// 
+        /// Get global state
         /// </summary>
-        //[FunctionName("Pause")]
-        //public static async Task Pause([ActivityTrigger] ProjectControlEntity projectControlEntity) => await projectControlEntity.Pause();
+        [FunctionName("getGlobalState")]
+        public static async Task<HttpResponseMessage> GetGlobalState([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
+                                                                  Route = "GlobalState/{globalKey}")] HttpRequestMessage req,
+                                                                  [DurableClient] IDurableEntityClient client, string globalKey)
+        {
+            EntityId globalStateId = new EntityId("GlobalState", globalKey);
+            Task<EntityStateResponse<int>> stateTask = client.ReadEntityStateAsync<int>(globalStateId);
 
-        //[FunctionName("Function1")]
-        //public static async Task<List<string>> RunOrchestrator(
-        //    [OrchestrationTrigger] IDurableOrchestrationContext context)
-        //{
-        //    var outputs = new List<string>();
+            HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);
 
-        //    // Replace "hello" with the name of your Durable Activity Function.
-        //    outputs.Add(await context.CallActivityAsync<string>("Function1_Hello", "Tokyo"));
-        //    outputs.Add(await context.CallActivityAsync<string>("Function1_Hello", "Seattle"));
-        //    outputs.Add(await context.CallActivityAsync<string>("Function1_Hello", "London"));
+            await stateTask;
 
-        //    // returns ["Hello Tokyo!", "Hello Seattle!", "Hello London!"]
-        //    return outputs;
-        //}
+            resp.Content = new StringContent(stateTask.Result.EntityState.ToString());
 
-        //[FunctionName("Function1_Hello")]
-        //public static string SayHello([ActivityTrigger] string name, ILogger log)
-        //{
-        //    log.LogInformation($"Saying hello to {name}.");
-        //    return $"Hello {name}!";
-        //}
+            return resp;
+        }
 
-        //[FunctionName("Function1_HttpStart")]
-        //public static async Task<HttpResponseMessage> HttpStart(
-        //    [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequestMessage req,
-        //    [DurableClient] IDurableOrchestrationClient starter,
-        //    ILogger log)
-        //{
-        //    // Function input comes from the request content.
-        //    string instanceId = await starter.StartNewAsync("Function1", null);
+        /// <summary>
+        /// Get project state
+        /// </summary>
+        [FunctionName("getProjectState")]
+        public static async Task<HttpResponseMessage> GetProjectState([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
+                                                                  Route = "ProjectState/{projectName}")] HttpRequestMessage req,
+                                                                  [DurableClient] IDurableEntityClient client, string projectName)
+        {
+            EntityId runStateId = new EntityId("ProjectState", projectName);
+            Task<EntityStateResponse<int>> stateTask = client.ReadEntityStateAsync<int>(runStateId);
 
-        //    log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
+            HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);
 
-        //    return starter.CreateCheckStatusResponse(req, instanceId);
-        //}
+            await stateTask;
+
+            resp.Content = new StringContent(stateTask.Result.EntityState.ToString());
+
+            return resp;
+        }
     }
 }

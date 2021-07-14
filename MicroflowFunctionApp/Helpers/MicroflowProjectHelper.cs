@@ -50,7 +50,7 @@ namespace Microflow.Helpers
                 }
                 // do not do anything, wait for the stopped project to be ready
                 var projStateTask = client.ReadEntityStateAsync<int>(projStateId);
-                int globState = 0;
+                int globState = MicroflowStates.Ready;
                 if (globStateTask != null)
                 {
                     await globStateTask;
@@ -58,7 +58,7 @@ namespace Microflow.Helpers
                 }
 
                 var projState = await projStateTask;
-                if (projState.EntityState != 0 || globState != 0)
+                if (projState.EntityState != MicroflowStates.Ready || globState != MicroflowStates.Ready)
                 {
                     return new HttpResponseMessage(HttpStatusCode.Locked);
                 }
@@ -70,16 +70,11 @@ namespace Microflow.Helpers
                 // reate the storage tables for the project
                 await MicroflowTableHelper.CreateTables(project.ProjectName);
 
-                // upsert project control
-                //Task projTask = MicroflowTableHelper.UpdateProjectControl(project.ProjectName, 0);
-
                 //  clear step table data
                 Task delTask = projectRun.DeleteSteps();
 
                 //    // parse the mergefields
                 content.ParseMergeFields(ref project);
-
-                //await projTask;
 
                 await delTask;
 
@@ -190,7 +185,7 @@ namespace Microflow.Helpers
             }
 
             int projState = await projStateTask;
-            int globState = 0;
+            int globState = MicroflowStates.Ready;
 
             if (globStateTask != null)
             {
@@ -198,7 +193,7 @@ namespace Microflow.Helpers
                 globState = globStateRes.EntityState;
             }
 
-            if (projState != 0 || globState != 0)
+            if (projState != MicroflowStates.Ready || globState != MicroflowStates.Ready)
             {
                 return false;
             }
@@ -283,6 +278,7 @@ namespace Microflow.Helpers
                         StopOnActionFailed = step.StopOnActionFailed,
                         CalloutUrl = step.CalloutUrl,
                         ActionTimeoutSeconds = step.ActionTimeoutSeconds,
+                        CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
                         IsHttpGet = step.IsHttpGet,
                         AsynchronousPollingEnabled = step.AsynchronousPollingEnabled
                     };
@@ -304,6 +300,7 @@ namespace Microflow.Helpers
                         StopOnActionFailed = step.StopOnActionFailed,
                         CalloutUrl = step.CalloutUrl,
                         ActionTimeoutSeconds = step.ActionTimeoutSeconds,
+                        CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
                         IsHttpGet = step.IsHttpGet,
                         AsynchronousPollingEnabled = step.AsynchronousPollingEnabled
                     };

@@ -113,8 +113,8 @@ namespace Microflow.API.Internal
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
 
             MicroflowPostData data = JsonSerializer.Deserialize<MicroflowPostData>(requestBody);
-
-            await MicroflowHttpClient.HttpClient.PostAsJsonAsync("http://localhost:7071/api/SleepTestOrchestrator_HttpStart/", data);
+            
+            await MicroflowHttpClient.HttpClient.PostAsJsonAsync($"{Environment.GetEnvironmentVariable("BaseUrl")}SleepTestOrchestrator_HttpStart/", data);
 
             HttpResponseMessage resp = new HttpResponseMessage();
 

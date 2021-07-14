@@ -8,6 +8,13 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 
 namespace Microflow.Helpers
 {
+    public static class MicroflowStates
+    {
+        public const int Ready = 0;
+        public const int Paused = 1;
+        public const int Stopped = 2;
+    }
+
     public static class MicroflowEntities
     {
         public const string StepCounter = "StepCounter";
@@ -44,7 +51,7 @@ namespace Microflow.Helpers
         public static void CalculateGlobalKey(this HttpCall httpCall)
         {
             // check if it is call to Microflow
-            if (httpCall.CalloutUrl.StartsWith($"{httpCall.BaseUrl}/api/start/"))
+            if (httpCall.CalloutUrl.StartsWith($"{httpCall.BaseUrl}/start/"))
             {
                 // parse query string
                 NameValueCollection data = new Uri(httpCall.CalloutUrl).ParseQueryString();

@@ -66,6 +66,7 @@ namespace MicroflowModels
         public string CallbackAction { get; set; }
         public bool StopOnActionFailed { get; set; } = true;
         public bool IsHttpGet { get; set; }
+        public int CalloutTimeoutSeconds { get; set; } = 1000;
         public int ActionTimeoutSeconds { get; set; } = 1000;
         public bool AsynchronousPollingEnabled { get; set; } = true;
 
