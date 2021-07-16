@@ -155,7 +155,7 @@ namespace Microflow.Helpers
                 {
                     HttpCallWithRetries httpCallRetriesEntity = new HttpCallWithRetries(projectRun.ProjectName, step.StepNumber.ToString(), step.StepId, sb.ToString())
                     {
-                        CallBackAction = step.CallbackAction,
+                        CallbackAction = step.CallbackAction,
                         StopOnActionFailed = step.StopOnActionFailed,
                         CalloutUrl = step.CalloutUrl,
                         ActionTimeoutSeconds = step.ActionTimeoutSeconds,
@@ -177,7 +177,7 @@ namespace Microflow.Helpers
                 {
                     HttpCall httpCallEntity = new HttpCall(projectRun.ProjectName, step.StepNumber.ToString(), step.StepId, sb.ToString())
                     {
-                        CallBackAction = step.CallbackAction,
+                        CallbackAction = step.CallbackAction,
                         StopOnActionFailed = step.StopOnActionFailed,
                         CalloutUrl = step.CalloutUrl,
                         ActionTimeoutSeconds = step.ActionTimeoutSeconds,

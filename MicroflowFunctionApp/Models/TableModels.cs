@@ -120,7 +120,7 @@ namespace Microflow.Models
         }
         public bool AsynchronousPollingEnabled { get; set; }
         public string CalloutUrl { get; set; }
-        public string CallBackAction { get; set; }
+        public string CallbackAction { get; set; }
         public bool StopOnActionFailed { get; set; }
         public int ActionTimeoutSeconds { get; set; }
         public int CalloutTimeoutSeconds { get; set; }

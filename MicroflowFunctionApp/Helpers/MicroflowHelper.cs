@@ -13,8 +13,6 @@ namespace Microflow.Helpers
 {
     public static class MicroflowHelper
     {
-
-
         /// <summary>
         /// Pause, run, or stop the project, cmd can be "run", "pause", or "stop"
         /// </summary>
@@ -23,6 +21,18 @@ namespace Microflow.Helpers
                                                                   Route = "ProjectControl/{cmd}/{projectName}")] HttpRequestMessage req,
                                                                   [DurableClient] IDurableEntityClient client, string projectName, string cmd)
         {
+            if (cmd.Equals(MicroflowControlKeys.Read, StringComparison.OrdinalIgnoreCase))
+            {
+                EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectStateId, projectName);
+                EntityStateResponse<string> stateRes = await client.ReadEntityStateAsync<string>(projStateId);
+                HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(stateRes.EntityState)
+                };
+
+                return resp;
+            }
+
             return await client.SetRunState(nameof(ProjectState), projectName, cmd);
         }
 
@@ -34,6 +44,18 @@ namespace Microflow.Helpers
                                                                   Route = "GlobalControl/{cmd}/{globalKey}")] HttpRequestMessage req,
                                                                   [DurableClient] IDurableEntityClient client, string globalKey, string cmd)
         {
+            if (cmd.Equals(MicroflowControlKeys.Read, StringComparison.OrdinalIgnoreCase))
+            {
+                EntityId globStateId = new EntityId(MicroflowStateKeys.GlobalStateId, globalKey);
+                EntityStateResponse<string> stateRes = await client.ReadEntityStateAsync<string>(globStateId);
+                HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(stateRes.EntityState)
+                };
+
+                return resp;
+            }
+
             return await client.SetRunState(nameof(GlobalState), globalKey, cmd);
         }
 

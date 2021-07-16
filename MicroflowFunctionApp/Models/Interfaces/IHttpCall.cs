@@ -4,7 +4,7 @@
     {
         int ActionTimeoutSeconds { get; set; }
         bool AsynchronousPollingEnabled { get; set; }
-        string CallBackAction { get; set; }
+        string CallbackAction { get; set; }
         string CalloutUrl { get; set; }
         string GlobalKey { get; set; }
         bool IsHttpGet { get; set; }

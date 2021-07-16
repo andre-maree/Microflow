@@ -4,6 +4,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using System.Net.Http;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using static Microflow.Helpers.Constants;
 
 namespace Microflow.ResponseProxies
 {
@@ -16,22 +17,14 @@ namespace Microflow.ResponseProxies
         /// </summary>
         [FunctionName("callback")]
         public static async Task<HttpResponseMessage> RaiseEvent(
-        [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = "webhook/{action}/{orchestratorId}/{stepId}/{content?}")] HttpRequestMessage req,
-        [DurableClient] IDurableOrchestrationClient client, string stepId, string action, string orchestratorId, string content)
+        [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = "callback/{action}/{orchestratorId}/{stepId:int?}")] HttpRequestMessage req,
+        [DurableClient] IDurableOrchestrationClient client, int stepId, string action, string orchestratorId)
         {
-            //string data = await req.Content.ReadAsStringAsync();
-
             HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);
-
-            // pass content back
-            if (!string.IsNullOrWhiteSpace(content))
-            {
-                resp.Content = new StringContent(content);
-            }
             
             await client.RaiseEventAsync(orchestratorId, action, resp);
 
-            return new HttpResponseMessage(HttpStatusCode.OK);
+            return resp;
         }
     }
 }

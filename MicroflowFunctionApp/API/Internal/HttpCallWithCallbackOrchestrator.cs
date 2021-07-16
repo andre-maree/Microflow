@@ -49,9 +49,9 @@ namespace Microflow.API.Internal
 
                 // TODO: always use https
 
-                log.LogCritical($"Waiting for callback: {httpCall.BaseUrl}/{CallNames.CallBackBase}/{httpCall.CallBackAction}/{context.InstanceId}/{httpCall.RowKey}");
+                log.LogCritical($"Waiting for callback: {httpCall.BaseUrl}/{CallNames.CallbackBase}/{httpCall.CallbackAction}/{context.InstanceId}/{httpCall.RowKey}");
                 // wait for the external event, set the timeout
-                HttpResponseMessage actionResult = await context.WaitForExternalEvent<HttpResponseMessage>(httpCall.CallBackAction, TimeSpan.FromSeconds(httpCall.ActionTimeoutSeconds));
+                HttpResponseMessage actionResult = await context.WaitForExternalEvent<HttpResponseMessage>(httpCall.CallbackAction, TimeSpan.FromSeconds(httpCall.ActionTimeoutSeconds));
 
                 // set the per step in-progress count to count-1
                 context.SignalEntity(countId, MicroflowCounterKeys.Subtract);
@@ -60,7 +60,7 @@ namespace Microflow.API.Internal
                 // check for action failed
                 if (actionResult.IsSuccessStatusCode)
                 {
-                    log.LogWarning($"Step {httpCall.RowKey} callback action {httpCall.CallBackAction} successful at {context.CurrentUtcDateTime:HH:mm:ss}");
+                    log.LogWarning($"Step {httpCall.RowKey} callback action {httpCall.CallbackAction} successful at {context.CurrentUtcDateTime:HH:mm:ss}");
 
                     microflowHttpResponse.HttpResponseStatusCode = (int)actionResult.StatusCode;
 
@@ -74,7 +74,7 @@ namespace Microflow.API.Internal
                         {
                             Success = false,
                             HttpResponseStatusCode = (int)actionResult.StatusCode,
-                            Message = $"callback action {httpCall.CallBackAction} falied, StopOnActionFailed is {httpCall.StopOnActionFailed}"
+                            Message = $"callback action {httpCall.CallbackAction} falied, StopOnActionFailed is {httpCall.StopOnActionFailed}"
                         };
                     }
                 }
@@ -88,7 +88,7 @@ namespace Microflow.API.Internal
                         Success = false,
                         HttpResponseStatusCode = -408,
                         Message = doneCallout
-                        ? $"callback action {httpCall.CallBackAction} timed out, StopOnActionFailed is {httpCall.StopOnActionFailed}"
+                        ? $"callback action {httpCall.CallbackAction} timed out, StopOnActionFailed is {httpCall.StopOnActionFailed}"
                         : $"callout to {httpCall.CalloutUrl} timed out before spawning a callback, StopOnActionFailed is {httpCall.StopOnActionFailed}"
                     };
                 }
@@ -104,7 +104,7 @@ namespace Microflow.API.Internal
                         Success = false,
                         HttpResponseStatusCode = -500,
                         Message = doneCallout 
-                        ? $"callback action {httpCall.CallBackAction} failed, StopOnActionFailed is {httpCall.StopOnActionFailed} - " + e.Message
+                        ? $"callback action {httpCall.CallbackAction} failed, StopOnActionFailed is {httpCall.StopOnActionFailed} - " + e.Message
                         : $"callout to {httpCall.CalloutUrl} failed before spawning a callback, StopOnActionFailed is {httpCall.StopOnActionFailed}"
                     };
                 }

@@ -3,6 +3,7 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using static Microflow.Helpers.Constants;
 
@@ -88,62 +89,85 @@ namespace Microflow.Helpers
         [Deterministic]
         public static async Task<bool> CheckAndWaitForReadyToRun(this IDurableOrchestrationContext context, string projectName, ILogger log, string globalKey = null)
         {
-            EntityId runStateId = new EntityId(MicroflowStateKeys.ProjectStateId, projectName);
+            EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectStateId, projectName);
+            Task<int> projStateTask = context.CallEntityAsync<int>(projStateId, MicroflowControlKeys.Read);
 
-            Task<int> projStateTask = context.CallEntityAsync<int>(runStateId, MicroflowControlKeys.Read);
-            Task<EntityStateResponse<int>> globStateTask = null;
-
-            if (!string.IsNullOrWhiteSpace(globalKey))
+            bool doGlobal = !string.IsNullOrWhiteSpace(globalKey);
+            Task<int> globalSateTask = null;
+            EntityId globalStateId;
+            int globalState = 0;
+            if (doGlobal)
             {
-                EntityId globalStateId = new EntityId(MicroflowStateKeys.GlobalStateId, globalKey);
-                globStateTask = context.CallEntityAsync<EntityStateResponse<int>>(globalStateId, MicroflowControlKeys.Read);
+                globalStateId = new EntityId(MicroflowStateKeys.GlobalStateId, globalKey);
+                globalSateTask = context.CallEntityAsync<int>(globalStateId, MicroflowControlKeys.Read);
             }
-
+            
             int projState = await projStateTask;
-            int globState = MicroflowStates.Ready;
 
-            if (globStateTask != null)
+            if (doGlobal)
             {
-                EntityStateResponse<int> globStateRes = await globStateTask;
-                globState = globStateRes.EntityState;
+                globalState = await globalSateTask;
             }
 
-            if (projState != MicroflowStates.Ready || globState != MicroflowStates.Ready)
+            // check project and global states, run step if both states are ready
+            if (projState == MicroflowStates.Ready && globalState == MicroflowStates.Ready)
             {
-                return false;
+                return true;
+            }
+            // if project or global key state is paused, then pause this step, and wait and poll states by timer
+            else if (projState == MicroflowStates.Paused || globalState == MicroflowStates.Paused)
+            {
+                // 7 days in paused state till exit
+                DateTime endDate = context.CurrentUtcDateTime.AddDays(7);
+                // start interval seconds
+                int count = 15;
+                // max interval seconds
+                const int max = 300; // 5 mins
+
+                using (CancellationTokenSource cts = new CancellationTokenSource())
+                {
+                    try
+                    {
+                        while (context.CurrentUtcDateTime < endDate)
+                        {
+                            DateTime deadline = context.CurrentUtcDateTime.Add(TimeSpan.FromSeconds(count < max ? count : max));
+                            await context.CreateTimer(deadline, cts.Token);
+                            count++;
+
+                            // timer wait completed, refresh pause states
+                            projStateTask = context.CallEntityAsync<int>(projStateId, MicroflowControlKeys.Read);
+
+                            if (doGlobal) globalSateTask = context.CallEntityAsync<int>(globalStateId, MicroflowControlKeys.Read);
+                            
+                            projState = await projStateTask;
+
+                            if (doGlobal) globalState = await globalSateTask;
+
+                            // check pause states, exit while if not paused
+                            if (projState != MicroflowStates.Paused && globalState != MicroflowStates.Paused)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        log.LogCritical("========================TaskCanceledException==========================");
+                    }
+                    finally
+                    {
+                        cts.Dispose();
+                    }
+                }
+
+                // if project and global key state is ready, then continue to run step
+                if (projState == MicroflowStates.Ready && globalState == MicroflowStates.Ready)
+                {
+                    return true;
+                }
             }
 
-            return true;
-
-            //DateTime endDate = context.CurrentUtcDateTime.AddMinutes(30);
-            //int count = 5;
-            //int max = 20;
-
-            //using (CancellationTokenSource cts = new CancellationTokenSource())
-            //{
-            //    try
-            //    {
-            //        while (context.CurrentUtcDateTime < endDate)
-            //        {
-            //            DateTime deadline = context.CurrentUtcDateTime.Add(TimeSpan.FromSeconds(count < max ? count : max));
-            //            await context.CreateTimer(deadline, cts.Token);
-            //            count++;
-
-            //            if (await context.CallEntityAsync<int>(runState, "get") == 0)
-            //            {
-            //                break;
-            //            }
-            //        }
-            //    }
-            //    catch (TaskCanceledException)
-            //    {
-            //        log.LogCritical("========================TaskCanceledException==========================");
-            //    }
-            //    finally
-            //    {
-            //        cts.Dispose();
-            //    }
-            //}
+            return false;
         }
 
         [Deterministic]

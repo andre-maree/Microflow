@@ -138,9 +138,9 @@ namespace Microflow.FlowControl
                 {
                     // call out to micro-service
                     // wait for external event flow / callback
-                    if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.CallBackAction))
+                    if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.CallbackAction))
                     {
-                        const string name = "HttpCallWithCallBackOrchestrator";
+                        const string name = "HttpCallWithCallbackOrchestrator";
 
                         if (HttpCallWithRetries.RetryDelaySeconds > 0)
                         {
@@ -374,9 +374,9 @@ namespace Microflow.FlowControl
                                       ProjectRun.RunObject.GlobalKey,
                                       false,
                                       -408,
-                                      string.IsNullOrWhiteSpace(HttpCallWithRetries.CallBackAction)
+                                      string.IsNullOrWhiteSpace(HttpCallWithRetries.CallbackAction)
                                         ? "callout timeout"
-                                        : $"action {HttpCallWithRetries.CallBackAction} timed out, StopOnActionFailed is {HttpCallWithRetries.StopOnActionFailed}")
+                                        : $"action {HttpCallWithRetries.CallbackAction} timed out, StopOnActionFailed is {HttpCallWithRetries.StopOnActionFailed}")
                 ));
             }
             else

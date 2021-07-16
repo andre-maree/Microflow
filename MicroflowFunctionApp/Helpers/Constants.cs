@@ -1,10 +1,12 @@
-﻿namespace Microflow.Helpers
+﻿using System;
+
+namespace Microflow.Helpers
 {
     public static class Constants
     {
         public static class CallNames
         {
-            public const string CallBackBase = "webhook";
+            public static readonly string CallbackBase = $"{Environment.GetEnvironmentVariable("CallbackBase")}";
             public const string CanExecuteNow = "CanExecuteNow";
             public const string ExecuteStep = "ExecuteStep";
             public const string GetStep = "GetStep";

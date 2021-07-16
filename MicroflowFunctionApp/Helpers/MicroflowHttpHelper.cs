@@ -39,9 +39,9 @@ namespace Microflow.Helpers
         {
             DurableHttpRequest newDurableHttpRequest;
 
-            string callback = string.IsNullOrWhiteSpace(httpCall.CallBackAction)
+            string callback = string.IsNullOrWhiteSpace(httpCall.CallbackAction)
                     ? ""
-                    : $"{httpCall.BaseUrl}/{CallNames.CallBackBase}/{httpCall.CallBackAction}/{instanceId}/{httpCall.RowKey}";
+                    : $"{httpCall.BaseUrl}/{CallNames.CallbackBase}/{httpCall.CallbackAction}/{instanceId}/{httpCall.RowKey}";
 
             httpCall.CalculateGlobalKey();
 

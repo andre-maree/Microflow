@@ -66,7 +66,7 @@ namespace Microflow.Helpers
                     ActionTimeoutSeconds = step.ActionTimeoutSeconds,
                     CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
                     StopOnActionFailed = step.StopOnActionFailed,
-                    CallbackAction = step.CallBackAction,
+                    CallbackAction = step.CallbackAction,
                     IsHttpGet = step.IsHttpGet,
                     CalloutUrl = step.CalloutUrl,
                     RetryOptions = step.RetryDelaySeconds == 0 ? null : new MicroflowRetryOptions()
