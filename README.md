@@ -62,7 +62,7 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
    "StopOnActionFailed":true,
    "IsHttpGet":true,
    "CalloutTimeoutSeconds": 15,
-   "ActionTimeoutSeconds":30,
+   "CallbackTimeoutSeconds":30,
    "SubSteps":[2,3],
    "RetryOptions":{
       "DelaySeconds":5,
@@ -81,7 +81,7 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
    - **StopOnActionFailed**: If there is any type of failure for callouts or callbacks, including timeouts, and any non-success http responses, this will stop all execution if true, and log and continue to the next step if it is false
    - **IsHttpGet**: Http post to micro-service endpoint if false
    - **CalloutTimeoutSeconds**: This is for how long to wait for the http callout, no cloud costs are incurred during the wait
-   - **ActionTimeoutSeconds**: This is for how long an action callback will wait, it can be set for any time span and no cloud costs are incurred during the wait
+   - **CallbackTimeoutSeconds**: This is for how long an action callback will wait, it can be set for any time span and no cloud costs are incurred during the wait
    - **SubSteps**: These are the sub steps that are dependent on this step
    - **RetryOptions**: Set this to do retries for the micro-service end-point call
    
@@ -90,13 +90,11 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
 This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 2 and StepId 3), and each sub step has 1 common sub step (StepId 4). This is the same structure as the included test Tests.CreateTestWorkflow_SimpleSteps(). StepId 1 has a callback action set, and StepId 3 has a retry set. There is 1 merge field set and is used as a default callout URL.
 ```
 {
-  {
-  "ProjectName": "MicroflowDemo",
+  "ProjectName": "MicroflowTestProject",
   "DefaultRetryOptions": null,
-  "Loop": 1
-  "StepIdFormat": "guid",
+  "Loop": 1,
   "MergeFields": {
-    "default_post_url": "http://localhost:7071/api/testpost?ProjectName=<ProjectName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&CallbackUrl=<CallbackUrl>&RunId=<RunId>&StepNumber=<StepNumber>"
+    "default_post_url": "http://localhost:7071/SleepTestOrchestrator_Function"
   },
   "Steps": [
     {
@@ -106,7 +104,9 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
       "CallbackAction": "approve",
       "StopOnActionFailed": true,
       "IsHttpGet": true,
-      "ActionTimeoutSeconds": 30,
+      "CalloutTimeoutSeconds": 10,
+      "CallbackTimeoutSeconds": 30,
+      "AsynchronousPollingEnabled": true,
       "SubSteps": [
         2,
         3
@@ -126,7 +126,9 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
       "CallbackAction": null,
       "StopOnActionFailed": true,
       "IsHttpGet": false,
-      "ActionTimeoutSeconds": 1000,
+      "CalloutTimeoutSeconds": 1000,
+      "CallbackTimeoutSeconds": 1000,
+      "AsynchronousPollingEnabled": true,
       "SubSteps": [
         4
       ],
@@ -139,7 +141,9 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
       "CallbackAction": null,
       "StopOnActionFailed": true,
       "IsHttpGet": false,
-      "ActionTimeoutSeconds": 1000,
+      "CalloutTimeoutSeconds": 1000,
+      "CallbackTimeoutSeconds": 1000,
+      "AsynchronousPollingEnabled": true,
       "SubSteps": [
         4
       ],
@@ -152,7 +156,9 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
       "CallbackAction": null,
       "StopOnActionFailed": true,
       "IsHttpGet": false,
-      "ActionTimeoutSeconds": 1000,
+      "CalloutTimeoutSeconds": 1000,
+      "CallbackTimeoutSeconds": 1000,
+      "AsynchronousPollingEnabled": true,
       "SubSteps": [],
       "RetryOptions": null
     }
