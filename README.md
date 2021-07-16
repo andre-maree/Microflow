@@ -90,13 +90,11 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
 This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 2 and StepId 3), and each sub step has 1 common sub step (StepId 4). This is the same structure as the included test Tests.CreateTestWorkflow_SimpleSteps(). StepId 1 has a callback action set, and StepId 3 has a retry set. There is 1 merge field set and is used as a default callout URL.
 ```
 {
-  {
-  "ProjectName": "MicroflowDemo",
+  "ProjectName": "MicroflowTestProject",
   "DefaultRetryOptions": null,
-  "Loop": 1
-  "StepIdFormat": "guid",
+  "Loop": 1,
   "MergeFields": {
-    "default_post_url": "http://localhost:7071/api/testpost?ProjectName=<ProjectName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&CallbackUrl=<CallbackUrl>&RunId=<RunId>&StepNumber=<StepNumber>"
+    "default_post_url": "http://localhost:7071/SleepTestOrchestrator_Function"
   },
   "Steps": [
     {
@@ -106,7 +104,9 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
       "CallbackAction": "approve",
       "StopOnActionFailed": true,
       "IsHttpGet": true,
+      "CalloutTimeoutSeconds": 10,
       "ActionTimeoutSeconds": 30,
+      "AsynchronousPollingEnabled": true,
       "SubSteps": [
         2,
         3
@@ -126,7 +126,9 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
       "CallbackAction": null,
       "StopOnActionFailed": true,
       "IsHttpGet": false,
+      "CalloutTimeoutSeconds": 1000,
       "ActionTimeoutSeconds": 1000,
+      "AsynchronousPollingEnabled": true,
       "SubSteps": [
         4
       ],
@@ -139,7 +141,9 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
       "CallbackAction": null,
       "StopOnActionFailed": true,
       "IsHttpGet": false,
+      "CalloutTimeoutSeconds": 1000,
       "ActionTimeoutSeconds": 1000,
+      "AsynchronousPollingEnabled": true,
       "SubSteps": [
         4
       ],
@@ -152,7 +156,9 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
       "CallbackAction": null,
       "StopOnActionFailed": true,
       "IsHttpGet": false,
+      "CalloutTimeoutSeconds": 1000,
       "ActionTimeoutSeconds": 1000,
+      "AsynchronousPollingEnabled": true,
       "SubSteps": [],
       "RetryOptions": null
     }
