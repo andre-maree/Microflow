@@ -158,7 +158,7 @@ namespace Microflow.Helpers
                         CallbackAction = step.CallbackAction,
                         StopOnActionFailed = step.StopOnActionFailed,
                         CalloutUrl = step.CalloutUrl,
-                        ActionTimeoutSeconds = step.ActionTimeoutSeconds,
+                        CallbackTimeoutSeconds = step.CallbackTimeoutSeconds,
                         CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
                         IsHttpGet = step.IsHttpGet,
                         AsynchronousPollingEnabled = step.AsynchronousPollingEnabled
@@ -180,7 +180,7 @@ namespace Microflow.Helpers
                         CallbackAction = step.CallbackAction,
                         StopOnActionFailed = step.StopOnActionFailed,
                         CalloutUrl = step.CalloutUrl,
-                        ActionTimeoutSeconds = step.ActionTimeoutSeconds,
+                        CallbackTimeoutSeconds = step.CallbackTimeoutSeconds,
                         CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
                         IsHttpGet = step.IsHttpGet,
                         AsynchronousPollingEnabled = step.AsynchronousPollingEnabled

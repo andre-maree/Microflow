@@ -63,7 +63,7 @@ namespace Microflow.Helpers
                 Step newstep = new Step()
                 {
                     StepId = step.RowKey,
-                    ActionTimeoutSeconds = step.ActionTimeoutSeconds,
+                    CallbackTimeoutSeconds = step.CallbackTimeoutSeconds,
                     CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
                     StopOnActionFailed = step.StopOnActionFailed,
                     CallbackAction = step.CallbackAction,

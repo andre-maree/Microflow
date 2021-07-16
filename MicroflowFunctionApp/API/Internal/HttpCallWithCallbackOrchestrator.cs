@@ -51,7 +51,7 @@ namespace Microflow.API.Internal
 
                 log.LogCritical($"Waiting for callback: {httpCall.BaseUrl}/{CallNames.CallbackBase}/{httpCall.CallbackAction}/{context.InstanceId}/{httpCall.RowKey}");
                 // wait for the external event, set the timeout
-                HttpResponseMessage actionResult = await context.WaitForExternalEvent<HttpResponseMessage>(httpCall.CallbackAction, TimeSpan.FromSeconds(httpCall.ActionTimeoutSeconds));
+                HttpResponseMessage actionResult = await context.WaitForExternalEvent<HttpResponseMessage>(httpCall.CallbackAction, TimeSpan.FromSeconds(httpCall.CallbackTimeoutSeconds));
 
                 // set the per step in-progress count to count-1
                 context.SignalEntity(countId, MicroflowCounterKeys.Subtract);

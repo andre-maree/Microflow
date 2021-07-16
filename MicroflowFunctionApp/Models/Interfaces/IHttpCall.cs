@@ -2,7 +2,7 @@
 {
     public interface IHttpCall : IStepEntity
     {
-        int ActionTimeoutSeconds { get; set; }
+        int CallbackTimeoutSeconds { get; set; }
         bool AsynchronousPollingEnabled { get; set; }
         string CallbackAction { get; set; }
         string CalloutUrl { get; set; }
