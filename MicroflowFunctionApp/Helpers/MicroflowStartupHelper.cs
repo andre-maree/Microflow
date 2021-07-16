@@ -9,7 +9,9 @@ namespace Microflow.Helpers
         /// <summary>
         /// Create a new ProjectRun for stratup, set GlobalKey
         /// </summary>
-        public static ProjectRun CreateStartupProjectRun(NameValueCollection data, ref string instanceId, string projectName)
+        public static ProjectRun CreateStartupProjectRun(NameValueCollection data,
+                                                         ref string instanceId,
+                                                         string projectName)
         {
             var input = new
             {

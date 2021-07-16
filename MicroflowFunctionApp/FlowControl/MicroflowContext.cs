@@ -25,7 +25,9 @@ namespace Microflow.FlowControl
         /// <summary>
         /// MicroflowContext contructor creates all needed class properties used in step execution
         /// </summary>
-        public MicroflowContext(IDurableOrchestrationContext microflowContext, IProjectRun projectRun, ILogger logger)
+        public MicroflowContext(IDurableOrchestrationContext microflowContext,
+                                IProjectRun projectRun,
+                                ILogger logger)
         {
             MicroflowDurableContext = microflowContext;
             ProjectRun = projectRun;
@@ -144,7 +146,10 @@ namespace Microflow.FlowControl
 
                         if (HttpCallWithRetries.RetryDelaySeconds > 0)
                         {
-                            MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(name, HttpCallWithRetries.GetRetryOptions(), id, HttpCallWithRetries);
+                            MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(name,
+                                                                                                                                           HttpCallWithRetries.GetRetryOptions(),
+                                                                                                                                           id,
+                                                                                                                                           HttpCallWithRetries);
                         }
 
                         MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(name, id, HttpCallWithRetries);
@@ -156,7 +161,10 @@ namespace Microflow.FlowControl
 
                         if (HttpCallWithRetries.RetryDelaySeconds > 0)
                         {
-                            MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(name, HttpCallWithRetries.GetRetryOptions(), id, HttpCallWithRetries);
+                            MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(name,
+                                                                                                                                           HttpCallWithRetries.GetRetryOptions(),
+                                                                                                                                           id,
+                                                                                                                                           HttpCallWithRetries);
                         }
 
                         MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(name, id, HttpCallWithRetries);

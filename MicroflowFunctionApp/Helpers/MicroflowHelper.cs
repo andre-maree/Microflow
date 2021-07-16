@@ -25,6 +25,7 @@ namespace Microflow.Helpers
             {
                 EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectStateId, projectName);
                 EntityStateResponse<string> stateRes = await client.ReadEntityStateAsync<string>(projStateId);
+
                 HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK)
                 {
                     Content = new StringContent(stateRes.EntityState)
@@ -48,6 +49,7 @@ namespace Microflow.Helpers
             {
                 EntityId globStateId = new EntityId(MicroflowStateKeys.GlobalStateId, globalKey);
                 EntityStateResponse<string> stateRes = await client.ReadEntityStateAsync<string>(globStateId);
+
                 HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK)
                 {
                     Content = new StringContent(stateRes.EntityState)
@@ -153,10 +155,13 @@ namespace Microflow.Helpers
 
         public static RetryOptions GetRetryOptions(this IHttpCallWithRetries httpCallWithRetries)
         {
-            RetryOptions ops = new RetryOptions(TimeSpan.FromSeconds(httpCallWithRetries.RetryDelaySeconds), httpCallWithRetries.RetryMaxRetries);
-            ops.RetryTimeout = TimeSpan.FromSeconds(httpCallWithRetries.RetryTimeoutSeconds);
-            ops.MaxRetryInterval = TimeSpan.FromSeconds(httpCallWithRetries.RetryMaxDelaySeconds);
-            ops.BackoffCoefficient = httpCallWithRetries.RetryBackoffCoefficient;
+            RetryOptions ops = new RetryOptions(TimeSpan.FromSeconds(httpCallWithRetries.RetryDelaySeconds),
+                                                httpCallWithRetries.RetryMaxRetries)
+            {
+                RetryTimeout = TimeSpan.FromSeconds(httpCallWithRetries.RetryTimeoutSeconds),
+                MaxRetryInterval = TimeSpan.FromSeconds(httpCallWithRetries.RetryMaxDelaySeconds),
+                BackoffCoefficient = httpCallWithRetries.RetryBackoffCoefficient
+            };
 
             return ops;
         }

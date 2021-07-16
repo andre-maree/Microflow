@@ -10,13 +10,15 @@ using static Microflow.Helpers.Constants;
 namespace Microflow.Helpers
 {
     public static class MicroflowOrchestrationHelper
-    { 
+    {
         /// <summary>
-      /// Start a new project run
-      /// </summary>
-      /// <returns></returns>
+        /// Start a new project run
+        /// </summary>
+        /// <returns></returns>
         [Deterministic]
-        public static async Task StartMicroflowProject(this IDurableOrchestrationContext context, ILogger log, ProjectRun projectRun)
+        public static async Task StartMicroflowProject(this IDurableOrchestrationContext context,
+                                                       ILogger log,
+                                                       ProjectRun projectRun)
         {
             // log start
             string logRowKey = MicroflowTableHelper.GetTableLogRowKeyDescendingByDate(context.CurrentUtcDateTime, $"_{projectRun.OrchestratorInstanceId}");
@@ -42,7 +44,9 @@ namespace Microflow.Helpers
         /// by getting step -1 from table storage
         /// </summary>
         [Deterministic]
-        public static async Task MicroflowStartProjectRun(this IDurableOrchestrationContext context, ILogger log, ProjectRun projectRun)
+        public static async Task MicroflowStartProjectRun(this IDurableOrchestrationContext context,
+                                                          ILogger log,
+                                                          ProjectRun projectRun)
         {
             // do the looping
             for (int i = 1; i <= projectRun.Loop; i++)
@@ -87,7 +91,10 @@ namespace Microflow.Helpers
         /// Check if project ready is true, else wait with a timer (this is a durable monitor), called from start
         /// </summary>
         [Deterministic]
-        public static async Task<bool> CheckAndWaitForReadyToRun(this IDurableOrchestrationContext context, string projectName, ILogger log, string globalKey = null)
+        public static async Task<bool> CheckAndWaitForReadyToRun(this IDurableOrchestrationContext context,
+                                                                 string projectName,
+                                                                 ILogger log,
+                                                                 string globalKey = null)
         {
             EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectStateId, projectName);
             Task<int> projStateTask = context.CallEntityAsync<int>(projStateId, MicroflowControlKeys.Read);
@@ -101,7 +108,7 @@ namespace Microflow.Helpers
                 globalStateId = new EntityId(MicroflowStateKeys.GlobalStateId, globalKey);
                 globalSateTask = context.CallEntityAsync<int>(globalStateId, MicroflowControlKeys.Read);
             }
-            
+
             int projState = await projStateTask;
 
             if (doGlobal)
@@ -138,7 +145,7 @@ namespace Microflow.Helpers
                             projStateTask = context.CallEntityAsync<int>(projStateId, MicroflowControlKeys.Read);
 
                             if (doGlobal) globalSateTask = context.CallEntityAsync<int>(globalStateId, MicroflowControlKeys.Read);
-                            
+
                             projState = await projStateTask;
 
                             if (doGlobal) globalState = await globalSateTask;
@@ -179,29 +186,34 @@ namespace Microflow.Helpers
         }
 
         [Deterministic]
-        public static async Task LogOrchestrationEnd(this IDurableOrchestrationContext context, ProjectRun projectRun, string logRowKey)
+        public static async Task LogOrchestrationEnd(this IDurableOrchestrationContext context,
+                                                     ProjectRun projectRun,
+                                                     string logRowKey)
         {
             var logEntity = new LogOrchestrationEntity(false,
-                                                                   projectRun.ProjectName,
-                                                                   logRowKey,
-                                                                   $"{projectRun.ProjectName} completed successfully",
-                                                                   context.CurrentUtcDateTime,
-                                                                   projectRun.OrchestratorInstanceId,
-                                                                   projectRun.RunObject.GlobalKey);
+                                                       projectRun.ProjectName,
+                                                       logRowKey,
+                                                       $"{projectRun.ProjectName} completed successfully",
+                                                       context.CurrentUtcDateTime,
+                                                       projectRun.OrchestratorInstanceId,
+                                                       projectRun.RunObject.GlobalKey);
 
             await context.CallActivityAsync(CallNames.LogOrchestration, logEntity);
         }
 
         [Deterministic]
-        public static async Task LogOrchestrationStartAsync(this IDurableOrchestrationContext context, ILogger log, ProjectRun projectRun, string logRowKey)
+        public static async Task LogOrchestrationStartAsync(this IDurableOrchestrationContext context,
+                                                            ILogger log,
+                                                            ProjectRun projectRun,
+                                                            string logRowKey)
         {
             LogOrchestrationEntity logEntity = new LogOrchestrationEntity(true,
-                                                                       projectRun.ProjectName,
-                                                                       logRowKey,
-                                                                       $"{projectRun.ProjectName} started...",
-                                                                       context.CurrentUtcDateTime,
-                                                                       projectRun.OrchestratorInstanceId,
-                                                                       projectRun.RunObject.GlobalKey);
+                                                                          projectRun.ProjectName,
+                                                                          logRowKey,
+                                                                          $"{projectRun.ProjectName} started...",
+                                                                          context.CurrentUtcDateTime,
+                                                                          projectRun.OrchestratorInstanceId,
+                                                                          projectRun.RunObject.GlobalKey);
 
             await context.CallActivityAsync(CallNames.LogOrchestration, logEntity);
 

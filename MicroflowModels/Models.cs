@@ -26,8 +26,6 @@ namespace MicroflowModels
 
     public class MicroflowProject : MicroflowProjectBase
     {
-        [DataMember(Name = "StepIdFormat", EmitDefaultValue = false)]
-        public string StepIdFormat { get; set; } = "guid";
         public List<Step> Steps { get; set; }
 
         [DataMember(Name = "MergeFields", EmitDefaultValue = false)]

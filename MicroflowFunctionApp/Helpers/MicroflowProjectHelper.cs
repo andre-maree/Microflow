@@ -19,7 +19,9 @@ namespace Microflow.Helpers
         /// <summary>
         /// From the api call
         /// </summary>
-        public static async Task<HttpResponseMessage> InserOrUpdateProject(this IDurableEntityClient client, string content, string globalKey)
+        public static async Task<HttpResponseMessage> InserOrUpdateProject(this IDurableEntityClient client,
+                                                                           string content,
+                                                                           string globalKey)
         {
             bool doneReadyFalse = false;
 
@@ -27,7 +29,11 @@ namespace Microflow.Helpers
             MicroflowProject project = JsonSerializer.Deserialize<MicroflowProject>(content);
 
             //    // create a project run
-            ProjectRun projectRun = new ProjectRun() { ProjectName = project.ProjectName, Loop = project.Loop };
+            ProjectRun projectRun = new ProjectRun() 
+            { 
+                ProjectName = project.ProjectName, 
+                Loop = project.Loop 
+            };
 
             EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectStateId, projectRun.ProjectName);
 
@@ -71,7 +77,7 @@ namespace Microflow.Helpers
                 await delTask;
 
                 // prepare the workflow by persisting parent info to table storage
-                await projectRun.PrepareWorkflow(project.Steps, project.StepIdFormat);
+                await projectRun.PrepareWorkflow(project.Steps);
 
                 return new HttpResponseMessage(HttpStatusCode.Accepted);
             }
@@ -93,7 +99,11 @@ namespace Microflow.Helpers
 
                 try
                 {
-                    await MicroflowHelper.LogError(project.ProjectName ?? "no project", projectRun.RunObject.GlobalKey, projectRun.RunObject.RunId, e);
+                    _ = await MicroflowHelper.LogError(project.ProjectName
+                                                       ?? "no project",
+                                                       projectRun.RunObject.GlobalKey, 
+                                                       projectRun.RunObject.RunId,
+                                                       e);
                 }
                 catch
                 {
@@ -118,7 +128,7 @@ namespace Microflow.Helpers
         /// only call this to create a new workflow or to update an existing 1
         /// Saves step meta data to table storage and read during execution
         /// </summary>
-        public static async Task PrepareWorkflow(this ProjectRun projectRun, List<Step> steps, string StepIdFormat)
+        public static async Task PrepareWorkflow(this ProjectRun projectRun, List<Step> steps)
         {
             TableBatchOperation batch = new TableBatchOperation();
             List<Task> batchTasks = new List<Task>();

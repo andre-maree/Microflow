@@ -15,14 +15,15 @@ namespace Microflow.FlowControl
         /// </summary>
         [Deterministic]
         [FunctionName(CallNames.ExecuteStep)]
-        public static async Task ExecuteStep([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger inLog)
+        public static async Task ExecuteStep([OrchestrationTrigger] IDurableOrchestrationContext context,
+                                             ILogger inLog)
         {
             ProjectRun projectRun = context.GetInput<ProjectRun>();
             MicroflowContext microflowContext = null;
 
             try
             {
-                microflowContext = new MicroflowContext(context, projectRun, inLog); 
+                microflowContext = new MicroflowContext(context, projectRun, inLog);
 
                 await microflowContext.RunMicroflow();
             }
@@ -30,10 +31,16 @@ namespace Microflow.FlowControl
             {
                 if (microflowContext != null)
                 {
-                    string stepNumber = microflowContext.HttpCallWithRetries == null ? "-2" : microflowContext.HttpCallWithRetries.RowKey;
+                    string stepNumber = microflowContext.HttpCallWithRetries == null 
+                        ? "-2" 
+                        : microflowContext.HttpCallWithRetries.RowKey;
 
                     // log to table workflow completed
-                    LogErrorEntity errorEntity = new LogErrorEntity(projectRun?.ProjectName, Convert.ToInt32(stepNumber), e.Message, projectRun?.RunObject?.RunId);
+                    LogErrorEntity errorEntity = new LogErrorEntity(projectRun?.ProjectName,
+                                                                    Convert.ToInt32(stepNumber),
+                                                                    e.Message,
+                                                                    projectRun?.RunObject?.RunId);
+
                     await context.CallActivityAsync(CallNames.LogError, errorEntity);
 
                     throw;
