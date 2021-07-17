@@ -32,13 +32,7 @@ namespace Microflow.FlowControl
         {
             try
             {
-                //await client.PurgeInstanceHistoryAsync("7c828621-3e7a-44aa-96fd-c6946763cc2b");
-
-                ProjectRun projectRun = MicroflowStartupHelper.CreateStartupProjectRun(req.RequestUri.ParseQueryString(), ref instanceId, projectName);
-                string baseUrl = $"{Environment.GetEnvironmentVariable("BaseUrl")}";
-                projectRun.BaseUrl = baseUrl.EndsWith('/') 
-                    ? baseUrl.Remove(baseUrl.Length - 1) 
-                    : baseUrl;
+                ProjectRun projectRun = MicroflowProjectHelper.CreateProjectRun(req, ref instanceId, projectName);
 
                 // start
                 await client.StartNewAsync("Start", instanceId, projectRun);

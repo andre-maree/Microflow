@@ -16,6 +16,17 @@ namespace Microflow.Helpers
 {
     public static class MicroflowProjectHelper
     {
+        public static ProjectRun CreateProjectRun(HttpRequestMessage req, ref string instanceId, string projectName)
+        {
+            ProjectRun projectRun = MicroflowStartupHelper.CreateStartupProjectRun(req.RequestUri.ParseQueryString(), ref instanceId, projectName);
+            string baseUrl = $"{Environment.GetEnvironmentVariable("BaseUrl")}";
+            projectRun.BaseUrl = baseUrl.EndsWith('/')
+                ? baseUrl.Remove(baseUrl.Length - 1)
+                : baseUrl;
+
+            return projectRun;
+        }
+
         /// <summary>
         /// From the api call
         /// </summary>

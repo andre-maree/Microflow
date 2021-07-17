@@ -47,7 +47,7 @@ namespace MicroflowApiFunctionApp
         public static async Task<string> GetProjectJsonWithMergefieldsReplaced([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "GetProjectJsonWithMergefieldsReplaced/{projectName}")] HttpRequestMessage req,
                                                         string projectName)
         {
-            return MicroflowTableHelper.GetProjectAsJson(projectName);
+            return await Task.Run(() => MicroflowTableHelper.GetProjectAsJson(projectName));
         }
 
         /// <summary>
