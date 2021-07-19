@@ -207,7 +207,7 @@ This contains 3 functions responsible starting project execution.
 #### FlowControl
 This contains 4 classes responsible for workflow execution.
   * CanStepExecuteNow.cs : Locks and checks the parent completed count to determine if a child step can execute, all parents must be completed for a child step to       start execution. Parent steps execute in parallel.
-  * Microflow.cs : This contains the recursive function "ExecuteStep". It instantiates a MicroflowContext object and calls it`s "RunMicroflow" method.
+  * MicroflowStep.cs : This contains the recursive function "ExecuteStep". It instantiates a MicroflowContext object and calls it`s "RunMicroflow" method.
   * MicroflowStart.cs : This is where the workflow JSON payload is received via http post and then prepares the workflow and calls start.
   * MicroflowContext.cs : This contains the core execution code.
 
