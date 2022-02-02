@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microflow.Helpers;
-using Microsoft.Azure.Cosmos.Table;
+using Microsoft.WindowsAzure.Storage.Table;
 
 namespace Microflow.Models
 {

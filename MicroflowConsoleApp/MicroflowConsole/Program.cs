@@ -31,7 +31,7 @@ namespace MicroflowConsole
             {
                 var workflow = Tests.CreateTestWorkflow_SimpleSteps();
                 //var workflow = Tests.CreateTestWorkflow_10StepsParallel();
-                var workflow2 = Tests.CreateTestWorkflow_Complex1();
+                //var workflow = Tests.CreateTestWorkflow_Complex1();
                 //var workflow = Tests.CreateTestWorkflow_110Steps();
                 //var workflow2 = Tests.CreateTestWorkflow_110Steps();
 
@@ -43,13 +43,13 @@ namespace MicroflowConsole
                     MergeFields = CreateMergeFields()
                 };
 
-                var project2 = new MicroflowProject()
-                {
-                    ProjectName = "yyy",
-                    Steps = workflow2,
-                    Loop = 1,
-                    MergeFields = CreateMergeFields()
-                };
+                //var project2 = new MicroflowProject()
+                //{
+                //    ProjectName = "yyy",
+                //    Steps = workflow2,
+                //    Loop = 1,
+                //    MergeFields = CreateMergeFields()
+                //};
 
                 //List<int> topsteps = new List<int>();
                 //foreach(var step in workflow)
@@ -63,12 +63,12 @@ namespace MicroflowConsole
                 var tasks = new List<Task<HttpResponseMessage>>();
 
                 // call microflow from microflow
-                project.Steps[2].CalloutUrl = baseUrl + $"/start/{project2.ProjectName}";
+                //project.Steps[2].CalloutUrl = baseUrl + $"/start/{project2.ProjectName}";
                 //project.Steps[0].AsynchronousPollingEnabled = false;
                 // call Microflow insertorupdateproject when something ischanges in the workflow, but do not always call this when corcurrent multiple workflows
                 var result = HttpClient.PostAsJsonAsync(baseUrl + "/insertorupdateproject", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
                 //project.Steps[0].CalloutUrl = project.Steps[5].CalloutUrl;
-                var result2 = HttpClient.PostAsJsonAsync(baseUrl + "/insertorupdateproject/", project2, new JsonSerializerOptions(JsonSerializerDefaults.General));
+                //var result2 = HttpClient.PostAsJsonAsync(baseUrl + "/insertorupdateproject/", project2, new JsonSerializerOptions(JsonSerializerDefaults.General));
                 //var content = await result.Content.ReadAsStringAsync();
                 // singleton workflow instance
                 //var result2 = await HttpClient.PostAsJsonAsync("http://localhost:7071/api/start/39806875-9c81-4736-81c0-9be562dae71e/", new ProjectBase() { ProjectName = "MicroflowDemo" }, new JsonSerializerOptions(JsonSerializerDefaults.General));
@@ -81,7 +81,7 @@ namespace MicroflowConsole
                 ////parallel multiple workflow instances
 
                 await result;
-                await result2;
+                //await result2;
 
                 for (int i = 0; i < 1; i++)
                 {

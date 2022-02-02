@@ -1,6 +1,4 @@
-﻿using Microsoft.Azure.Cosmos.Table;
-
-namespace Microflow.Models
+﻿namespace Microflow.Models
 {
     public interface IHttpCallWithRetries : IHttpCall
     {

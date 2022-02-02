@@ -8,8 +8,8 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microflow.Helpers;
 using System.Net;
 using Microflow.Models;
-using Microsoft.Azure.Cosmos.Table;
 using static Microflow.Helpers.Constants;
+using Microsoft.WindowsAzure.Storage;
 
 namespace Microflow.FlowControl
 {

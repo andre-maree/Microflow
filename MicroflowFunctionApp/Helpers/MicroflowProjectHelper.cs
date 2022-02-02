@@ -8,8 +8,9 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microflow.Models;
 using MicroflowModels;
-using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Table;
 using static Microflow.Helpers.Constants;
 
 namespace Microflow.Helpers
@@ -62,7 +63,7 @@ namespace Microflow.Helpers
                 int globState = MicroflowStates.Ready;
                 if (globStateTask != null)
                 {
-                    await globStateTask;
+                    await globStateTask.ConfigureAwait(false);
                     globState = globStateTask.Result.EntityState;
                 }
 
@@ -77,7 +78,7 @@ namespace Microflow.Helpers
                 doneReadyFalse = true;
 
                 // reate the storage tables for the project
-                await MicroflowTableHelper.CreateTables();
+                await MicroflowTableHelper.CreateTables().ConfigureAwait(false);
 
                 //  clear step table data
                 Task delTask = projectRun.DeleteSteps();
@@ -85,10 +86,10 @@ namespace Microflow.Helpers
                 //    // parse the mergefields
                 content.ParseMergeFields(ref project);
 
-                await delTask;
+                await delTask.ConfigureAwait(false);
 
                 // prepare the workflow by persisting parent info to table storage
-                await projectRun.PrepareWorkflow(project.Steps);
+                await projectRun.PrepareWorkflow(project.Steps).ConfigureAwait(false);
 
                 return new HttpResponseMessage(HttpStatusCode.Accepted);
             }

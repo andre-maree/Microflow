@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Microflow.Models;
 using MicroflowModels;
-using Microsoft.Azure.Cosmos.Table;
+using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Table;
 
 namespace Microflow.Helpers
 {
@@ -52,9 +53,9 @@ namespace Microflow.Helpers
         }
 
         // TODO: move out to api app
-        public static string GetProjectAsJson(string projectName)
+        public static async Task<string> GetProjectAsJson(string projectName)
         {
-            List<HttpCallWithRetries> steps = GetStepsHttpCallWithRetries(projectName);
+            List<HttpCallWithRetries> steps = await GetStepsHttpCallWithRetries(projectName);
             List<Step> outSteps = new List<Step>();
 
             for (int i = 1; i < steps.Count; i++)
@@ -95,22 +96,62 @@ namespace Microflow.Helpers
             return JsonSerializer.Serialize(outSteps);
         }
 
-        public static List<HttpCallWithRetries> GetStepsHttpCallWithRetries(string projectName)
+        public static async Task<List<HttpCallWithRetries>> GetStepsHttpCallWithRetries(string projectName)
         {
             CloudTable table = GetStepsTable();
 
-            TableQuery<HttpCallWithRetries> query = new TableQuery<HttpCallWithRetries>().Where(TableQuery.GenerateFilterCondition("PartitionKey",
-                                                                                                                   QueryComparisons.Equal,
-                                                                                                                   projectName)); 
-
             List<HttpCallWithRetries> list = new List<HttpCallWithRetries>();
-            //TODO use the async version
-            foreach (HttpCallWithRetries httpCallWithRetries in table.ExecuteQuery(query))
+
+            foreach (var call in await table.ExecuteQueryAsync(new TableQuery<HttpCallWithRetries>().Where(TableQuery.GenerateFilterCondition("PartitionKey",
+                                                                                QueryComparisons.Equal,
+                                                                                projectName))))
             {
-                list.Add(httpCallWithRetries);
+                list.Add(new HttpCallWithRetries(call.PartitionKey, call.RowKey, call.StepId, call.SubSteps));
             }
 
             return list;
+        }
+
+        //public static async Task<IList<DynamicTableEntity>> ExecuteQueryAsync(this CloudTable table,
+        //       TableQuery query, CancellationToken cancellationToken = default(CancellationToken))
+        //{
+        //    var items = new List<DynamicTableEntity>();
+        //    TableContinuationToken token = null;
+        //    do
+        //    {
+        //        var seg =
+        //            await
+        //                table.ExecuteQuerySegmentedAsync(query, token, new TableRequestOptions(), new OperationContext(),
+        //                    cancellationToken);
+
+        //        token = seg.ContinuationToken;
+        //        items.AddRange(seg);
+
+
+        //    } while (token != null && !cancellationToken.IsCancellationRequested
+        //             && (query.TakeCount == null || items.Count < query.TakeCount.Value));
+
+
+        //    return items;
+        //}
+
+        public static async Task<IList<T>> ExecuteQueryAsync<T>(this CloudTable table, TableQuery<T> query, CancellationToken ct = default(CancellationToken), Action<IList<T>> onProgress = null) where T : ITableEntity, new()
+        {
+
+            var items = new List<T>();
+            TableContinuationToken token = null;
+
+            do
+            {
+
+                TableQuerySegment<T> seg = await table.ExecuteQuerySegmentedAsync<T>(query, token);
+                token = seg.ContinuationToken;
+                items.AddRange(seg);
+                if (onProgress != null) onProgress(items);
+
+            } while (token != null && !ct.IsCancellationRequested);
+
+            return items;
         }
 
         public static async Task<HttpCallWithRetries> GetStep(this ProjectRun projectRun)
@@ -123,19 +164,24 @@ namespace Microflow.Helpers
             return stepEnt;
         }
 
-        public static List<TableEntity> GetStepEntities(string projectName)
+        public static async Task<List<TableEntity>> GetStepEntities(string projectName)
         {
             CloudTable table = GetStepsTable();
 
             TableQuery<TableEntity> query = new TableQuery<TableEntity>().Where(TableQuery.GenerateFilterCondition("PartitionKey",
                                                                                                                    QueryComparisons.Equal,
                                                                                                                    projectName));
-            
+
             List<TableEntity> list = new List<TableEntity>();
             //TODO use the async version
-            foreach (TableEntity entity in table.ExecuteQuery(query))
+            //foreach (TableEntity entity in await table.ExecuteQueryAsync<DynamicTableEntity>(query))
+            //{
+            //    list.Add(entity);
+            //}
+
+            foreach (var dyna in await table.ExecuteQueryAsync(query))
             {
-                list.Add(entity);
+                list.Add(new TableEntity(dyna.PartitionKey, dyna.RowKey));
             }
 
             return list;
@@ -143,34 +189,46 @@ namespace Microflow.Helpers
 
         public static async Task DeleteSteps(this ProjectRun projectRun)
         {
-            CloudTable table = GetStepsTable();
-
-            List<TableEntity> steps = GetStepEntities(projectRun.ProjectName);
-            List<Task> batchTasks = new List<Task>();
-
-            if (steps.Count > 0)
+            try
             {
-                TableBatchOperation batchop = new TableBatchOperation();
+                CloudTable table = GetStepsTable();
 
-                foreach (TableEntity entity in steps)
+                List<TableEntity> steps = await GetStepEntities(projectRun.ProjectName).ConfigureAwait(false);
+                List<Task> batchTasks = new List<Task>();
+
+                if (steps.Count > 0)
                 {
-                    TableOperation delop = TableOperation.Delete(entity);
-                    batchop.Add(delop);
+                    TableBatchOperation batchop = new TableBatchOperation();
 
-                    if (batchop.Count == 100)
+                    foreach (TableEntity entity in steps)
+                    {
+                        entity.ETag = "*";
+                        TableOperation delop = TableOperation.Delete(entity);
+                        batchop.Add(delop);
+
+                        if (batchop.Count == 100)
+                        {
+                            batchTasks.Add(table.ExecuteBatchAsync(batchop));
+                            batchop = new TableBatchOperation();
+                        }
+                    }
+
+                    if (batchop.Count > 0)
                     {
                         batchTasks.Add(table.ExecuteBatchAsync(batchop));
-                        batchop = new TableBatchOperation();
                     }
                 }
 
-                if (batchop.Count > 0)
+                await Task.WhenAll(batchTasks).ConfigureAwait(false);
+            }
+            // TODO: find out why this happens on delete but delete works
+            catch (StorageException e)
+            {
+                if (!e.Message.Equals("Element 0 in the batch returned an unexpected response code."))
                 {
-                    batchTasks.Add(table.ExecuteBatchAsync(batchop));
+                    throw e;
                 }
             }
-
-            await Task.WhenAll(batchTasks);
         }
 
         /// <summary>
