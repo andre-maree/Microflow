@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
+using Azure;
+using Azure.Data.Tables;
+using Azure.Data.Tables.Models;
 using Microflow.Models;
 using MicroflowModels;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Table;
 
 namespace Microflow.Helpers
 {
@@ -30,37 +30,35 @@ namespace Microflow.Helpers
 
         public static async Task LogError(this LogErrorEntity logEntity)
         {
-            CloudTable table = GetErrorsTable();
-            TableOperation mergeOperation = TableOperation.InsertOrMerge(logEntity);
+            TableClient tableClient = GetErrorsTable();
 
-            await table.ExecuteAsync(mergeOperation);
+
+            await tableClient.UpsertEntityAsync(logEntity);
         }
 
         public static async Task LogStep(this LogStepEntity logEntity)
         {
-            CloudTable table = GetLogStepsTable();
-            TableOperation mergeOperation = TableOperation.InsertOrMerge(logEntity);
+            TableClient tableClient = GetLogStepsTable();
 
-            await table.ExecuteAsync(mergeOperation);
+            await tableClient.UpsertEntityAsync(logEntity);
         }
 
         public static async Task LogOrchestration(this LogOrchestrationEntity logEntity)
         {
-            CloudTable table = GetLogOrchestrationTable();
-            TableOperation mergeOperation = TableOperation.InsertOrMerge(logEntity);
+            TableClient tableClient = GetLogOrchestrationTable();
 
-            await table.ExecuteAsync(mergeOperation);
+            await tableClient.UpsertEntityAsync(logEntity);
         }
 
         // TODO: move out to api app
         public static async Task<string> GetProjectAsJson(string projectName)
         {
-            List<HttpCallWithRetries> steps = await GetStepsHttpCallWithRetries(projectName);
+            AsyncPageable<HttpCallWithRetries> steps = GetStepsHttpCallWithRetries(projectName);
+
             List<Step> outSteps = new List<Step>();
 
-            for (int i = 1; i < steps.Count; i++)
+            await foreach (HttpCallWithRetries step in steps.ConfigureAwait(false))
             {
-                HttpCallWithRetries step = steps[i];
                 Step newstep = new Step()
                 {
                     StepId = step.RowKey,
@@ -96,139 +94,52 @@ namespace Microflow.Helpers
             return JsonSerializer.Serialize(outSteps);
         }
 
-        public static async Task<List<HttpCallWithRetries>> GetStepsHttpCallWithRetries(string projectName)
+        public static AsyncPageable<HttpCallWithRetries> GetStepsHttpCallWithRetries(string projectName)
         {
-            CloudTable table = GetStepsTable();
+            TableClient tableClient = GetStepsTable();
 
-            List<HttpCallWithRetries> list = new List<HttpCallWithRetries>();
-
-            foreach (var call in await table.ExecuteQueryAsync(new TableQuery<HttpCallWithRetries>().Where(TableQuery.GenerateFilterCondition("PartitionKey",
-                                                                                QueryComparisons.Equal,
-                                                                                projectName))))
-            {
-                list.Add(new HttpCallWithRetries(call.PartitionKey, call.RowKey, call.StepId, call.SubSteps));
-            }
-
-            return list;
-        }
-
-        //public static async Task<IList<DynamicTableEntity>> ExecuteQueryAsync(this CloudTable table,
-        //       TableQuery query, CancellationToken cancellationToken = default(CancellationToken))
-        //{
-        //    var items = new List<DynamicTableEntity>();
-        //    TableContinuationToken token = null;
-        //    do
-        //    {
-        //        var seg =
-        //            await
-        //                table.ExecuteQuerySegmentedAsync(query, token, new TableRequestOptions(), new OperationContext(),
-        //                    cancellationToken);
-
-        //        token = seg.ContinuationToken;
-        //        items.AddRange(seg);
-
-
-        //    } while (token != null && !cancellationToken.IsCancellationRequested
-        //             && (query.TakeCount == null || items.Count < query.TakeCount.Value));
-
-
-        //    return items;
-        //}
-
-        public static async Task<IList<T>> ExecuteQueryAsync<T>(this CloudTable table, TableQuery<T> query, CancellationToken ct = default(CancellationToken), Action<IList<T>> onProgress = null) where T : ITableEntity, new()
-        {
-
-            var items = new List<T>();
-            TableContinuationToken token = null;
-
-            do
-            {
-
-                TableQuerySegment<T> seg = await table.ExecuteQuerySegmentedAsync<T>(query, token);
-                token = seg.ContinuationToken;
-                items.AddRange(seg);
-                if (onProgress != null) onProgress(items);
-
-            } while (token != null && !ct.IsCancellationRequested);
-
-            return items;
+            return tableClient.QueryAsync<HttpCallWithRetries>(filter: $"PartitionKey eq '{projectName}'");
         }
 
         public static async Task<HttpCallWithRetries> GetStep(this ProjectRun projectRun)
         {
-            CloudTable table = GetStepsTable();
-            TableOperation retrieveOperation = TableOperation.Retrieve<HttpCallWithRetries>($"{projectRun.ProjectName}", $"{projectRun.RunObject.StepNumber}");
-            TableResult result = await table.ExecuteAsync(retrieveOperation);
-            HttpCallWithRetries stepEnt = result.Result as HttpCallWithRetries;
+            TableClient tableClient = GetStepsTable();
 
-            return stepEnt;
+            return await tableClient.GetEntityAsync<HttpCallWithRetries>(projectRun.ProjectName, projectRun.RunObject.StepNumber);
         }
 
-        public static async Task<List<TableEntity>> GetStepEntities(string projectName)
+        public static AsyncPageable<TableEntity> GetStepEntities(string projectName)
         {
-            CloudTable table = GetStepsTable();
+            TableClient tableClient = GetStepsTable();
 
-            TableQuery<TableEntity> query = new TableQuery<TableEntity>().Where(TableQuery.GenerateFilterCondition("PartitionKey",
-                                                                                                                   QueryComparisons.Equal,
-                                                                                                                   projectName));
-
-            List<TableEntity> list = new List<TableEntity>();
-            //TODO use the async version
-            //foreach (TableEntity entity in await table.ExecuteQueryAsync<DynamicTableEntity>(query))
-            //{
-            //    list.Add(entity);
-            //}
-
-            foreach (var dyna in await table.ExecuteQueryAsync(query))
-            {
-                list.Add(new TableEntity(dyna.PartitionKey, dyna.RowKey));
-            }
-
-            return list;
+            return tableClient.QueryAsync<TableEntity>(filter: $"PartitionKey eq '{projectName}'", select: new List<string>() { "PartitionKey", "RowKey" });
         }
 
         public static async Task DeleteSteps(this ProjectRun projectRun)
         {
-            try
+            TableClient tableClient = GetStepsTable();
+
+            var steps = GetStepEntities(projectRun.ProjectName);
+            List<TableTransactionAction> batch = new List<TableTransactionAction>();
+            List<Task> batchTasks = new List<Task>();
+
+            await foreach (TableEntity entity in steps.ConfigureAwait(false))
             {
-                CloudTable table = GetStepsTable();
+                batch.Add(new TableTransactionAction(TableTransactionActionType.Delete, entity));
 
-                List<TableEntity> steps = await GetStepEntities(projectRun.ProjectName).ConfigureAwait(false);
-                List<Task> batchTasks = new List<Task>();
-
-                if (steps.Count > 0)
+                if (batch.Count == 100)
                 {
-                    TableBatchOperation batchop = new TableBatchOperation();
-
-                    foreach (TableEntity entity in steps)
-                    {
-                        entity.ETag = "*";
-                        TableOperation delop = TableOperation.Delete(entity);
-                        batchop.Add(delop);
-
-                        if (batchop.Count == 100)
-                        {
-                            batchTasks.Add(table.ExecuteBatchAsync(batchop));
-                            batchop = new TableBatchOperation();
-                        }
-                    }
-
-                    if (batchop.Count > 0)
-                    {
-                        batchTasks.Add(table.ExecuteBatchAsync(batchop));
-                    }
-                }
-
-                await Task.WhenAll(batchTasks).ConfigureAwait(false);
-            }
-            // TODO: find out why this happens on delete but delete works
-            catch (StorageException e)
-            {
-                if (!e.Message.Equals("Element 0 in the batch returned an unexpected response code."))
-                {
-                    throw e;
+                    batchTasks.Add(tableClient.SubmitTransactionAsync(batch));
+                    batch = new List<TableTransactionAction>();
                 }
             }
+
+            if (batch.Count > 0)
+            {
+                batchTasks.Add(tableClient.SubmitTransactionAsync(batch));
+            }
+
+            await Task.WhenAll(batchTasks).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -237,21 +148,21 @@ namespace Microflow.Helpers
         public static async Task CreateTables()
         {
             // StepsMyProject for step config
-            CloudTable stepsTable = GetStepsTable();
+            TableClient stepsTable = GetStepsTable();
 
             // MicroflowLog table
-            CloudTable logOrchestrationTable = GetLogOrchestrationTable();
+            TableClient logOrchestrationTable = GetLogOrchestrationTable();
 
             // MicroflowLog table
-            CloudTable logStepsTable = GetLogStepsTable();
+            TableClient logStepsTable = GetLogStepsTable();
 
             // ErrorMyProject table
-            CloudTable errorsTable = GetErrorsTable();
+            TableClient errorsTable = GetErrorsTable();
 
-            Task<bool> t1 = stepsTable.CreateIfNotExistsAsync();
-            Task<bool> t2 = logOrchestrationTable.CreateIfNotExistsAsync();
-            Task<bool> t3 = logStepsTable.CreateIfNotExistsAsync();
-            Task<bool> t4 = errorsTable.CreateIfNotExistsAsync();
+            Task<Response<TableItem>> t1 = stepsTable.CreateIfNotExistsAsync();
+            Task<Response<TableItem>> t2 = logOrchestrationTable.CreateIfNotExistsAsync();
+            Task<Response<TableItem>> t3 = logStepsTable.CreateIfNotExistsAsync();
+            Task<Response<TableItem>> t4 = errorsTable.CreateIfNotExistsAsync();
 
             await t1;
             await t2;
@@ -263,39 +174,37 @@ namespace Microflow.Helpers
 
         #region Get table references
 
-        private static CloudTable GetErrorsTable()
+        private static TableClient GetErrorsTable()
         {
-            CloudTableClient tableClient = GetTableClient();
+            TableServiceClient tableClient = GetTableClient();
 
-            return tableClient.GetTableReference($"MicroflowLogErrors");
+            return tableClient.GetTableClient($"MicroflowLogErrors");
         }
 
-        public static CloudTable GetStepsTable()
+        public static TableClient GetStepsTable()
         {
-            CloudTableClient tableClient = GetTableClient();
+            TableServiceClient tableClient = GetTableClient();
 
-            return tableClient.GetTableReference($"MicroflowStepConfigs");
+            return tableClient.GetTableClient($"MicroflowStepConfigs");
         }
 
-        private static CloudTable GetLogOrchestrationTable()
+        private static TableClient GetLogOrchestrationTable()
         {
-            CloudTableClient tableClient = GetTableClient();
+            TableServiceClient tableClient = GetTableClient();
 
-            return tableClient.GetTableReference($"MicroflowLogOrchestrations");
+            return tableClient.GetTableClient($"MicroflowLogOrchestrations");
         }
 
-        private static CloudTable GetLogStepsTable()
+        private static TableClient GetLogStepsTable()
         {
-            CloudTableClient tableClient = GetTableClient();
+            TableServiceClient tableClient = GetTableClient();
 
-            return tableClient.GetTableReference($"MicroflowLogSteps");
+            return tableClient.GetTableClient($"MicroflowLogSteps");
         }
 
-        private static CloudTableClient GetTableClient()
+        private static TableServiceClient GetTableClient()
         {
-            CloudStorageAccount storageAccount = CloudStorageAccount.Parse(Environment.GetEnvironmentVariable("MicroflowStorage"));
-
-            return storageAccount.CreateCloudTableClient();
+            return new TableServiceClient(Environment.GetEnvironmentVariable("MicroflowStorage"));
         }
 
         #endregion

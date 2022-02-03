@@ -6,11 +6,10 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Azure.Data.Tables;
 using Microflow.Models;
 using MicroflowModels;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Table;
 using static Microflow.Helpers.Constants;
 
 namespace Microflow.Helpers
@@ -93,7 +92,7 @@ namespace Microflow.Helpers
 
                 return new HttpResponseMessage(HttpStatusCode.Accepted);
             }
-            catch (StorageException e)
+            catch (Azure.RequestFailedException e)
             {
                 HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.BadRequest)
                 {
@@ -113,7 +112,7 @@ namespace Microflow.Helpers
                 {
                     _ = await MicroflowHelper.LogError(project.ProjectName
                                                        ?? "no project",
-                                                       projectRun.RunObject.GlobalKey, 
+                                                       projectRun.RunObject.GlobalKey,
                                                        projectRun.RunObject.RunId,
                                                        e);
                 }
@@ -142,9 +141,9 @@ namespace Microflow.Helpers
         /// </summary>
         public static async Task PrepareWorkflow(this ProjectRun projectRun, List<Step> steps)
         {
-            TableBatchOperation batch = new TableBatchOperation();
+            List<TableTransactionAction> batch = new List<TableTransactionAction>();
             List<Task> batchTasks = new List<Task>();
-            CloudTable stepsTable = MicroflowTableHelper.GetStepsTable();
+            TableClient stepsTable = MicroflowTableHelper.GetStepsTable();
             Step stepContainer = new Step(-1, null);
             StringBuilder sb = new StringBuilder();
             List<(int StepNumber, int ParentCount)> liParentCounts = new List<(int, int)>();
@@ -193,7 +192,7 @@ namespace Microflow.Helpers
                     httpCallRetriesEntity.RetryBackoffCoefficient = step.RetryOptions.BackoffCoefficient;
 
                     // batchop
-                    batch.Add(TableOperation.InsertOrReplace(httpCallRetriesEntity));
+                    batch.Add(new TableTransactionAction(TableTransactionActionType.UpsertReplace, httpCallRetriesEntity));
                 }
                 else
                 {
@@ -209,15 +208,15 @@ namespace Microflow.Helpers
                     };
 
                     // batchop
-                    batch.Add(TableOperation.InsertOrReplace(httpCallEntity));
+                    batch.Add(new TableTransactionAction(TableTransactionActionType.UpsertReplace, httpCallEntity));
                 }
 
                 sb.Clear();
 
                 if (batch.Count == 100)
                 {
-                    batchTasks.Add(stepsTable.ExecuteBatchAsync(batch));
-                    batch = new TableBatchOperation();
+                    batchTasks.Add(stepsTable.SubmitTransactionAsync(batch)); 
+                    batch = new List<TableTransactionAction>();
                 }
             }
 
@@ -228,9 +227,9 @@ namespace Microflow.Helpers
 
             HttpCall containerEntity = new HttpCall(projectRun.ProjectName, "-1", null, sb.ToString());
 
-            batch.Add(TableOperation.InsertOrReplace(containerEntity));
+            batch.Add(new TableTransactionAction(TableTransactionActionType.UpsertReplace, containerEntity));
 
-            batchTasks.Add(stepsTable.ExecuteBatchAsync(batch));
+            batchTasks.Add(stepsTable.SubmitTransactionAsync(batch));
 
             await Task.WhenAll(batchTasks);
         }

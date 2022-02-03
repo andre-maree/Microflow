@@ -1,0 +1,47 @@
+[
+  {
+    "name": "AzureWebJobsDashboard",
+    "value": "DefaultEndpointsProtocol=https;AccountName=microflowapp202202032142;AccountKey=lsGSaloGV9L6RCn7XlR/zDZe6xOnOv8BtdZACqxvJpkIFiqWSHiiAIg12LpwK5jt4Rk+WeeUG57ykIjgTiSaqg==;EndpointSuffix=core.windows.net",
+    "slotSetting": false
+  },
+  {
+    "name": "AzureWebJobsStorage",
+    "value": "DefaultEndpointsProtocol=https;AccountName=microflowapp202202032142;AccountKey=lsGSaloGV9L6RCn7XlR/zDZe6xOnOv8BtdZACqxvJpkIFiqWSHiiAIg12LpwK5jt4Rk+WeeUG57ykIjgTiSaqg==;EndpointSuffix=core.windows.net",
+    "slotSetting": false
+  },
+  {
+    "name": "BaseUrl",
+    "value": "https://microflowapp20220203214232.azurewebsites.net/",
+    "slotSetting": false
+  },
+  {
+    "name": "CallBackBase",
+    "value": "callback",
+    "slotSetting": false
+  },
+  {
+    "name": "FUNCTIONS_EXTENSION_VERSION",
+    "value": "~4",
+    "slotSetting": false
+  },
+  {
+    "name": "FUNCTIONS_WORKER_RUNTIME",
+    "value": "dotnet",
+    "slotSetting": false
+  },
+  {
+    "name": "MicroflowStorage",
+    "value": "DefaultEndpointsProtocol=https;AccountName=microflowapp202202032142;AccountKey=lsGSaloGV9L6RCn7XlR/zDZe6xOnOv8BtdZACqxvJpkIFiqWSHiiAIg12LpwK5jt4Rk+WeeUG57ykIjgTiSaqg==;EndpointSuffix=core.windows.net",
+    "slotSetting": false
+  },
+  {
+    "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+    "value": "DefaultEndpointsProtocol=https;AccountName=microflowapp202202032142;AccountKey=lsGSaloGV9L6RCn7XlR/zDZe6xOnOv8BtdZACqxvJpkIFiqWSHiiAIg12LpwK5jt4Rk+WeeUG57ykIjgTiSaqg==;EndpointSuffix=core.windows.net",
+    "slotSetting": false
+  },
+  {
+    "name": "WEBSITE_CONTENTSHARE",
+    "value": "microflowapp20220203214232",
+    "slotSetting": false
+  }
+]

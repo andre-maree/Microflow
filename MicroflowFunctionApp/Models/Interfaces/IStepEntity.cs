@@ -1,4 +1,4 @@
-﻿using Microsoft.WindowsAzure.Storage.Table;
+﻿using Azure.Data.Tables;
 using System.Collections.Generic;
 
 namespace Microflow.Models

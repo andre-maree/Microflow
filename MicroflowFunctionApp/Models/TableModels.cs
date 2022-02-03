@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
+using Azure;
+using Azure.Data.Tables;
 using Microflow.Helpers;
-using Microsoft.WindowsAzure.Storage.Table;
 
 namespace Microflow.Models
 {
@@ -10,7 +12,7 @@ namespace Microflow.Models
     /// <summary>
     /// Used for step level logging
     /// </summary>
-    public class LogErrorEntity : TableEntity
+    public class LogErrorEntity : ITableEntity
     {
         public LogErrorEntity() { }
 
@@ -28,12 +30,16 @@ namespace Microflow.Models
         public int StepNumber { get; set; }
         public DateTime Date { get; set; }
         public string Message { get; set; }
+        public string PartitionKey { get; set; }
+        public string RowKey { get; set; }
+        public DateTimeOffset? Timestamp { get; set; }
+        public ETag ETag { get; set; }
     }
 
     /// <summary>
     /// Used for step level logging
     /// </summary>
-    public class LogStepEntity : TableEntity
+    public class LogStepEntity : ITableEntity
     {
         public LogStepEntity() { }
 
@@ -63,12 +69,16 @@ namespace Microflow.Models
         public string GlobalKey { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        public string PartitionKey { get; set; }
+        public string RowKey { get; set; }
+        public DateTimeOffset? Timestamp { get; set; }
+        public ETag ETag { get; set; }
     }
 
     /// <summary>
     /// Used for orchestration level logging
     /// </summary>
-    public class LogOrchestrationEntity : TableEntity
+    public class LogOrchestrationEntity : ITableEntity
     {
         public LogOrchestrationEntity() { }
 
@@ -91,17 +101,25 @@ namespace Microflow.Models
         public string LogMessage { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        public string PartitionKey { get; set; }
+        public string RowKey { get; set; }
+        public DateTimeOffset? Timestamp { get; set; }
+        public ETag ETag { get; set; }
     }
 
     /// <summary>
     /// Base class for http calls
     /// </summary>
-    public class StepEntity : TableEntity, IStepEntity
+    public class StepEntity : ITableEntity, IStepEntity
     {
         public StepEntity() { }
 
         public string SubSteps { get; set; }
         public Dictionary<string, string> MergeFields { get; set; }
+        public string PartitionKey { get; set; }
+        public string RowKey { get; set; }
+        public DateTimeOffset? Timestamp { get; set; }
+        public ETag ETag { get; set; }
     }
 
     /// <summary>
@@ -127,16 +145,17 @@ namespace Microflow.Models
         public bool IsHttpGet { get; set; }
         public string StepId { get; set; }
 
-        [IgnoreProperty]
+
+        [IgnoreDataMember]
         public string GlobalKey { get; set; }
 
-        [IgnoreProperty]
+        [IgnoreDataMember]
         public string RunId { get; set; }
 
-        [IgnoreProperty]
+        [IgnoreDataMember]
         public string MainOrchestrationId { get; set; }
 
-        [IgnoreProperty]
+        [IgnoreDataMember]
         public string BaseUrl { get; set; }
     }
 
@@ -166,7 +185,7 @@ namespace Microflow.Models
     /// <summary>
     /// This is used to check if all parents have completed
     /// </summary>
-    public class ParentCountCompletedEntity : TableEntity
+    public class ParentCountCompletedEntity : ITableEntity
     {
         public ParentCountCompletedEntity() { }
 
@@ -177,27 +196,11 @@ namespace Microflow.Models
         }
 
         public int ParentCountCompleted { get; set; }
+        public string PartitionKey { get; set; }
+        public string RowKey { get; set; }
+        public DateTimeOffset? Timestamp { get; set; }
+        public ETag ETag { get; set; }
     }
-
-    /// <summary>
-    /// This is used to store higher level project execution state data
-    /// </summary>
-    //public class ProjectControlEntity : TableEntity
-    //{
-    //    public ProjectControlEntity() { }
-
-    //    public ProjectControlEntity(string projectName, int state, int loop = 1, string instanceId = null)
-    //    {
-    //        PartitionKey = projectName;
-    //        RowKey = instanceId ?? "0";
-    //        State = state;
-    //        Loop = loop;
-    //    }
-
-    //    public int Loop { get; set; }
-    //    public int State { get; set; }
-    //    public int PausedStepId { get; set; }
-    //}
 
     #endregion
 }

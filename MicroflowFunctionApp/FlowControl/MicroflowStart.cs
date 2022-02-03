@@ -9,7 +9,7 @@ using Microflow.Helpers;
 using System.Net;
 using Microflow.Models;
 using static Microflow.Helpers.Constants;
-using Microsoft.WindowsAzure.Storage;
+using Azure;
 
 namespace Microflow.FlowControl
 {
@@ -40,7 +40,7 @@ namespace Microflow.FlowControl
                 return await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromSeconds(1));
 
             }
-            catch (StorageException ex)
+            catch (RequestFailedException ex)
             {
                 HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.InternalServerError)
                 {
@@ -85,7 +85,7 @@ namespace Microflow.FlowControl
 
                 await context.StartMicroflowProject(log, projectRun);
             }
-            catch (StorageException e)
+            catch (RequestFailedException e)
             {
                 // log to table workflow completed
                 LogErrorEntity errorEntity = new LogErrorEntity(projectRun.ProjectName,
