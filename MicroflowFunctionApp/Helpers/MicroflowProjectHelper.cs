@@ -62,7 +62,7 @@ namespace Microflow.Helpers
                 int globState = MicroflowStates.Ready;
                 if (globStateTask != null)
                 {
-                    await globStateTask.ConfigureAwait(false);
+                    await globStateTask;
                     globState = globStateTask.Result.EntityState;
                 }
 
@@ -77,7 +77,7 @@ namespace Microflow.Helpers
                 doneReadyFalse = true;
 
                 // reate the storage tables for the project
-                await MicroflowTableHelper.CreateTables().ConfigureAwait(false);
+                await MicroflowTableHelper.CreateTables();
 
                 //  clear step table data
                 Task delTask = projectRun.DeleteSteps();
@@ -85,10 +85,10 @@ namespace Microflow.Helpers
                 //    // parse the mergefields
                 content.ParseMergeFields(ref project);
 
-                await delTask.ConfigureAwait(false);
+                await delTask;
 
                 // prepare the workflow by persisting parent info to table storage
-                await projectRun.PrepareWorkflow(project.Steps).ConfigureAwait(false);
+                await projectRun.PrepareWorkflow(project.Steps);
 
                 return new HttpResponseMessage(HttpStatusCode.Accepted);
             }

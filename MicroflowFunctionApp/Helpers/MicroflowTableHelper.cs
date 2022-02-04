@@ -57,7 +57,7 @@ namespace Microflow.Helpers
 
             List<Step> outSteps = new List<Step>();
 
-            await foreach (HttpCallWithRetries step in steps.ConfigureAwait(false))
+            await foreach (HttpCallWithRetries step in steps)
             {
                 Step newstep = new Step()
                 {
@@ -123,7 +123,7 @@ namespace Microflow.Helpers
             List<TableTransactionAction> batch = new List<TableTransactionAction>();
             List<Task> batchTasks = new List<Task>();
 
-            await foreach (TableEntity entity in steps.ConfigureAwait(false))
+            await foreach (TableEntity entity in steps)
             {
                 batch.Add(new TableTransactionAction(TableTransactionActionType.Delete, entity));
 
@@ -139,7 +139,7 @@ namespace Microflow.Helpers
                 batchTasks.Add(tableClient.SubmitTransactionAsync(batch));
             }
 
-            await Task.WhenAll(batchTasks).ConfigureAwait(false);
+            await Task.WhenAll(batchTasks);
         }
 
         /// <summary>
