@@ -209,6 +209,7 @@ namespace Microflow.FlowControl
             if (MicroflowHttpResponse.Success || !HttpCallWithRetries.StopOnActionFailed)
             {
                 LogStepEnd();
+
                 List<Task<CanExecuteResult>> canExecuteTasks = CanExecute();
 
                 await ProcessStepCanExecuteTasks(canExecuteTasks);
@@ -284,7 +285,51 @@ namespace Microflow.FlowControl
                         GlobalKey = ProjectRun.RunObject.GlobalKey
                     };
 
-                    MicroflowTasks.Add(MicroflowDurableContext.CallSubOrchestratorAsync(CallNames.ExecuteStep, ProjectRun));
+
+                    //await MicroflowDurableContext.CallSubOrchestratorAsync<CanExecuteResult>(CallNames.CanExecuteNow, new CanExecuteNowObject()
+                    //{
+                    //    RunId = ProjectRun.RunObject.RunId,
+                    //    //ScaleGroupCount = ProjectRun.RunObject.
+                    //    ProjectName = ProjectRun.ProjectName
+                    //});
+
+
+                    //// 7 days in paused state till exit
+                    //DateTime endDate = MicroflowDurableContext.CurrentUtcDateTime.AddDays(7);
+                    //// start interval seconds
+                    //int count = 15;
+                    //// max interval seconds
+                    //const int max = 60; // 1 mins
+
+                    //using (CancellationTokenSource cts = new CancellationTokenSource())
+                    //{
+                    //    try
+                    //    {
+                    //        while (MicroflowDurableContext.CurrentUtcDateTime < endDate)
+                    //        {
+                    //            DateTime deadline = MicroflowDurableContext.CurrentUtcDateTime.Add(TimeSpan.FromSeconds(count < max ? count : max));
+                    //            await MicroflowDurableContext.CreateTimer(deadline, cts.Token);
+                    //            count++;
+
+                    //        }
+                    //    }
+                    //    catch (TaskCanceledException)
+                    //    {
+                    //        Logger.LogCritical("========================TaskCanceledException==========================");
+                    //    }
+                    //    finally
+                    //    {
+                    //        cts.Dispose();
+                    //    }
+
+
+
+
+
+
+
+
+                        MicroflowTasks.Add(MicroflowDurableContext.CallSubOrchestratorAsync(CallNames.ExecuteStep, ProjectRun));
                 }
 
                 canExecuteTasks.Remove(canExecuteTask);

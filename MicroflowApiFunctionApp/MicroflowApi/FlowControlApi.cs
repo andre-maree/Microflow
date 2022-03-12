@@ -1,10 +1,11 @@
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using static Microflow.Helpers.Constants;
+//using static Microflow.Helpers.Constants;
 
 namespace MicroflowApiFunctionApp
 {
@@ -51,41 +52,78 @@ namespace MicroflowApiFunctionApp
         /// <summary>
         /// Get global state
         /// </summary>
-        [FunctionName("getGlobalState")]
-        public static async Task<HttpResponseMessage> GetGlobalState([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-                                                                  Route = "GlobalState/{globalKey}")] HttpRequestMessage req,
-                                                                  [DurableClient] IDurableEntityClient client, string globalKey)
-        {
-            EntityId globalStateId = new EntityId("GlobalState", globalKey);
-            Task<EntityStateResponse<int>> stateTask = client.ReadEntityStateAsync<int>(globalStateId);
+        //[FunctionName("getGlobalState")]
+        //public static async Task<HttpResponseMessage> GetGlobalState([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
+        //                                                          Route = "GlobalState/{globalKey}")] HttpRequestMessage req,
+        //                                                          [DurableClient] IDurableEntityClient client, string globalKey)
+        //{
+        //    EntityId globalStateId = new EntityId("GlobalState", globalKey);
+        //    Task<EntityStateResponse<int>> stateTask = client.ReadEntityStateAsync<int>(globalStateId);
 
-            HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);
+        //    HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);
 
-            await stateTask;
+        //    await stateTask;
 
-            resp.Content = new StringContent(stateTask.Result.EntityState.ToString());
+        //    resp.Content = new StringContent(stateTask.Result.EntityState.ToString());
 
-            return resp;
-        }
+        //    return resp;
+        //}
+
+        ///// <summary>
+        ///// Get project state
+        ///// </summary>
+        //[FunctionName("getProjectState")]
+        //public static async Task<HttpResponseMessage> GetProjectState([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
+        //                                                          Route = "ProjectState/{projectName}")] HttpRequestMessage req,
+        //                                                          [DurableClient] IDurableEntityClient client, string projectName)
+        //{
+        //    EntityId runStateId = new EntityId("ProjectState", projectName);
+        //    Task<EntityStateResponse<int>> stateTask = client.ReadEntityStateAsync<int>(runStateId);
+
+        //    HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);
+
+        //    await stateTask;
+
+        //    resp.Content = new StringContent(stateTask.Result.EntityState.ToString());
+
+        //    return resp;
+        //}
 
         /// <summary>
         /// Get project state
         /// </summary>
-        [FunctionName("getProjectState")]
-        public static async Task<HttpResponseMessage> GetProjectState([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-                                                                  Route = "ProjectState/{projectName}")] HttpRequestMessage req,
-                                                                  [DurableClient] IDurableEntityClient client, string projectName)
+        [FunctionName("setScaleGroup")]
+        public static async Task<HttpResponseMessage> SetScaleGroup([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
+                                                                  Route = "ScaleGroup/{scaleGroupId}/{maxInstanceCount}")] HttpRequestMessage req,
+                                                                  [DurableClient] IDurableEntityClient client, string scaleGroupId, int maxInstanceCount)
         {
-            EntityId runStateId = new EntityId("ProjectState", projectName);
-            Task<EntityStateResponse<int>> stateTask = client.ReadEntityStateAsync<int>(runStateId);
+            EntityId scaleGroupCountId = new EntityId("ScaleGroupCount", scaleGroupId);
+            await client.SignalEntityAsync(scaleGroupCountId, "set", maxInstanceCount);
 
             HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);
 
-            await stateTask;
+            //await stateTask;
 
-            resp.Content = new StringContent(stateTask.Result.EntityState.ToString());
+            //resp.Content = new StringContent(stateTask.Result.EntityState.ToString());
 
             return resp;
+        }
+
+        [FunctionName("ScaleGroupCount")]
+        public static void ScaleGroupCount([EntityTrigger] IDurableEntityContext ctx)
+        {
+            switch (ctx.OperationName.ToLowerInvariant())
+            {
+                case "set":
+                    ctx.SetState(ctx.GetInput<int>());
+                    break;
+                case "get":
+                    ctx.Return(ctx.GetState<int>());
+                    break;
+                case "delete":
+                    ctx.DeleteState();
+                    break;
+            }
         }
     }
 }

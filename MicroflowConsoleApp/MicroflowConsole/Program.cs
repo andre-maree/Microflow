@@ -11,8 +11,8 @@ namespace MicroflowConsole
     class Program
     {
         public static readonly HttpClient HttpClient = new HttpClient();
-        //private static string baseUrl = "http://localhost:7071";
-        private static string baseUrl = "https://microflowapp20220203214232.azurewebsites.net";
+        private static string baseUrl = "http://localhost:7071";
+        //private static string baseUrl = "https://microflowapp20220203214232.azurewebsites.net";
 
         static async Task Main(string[] args)
         {
