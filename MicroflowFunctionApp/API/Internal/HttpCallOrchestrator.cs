@@ -21,7 +21,7 @@ namespace Microflow.API.Internal
 
             bool doneAdd = false;
             bool doneSubtract = false;
-            EntityId countId = new EntityId(MicroflowEntities.StepCounter, httpCall.PartitionKey + httpCall.RowKey);
+            EntityId countId = new EntityId(MicroflowEntities.StepCount, httpCall.PartitionKey + httpCall.RowKey);
 
             try
             {

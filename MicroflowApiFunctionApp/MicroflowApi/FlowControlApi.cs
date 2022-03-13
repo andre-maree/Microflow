@@ -97,7 +97,7 @@ namespace MicroflowApiFunctionApp
                                                                   Route = "ScaleGroup/{scaleGroupId}/{maxInstanceCount}")] HttpRequestMessage req,
                                                                   [DurableClient] IDurableEntityClient client, string scaleGroupId, int maxInstanceCount)
         {
-            EntityId scaleGroupCountId = new EntityId("ScaleGroupCount", scaleGroupId);
+            EntityId scaleGroupCountId = new EntityId("ScaleGroupMaxConcurrentInstanceCount", scaleGroupId);
             await client.SignalEntityAsync(scaleGroupCountId, "set", maxInstanceCount);
 
             HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);
@@ -109,8 +109,8 @@ namespace MicroflowApiFunctionApp
             return resp;
         }
 
-        [FunctionName("ScaleGroupCount")]
-        public static void ScaleGroupCount([EntityTrigger] IDurableEntityContext ctx)
+        [FunctionName("ScaleGroupMaxConcurrentInstanceCount")]
+        public static void ScaleGroupMaxConcurrentInstanceCount([EntityTrigger] IDurableEntityContext ctx)
         {
             switch (ctx.OperationName.ToLowerInvariant())
             {

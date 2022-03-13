@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microflow.Models;
 using Microsoft.Azure.WebJobs;
@@ -9,68 +10,82 @@ namespace Microflow.FlowControl
 {
     public static class CanStepExecuteNowForScalingGroup
     {
-        /// <summary>
-     /// Calculate if a step is ready to execute by locking and counting the completed parents - for each run and each step in the run
-     /// </summary>
-     /// <returns>Bool to indicate if this step request can be executed or not</returns>
-        [Deterministic]
-        [FunctionName("CanExecuteNowInScalingGroup")]
-        public static async Task<CanExecuteResult> CanExecuteNowInScalingGroup([OrchestrationTrigger] IDurableOrchestrationContext context)
+        [FunctionName(CallNames.CanExecuteNowInScaleGroup)]
+        public static async Task CheckMaxScaleCountForGroup([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
             CanExecuteNowObject canExecuteNowObject = context.GetInput<CanExecuteNowObject>();
+            EntityId countId = new EntityId(CallNames.CanExecuteNowInScaleGroupCount, canExecuteNowObject.ScaleGroupId);
+
+            EntityId scaleGroupCountId = new EntityId(CallNames.ScaleGroupMaxConcurrentInstanceCount, canExecuteNowObject.ScaleGroupId);
+            int scaleGroupMaxCount = await context.CallEntityAsync<int>(scaleGroupCountId, MicroflowControlKeys.Read);
             
-            try
+            if (scaleGroupMaxCount == 0)
             {
-                EntityId countId = new EntityId("CanExecuteNowInScalingGroupCounter",
-                                                canExecuteNowObject.RunId + canExecuteNowObject.StepNumber + "_" + canExecuteNowObject.ScaleGroupId);
+                return;
+            }
 
-                using (await context.LockAsync(countId))
+            using (await context.LockAsync(countId))
+            {
+                int scaleGroupInProcessCount = await context.CallEntityAsync<int>(countId, MicroflowCounterKeys.Read);
+                
+                if (scaleGroupInProcessCount < scaleGroupMaxCount)
                 {
-                    int scaleGroupInProcessCount = await context.CallEntityAsync<int>(countId, MicroflowCounterKeys.Read);
+                    await context.CallEntityAsync(countId, MicroflowCounterKeys.Add);
 
-                    if (scaleGroupInProcessCount < canExecuteNowObject.ScaleGroupCount)
-                    {
-                        // maybe needed cleanup
-                        //await context.CallEntityAsync(countId, "delete");
-
-                        await context.CallEntityAsync<int>(countId, MicroflowCounterKeys.Add);
-
-                        return new CanExecuteResult()
-                        {
-                            CanExecute = true,
-                            StepNumber = canExecuteNowObject.StepNumber
-                        };
-                    }
-
-                    return new CanExecuteResult()
-                    {
-                        CanExecute = false,
-                        StepNumber = canExecuteNowObject.StepNumber
-                    };
+                    return;
                 }
             }
-            catch (Exception e)
+
+            // 7 days in paused state till exit
+            DateTime endDate = context.CurrentUtcDateTime.AddDays(7);
+            // start interval seconds
+            int count = 10;
+            // max interval seconds
+            const int max = 60; // 1 mins
+
+            using (CancellationTokenSource cts = new CancellationTokenSource())
             {
-                // log to table error
-                LogErrorEntity errorEntity = new LogErrorEntity(canExecuteNowObject.ProjectName,
-                                                                Convert.ToInt32(canExecuteNowObject.StepNumber),
-                                                                e.Message,
-                                                                canExecuteNowObject.RunId);
-
-                await context.CallActivityAsync(CallNames.LogError, errorEntity);
-
-                return new CanExecuteResult()
+                try
                 {
-                    CanExecute = false,
-                    StepNumber = canExecuteNowObject.StepNumber
-                };
+                    while (context.CurrentUtcDateTime < endDate)
+                    {
+                        DateTime deadline = context.CurrentUtcDateTime.Add(TimeSpan.FromSeconds(count < max ? count : max));
+                        await context.CreateTimer(deadline, cts.Token);
+                        count++;
+
+                        using (await context.LockAsync(countId))
+                        {
+                            int scaleGroupInProcessCount = await context.CallEntityAsync<int>(countId, MicroflowCounterKeys.Read);
+
+                            if (scaleGroupMaxCount == 0 || scaleGroupInProcessCount < scaleGroupMaxCount)
+                            {
+                                await context.CallEntityAsync<int>(countId, MicroflowCounterKeys.Add);
+
+                                return;
+                            }
+                        }
+
+                        if (count % 5 == 0)
+                        {
+                            scaleGroupMaxCount = await context.CallEntityAsync<int>(scaleGroupCountId, MicroflowControlKeys.Read);
+                        }
+                    }
+                }
+                catch (TaskCanceledException)
+                {
+                    //Logger.LogCritical("========================TaskCanceledException==========================");
+                }
+                finally
+                {
+                    cts.Dispose();
+                }
             }
         }
 
         /// <summary>
         /// Durable entity to keep a count for each run and each step in the run
         /// </summary>
-        [FunctionName("CanExecuteNowInScalingGroupCounter")]
+        [FunctionName(CallNames.CanExecuteNowInScaleGroupCount)]
         public static void CanExecuteNowInScalingGroupCounter([EntityTrigger] IDurableEntityContext ctx)
         {
             switch (ctx.OperationName)
@@ -78,15 +93,32 @@ namespace Microflow.FlowControl
                 case MicroflowCounterKeys.Add:
                     ctx.SetState(ctx.GetState<int>() + 1);
                     break;
-                //case "reset":
-                //    ctx.SetState(0);
-                //    break;
+                case MicroflowCounterKeys.Subtract:
+                    ctx.SetState(ctx.GetState<int>() - 1);
+                    break;
                 case MicroflowCounterKeys.Read:
                     ctx.Return(ctx.GetState<int>());
                     break;
-                //case "delete":
-                //    ctx.DeleteState();
-                //    break;
+                    //case "delete":
+                    //    ctx.DeleteState();
+                    //    break;
+            }
+        }
+
+        [FunctionName(CallNames.ScaleGroupMaxConcurrentInstanceCount)]
+        public static void ScaleGroupMaxConcurrentInstanceCount([EntityTrigger] IDurableEntityContext ctx)
+        {
+            switch (ctx.OperationName.ToLowerInvariant())
+            {
+                case "set":
+                    ctx.SetState(ctx.GetInput<int>());
+                    break;
+                case MicroflowCounterKeys.Read:
+                    ctx.Return(ctx.GetState<int>());
+                    break;
+                case "delete":
+                    ctx.DeleteState();
+                    break;
             }
         }
     }

@@ -29,7 +29,7 @@ namespace Microflow.API.Internal
             bool doneAdd = false;
             bool doneSubtract = false;
             bool doneCallout = false;
-            EntityId countId = new EntityId(MicroflowEntities.StepCounter, httpCall.PartitionKey + httpCall.RowKey);
+            EntityId countId = new EntityId(MicroflowEntities.StepCount, httpCall.PartitionKey + httpCall.RowKey);
 
             // http call outside of Microflow, this is the micro-service api call
             try

@@ -182,7 +182,8 @@ namespace Microflow.Helpers
                         CallbackTimeoutSeconds = step.CallbackTimeoutSeconds,
                         CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
                         IsHttpGet = step.IsHttpGet,
-                        AsynchronousPollingEnabled = step.AsynchronousPollingEnabled
+                        AsynchronousPollingEnabled = step.AsynchronousPollingEnabled,
+                        ScaleGroupId = step.ScaleGroupId
                     };
 
                     httpCallRetriesEntity.RetryDelaySeconds = step.RetryOptions.DelaySeconds;
@@ -204,7 +205,8 @@ namespace Microflow.Helpers
                         CallbackTimeoutSeconds = step.CallbackTimeoutSeconds,
                         CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
                         IsHttpGet = step.IsHttpGet,
-                        AsynchronousPollingEnabled = step.AsynchronousPollingEnabled
+                        AsynchronousPollingEnabled = step.AsynchronousPollingEnabled,
+                        ScaleGroupId = step.ScaleGroupId
                     };
 
                     // batchop

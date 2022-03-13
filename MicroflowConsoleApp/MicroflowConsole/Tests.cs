@@ -17,8 +17,8 @@ namespace MicroflowConsole
             //steps[0].SetRetryForStep(1, 2, 1);
             //steps[0].StopOnActionFailed = true;
             //steps[0].CalloutTimeoutSeconds = 190;
-            steps[0].AddSubSteps(steps[1].StepNumber, steps[2].StepNumber);
 
+            steps[0].AddSubSteps(steps[1].StepNumber, steps[2].StepNumber);
             steps[3].AddParentSteps(steps[1], steps[2]);
 
             //steps[0].CallbackAction = "approve"; 

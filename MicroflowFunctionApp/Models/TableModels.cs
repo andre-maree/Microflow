@@ -144,6 +144,7 @@ namespace Microflow.Models
         public int CalloutTimeoutSeconds { get; set; }
         public bool IsHttpGet { get; set; }
         public string StepId { get; set; }
+        public string ScaleGroupId { get; set; }
 
 
         [IgnoreDataMember]

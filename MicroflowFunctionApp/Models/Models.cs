@@ -36,7 +36,6 @@ namespace Microflow.Models
         public string RunId { get; set; }
         public string StepNumber { get; set; }
         public int ParentCount { get; set; }
-        public int ScaleGroupCount { get; set; }
         public string ScaleGroupId { get; set; }
         public string ProjectName { get; set; }
     }
