@@ -8,6 +8,9 @@ namespace Microflow.Helpers
         {
             public static readonly string CallbackBase = $"{Environment.GetEnvironmentVariable("CallbackBase")}";
             public const string CanExecuteNow = "CanExecuteNow";
+            public const string CanExecuteNowInScaleGroup = "CanExecuteNowInScaleGroup";
+            public const string CanExecuteNowInScaleGroupCount = "CanExecuteNowInScaleGroupCount";
+            public const string ScaleGroupMaxConcurrentInstanceCount = "ScaleGroupMaxConcurrentInstanceCount";
             public const string ExecuteStep = "ExecuteStep";
             public const string GetStep = "GetStep";
             public const string LogError = "LogError";
@@ -24,8 +27,8 @@ namespace Microflow.Helpers
 
         public static class MicroflowEntities
         {
-            public const string StepCounter = "StepCounter";
-            public const string CanExecuteNowCounter = "CanExecuteNowCounter";
+            public const string StepCount = "StepCount";
+            public const string CanExecuteNowCount = "CanExecuteNowCount";
         }
 
         public static class MicroflowCounterKeys

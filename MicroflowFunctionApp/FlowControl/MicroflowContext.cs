@@ -118,6 +118,20 @@ namespace Microflow.FlowControl
                 // get the step data from table storage (from PrepareWorkflow)
                 await GetHttpCall();
 
+                if(!string.IsNullOrWhiteSpace(HttpCallWithRetries.ScaleGroupId))
+                {
+                    EntityId scaleId = new EntityId(CallNames.ScaleGroupMaxConcurrentInstanceCount, HttpCallWithRetries.ScaleGroupId);
+
+                    CanExecuteNowObject canExeNow = new CanExecuteNowObject()
+                    {
+                        ScaleGroupId = HttpCallWithRetries.ScaleGroupId,
+                        RunId = ProjectRun.RunObject.RunId,
+                        StepNumber = ProjectRun.RunObject.StepNumber
+                    };
+
+                    await MicroflowDurableContext.CallSubOrchestratorAsync(CallNames.CanExecuteNowInScaleGroup, canExeNow);
+                }
+
                 string id = MicroflowDurableContext.NewGuid().ToString();
 
                 // log start of step
@@ -135,6 +149,13 @@ namespace Microflow.FlowControl
                 else
                 {
                     await HttpCallout(id);
+                }
+
+                if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.ScaleGroupId))
+                {
+                    EntityId countId = new EntityId(CallNames.CanExecuteNowInScaleGroupCount, HttpCallWithRetries.ScaleGroupId);
+                    
+                    await MicroflowDurableContext.CallEntityAsync(countId, MicroflowCounterKeys.Subtract);
                 }
 
                 MicroflowTasks.Add(ProcessSubSteps());
@@ -209,6 +230,7 @@ namespace Microflow.FlowControl
             if (MicroflowHttpResponse.Success || !HttpCallWithRetries.StopOnActionFailed)
             {
                 LogStepEnd();
+
                 List<Task<CanExecuteResult>> canExecuteTasks = CanExecute();
 
                 await ProcessStepCanExecuteTasks(canExecuteTasks);
@@ -284,7 +306,7 @@ namespace Microflow.FlowControl
                         GlobalKey = ProjectRun.RunObject.GlobalKey
                     };
 
-                    MicroflowTasks.Add(MicroflowDurableContext.CallSubOrchestratorAsync(CallNames.ExecuteStep, ProjectRun));
+                        MicroflowTasks.Add(MicroflowDurableContext.CallSubOrchestratorAsync(CallNames.ExecuteStep, ProjectRun));
                 }
 
                 canExecuteTasks.Remove(canExecuteTask);
@@ -295,7 +317,7 @@ namespace Microflow.FlowControl
         /// Durable entity to keep an in progress count for each concurrent step in the project/run
         /// Used by HttpCallOrchestrator and HttpCallWithCallbackOrchestrator
         /// </summary>
-        [FunctionName(MicroflowEntities.StepCounter)]
+        [FunctionName(MicroflowEntities.StepCount)]
         public static void StepCounter([EntityTrigger] IDurableEntityContext ctx)
         {
             switch (ctx.OperationName)

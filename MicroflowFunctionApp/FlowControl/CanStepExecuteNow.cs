@@ -20,7 +20,7 @@ namespace Microflow.FlowControl
             CanExecuteNowObject canExecuteNowObject = context.GetInput<CanExecuteNowObject>();
             try
             {
-                EntityId countId = new EntityId(MicroflowEntities.CanExecuteNowCounter,
+                EntityId countId = new EntityId(MicroflowEntities.CanExecuteNowCount,
                                                 canExecuteNowObject.RunId + canExecuteNowObject.StepNumber);
 
                 using (await context.LockAsync(countId))
@@ -69,7 +69,7 @@ namespace Microflow.FlowControl
         /// <summary>
         /// Durable entity to keep a count for each run and each step in the run
         /// </summary>
-        [FunctionName(MicroflowEntities.CanExecuteNowCounter)]
+        [FunctionName(MicroflowEntities.CanExecuteNowCount)]
         public static void CanExecuteNowCounter([EntityTrigger] IDurableEntityContext ctx)
         {
             switch (ctx.OperationName)
