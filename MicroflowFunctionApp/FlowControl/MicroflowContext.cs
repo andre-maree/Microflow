@@ -42,8 +42,8 @@ namespace Microflow.FlowControl
         [Deterministic]
         public async Task RunMicroflow()
         {
-            EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectStateId, ProjectRun.ProjectName);
-            EntityId globalStateId = new EntityId(MicroflowStateKeys.GlobalStateId, ProjectRun.RunObject.GlobalKey);
+            EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectState, ProjectRun.ProjectName);
+            EntityId globalStateId = new EntityId(MicroflowStateKeys.GlobalState, ProjectRun.RunObject.GlobalKey);
             Task<int> projStateTask = MicroflowDurableContext.CallEntityAsync<int>(projStateId, MicroflowControlKeys.Read);
             Task<int> globalSateTask = MicroflowDurableContext.CallEntityAsync<int>(globalStateId, MicroflowControlKeys.Read);
             int projState = await projStateTask;

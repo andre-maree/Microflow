@@ -29,8 +29,8 @@ namespace MicroflowConsole
             //var terminate = await client.PostAsync("http://localhost:7071/runtime/webhooks/durabletask/instances/39806875-9c81-4736-81c0-9be562dae71e/terminate?reason=dfgd", null);
             try
             {
-                var workflow = Tests.CreateTestWorkflow_SimpleSteps();
-                //var workflow = Tests.CreateTestWorkflow_10StepsParallel();
+                //var workflow = Tests.CreateTestWorkflow_SimpleSteps();
+                var workflow = Tests.CreateTestWorkflow_10StepsParallel();
                 //var workflow = Tests.CreateTestWorkflow_Complex1();
                 //var workflow = Tests.CreateTestWorkflow_110Steps();
                 //var workflow2 = Tests.CreateTestWorkflow_110Steps();
@@ -98,7 +98,7 @@ namespace MicroflowConsole
 
                 // save project and get project
                 //var saveprohectjson = await HttpClient.PostAsJsonAsync("http://localhost:7071/api/SaveProjectJson", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
-                var getprohectjson = await HttpClient.PostAsJsonAsync("http://localhost:7071/api/GetProjectJsonWithMergefieldsReplaced/" + project.ProjectName, new JsonSerializerOptions(JsonSerializerDefaults.General));
+                var getprohectjson = await HttpClient.PostAsJsonAsync("http://localhost:7071/api/GetProjectJson/" + project.ProjectName, new JsonSerializerOptions(JsonSerializerDefaults.General));
 
                 //string content = await getprohectjson.Content.ReadAsStringAsync();
                 //MicroflowProject microflowProject = JsonSerializer.Deserialize<MicroflowProject>(content);

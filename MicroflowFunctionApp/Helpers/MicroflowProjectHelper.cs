@@ -46,7 +46,7 @@ namespace Microflow.Helpers
                 Loop = project.Loop 
             };
 
-            EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectStateId, projectRun.ProjectName);
+            EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectState, projectRun.ProjectName);
 
             try
             {
@@ -54,7 +54,7 @@ namespace Microflow.Helpers
 
                 if (!string.IsNullOrWhiteSpace(globalKey))
                 {
-                    EntityId globalStateId = new EntityId(MicroflowStateKeys.GlobalStateId, globalKey);
+                    EntityId globalStateId = new EntityId(MicroflowStateKeys.GlobalState, globalKey);
                     globStateTask = client.ReadEntityStateAsync<int>(globalStateId);
                 }
                 // do not do anything, wait for the stopped project to be ready

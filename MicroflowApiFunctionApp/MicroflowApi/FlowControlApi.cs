@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-//using static Microflow.Helpers.Constants;
+using static Microflow.Helpers.Constants;
 
 namespace MicroflowApiFunctionApp
 {
@@ -21,87 +22,123 @@ namespace MicroflowApiFunctionApp
     public static class RunTimeApi
     {
 
-        ///// <summary>
-        ///// Pause, run, or stop the project, cmd can be "run", "pause", or "stop"
-        ///// </summary>
-        //[FunctionName("Microflow_ProjectControl")]
-        //public static async Task<HttpResponseMessage> ProjectControl([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-        //                                                          Route = "ProjectControl/{cmd}/{projectName}")] HttpRequestMessage req,
-        //                                                          [DurableClient] IDurableEntityClient client, string projectName, string cmd)
-        //{
-        //    return await client.SetRunState(nameof(ProjectState), projectName, cmd);
-        //}
+        /// <summary>
+        /// Pause, run, or stop the project, cmd can be "run", "pause", or "stop"
+        /// </summary>
+        [FunctionName("Microflow_ProjectControl")]
+        public static async Task<HttpResponseMessage> ProjectControl([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
+                                                                  Route = "ProjectControl/{cmd}/{projectName}")] HttpRequestMessage req,
+                                                                  [DurableClient] IDurableEntityClient client, string projectName, string cmd)
+        {
+            if (cmd.Equals(MicroflowControlKeys.Read, StringComparison.OrdinalIgnoreCase))
+            {
+                EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectState, projectName);
+                EntityStateResponse<string> stateRes = await client.ReadEntityStateAsync<string>(projStateId);
 
-        ///// <summary>
-        ///// Pause, run, or stop all with the same global key, cmd can be "run", "pause", or "stop"
-        ///// </summary>
-        //[FunctionName("Microflow_GlobalControl")]
-        //public static async Task<HttpResponseMessage> GlobalControl([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-        //                                                          Route = "GlobalControl/{cmd}/{globalKey}")] HttpRequestMessage req,
-        //                                                          [DurableClient] IDurableEntityClient client, string globalKey, string cmd)
-        //{
-        //    return await client.SetRunState(nameof(GlobalState), globalKey, cmd);
-        //}
+                HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(stateRes.EntityState)
+                };
 
-        ///// <summary>
-        ///// Call this to see the step count in StepCallout per project name and stepId 
-        ///// </summary>
-        //[FunctionName("GetStepCountInprogress")]
-        //public static async Task<int> GetStepCountInprogress([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "getstepcountinprogress/{projectNameStepNumber}")] HttpRequestMessage req,
-        //                                                     [DurableClient] IDurableEntityClient client,
-        //                                                     string projectNameStepNumber)
-        //{
-        //    EntityId countId = new EntityId(MicroflowEntities.StepCounter, projectNameStepNumber);
+                return resp;
+            }
 
-        //    EntityStateResponse<int> result = await client.ReadEntityStateAsync<int>(countId);
-
-        //    return result.EntityState;
-        //}
+            return await client.SetRunState(nameof(ProjectState), projectName, cmd);
+        }
 
         /// <summary>
-        /// Get global state
+        /// Pause, run, or stop all with the same global key, cmd can be "run", "pause", or "stop"
         /// </summary>
-        //[FunctionName("getGlobalState")]
-        //public static async Task<HttpResponseMessage> GetGlobalState([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-        //                                                          Route = "GlobalState/{globalKey}")] HttpRequestMessage req,
-        //                                                          [DurableClient] IDurableEntityClient client, string globalKey)
-        //{
-        //    EntityId globalStateId = new EntityId("GlobalState", globalKey);
-        //    Task<EntityStateResponse<int>> stateTask = client.ReadEntityStateAsync<int>(globalStateId);
+        [FunctionName("Microflow_GlobalControl")]
+        public static async Task<HttpResponseMessage> GlobalControl([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
+                                                                  Route = "GlobalControl/{cmd}/{globalKey}")] HttpRequestMessage req,
+                                                                  [DurableClient] IDurableEntityClient client, string globalKey, string cmd)
+        {
+            if (cmd.Equals(MicroflowControlKeys.Read, StringComparison.OrdinalIgnoreCase))
+            {
+                EntityId globStateId = new EntityId(MicroflowStateKeys.GlobalState, globalKey);
+                EntityStateResponse<string> stateRes = await client.ReadEntityStateAsync<string>(globStateId);
 
-        //    HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);
+                HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(stateRes.EntityState)
+                };
 
-        //    await stateTask;
+                return resp;
+            }
 
-        //    resp.Content = new StringContent(stateTask.Result.EntityState.ToString());
-
-        //    return resp;
-        //}
-
-        ///// <summary>
-        ///// Get project state
-        ///// </summary>
-        //[FunctionName("getProjectState")]
-        //public static async Task<HttpResponseMessage> GetProjectState([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-        //                                                          Route = "ProjectState/{projectName}")] HttpRequestMessage req,
-        //                                                          [DurableClient] IDurableEntityClient client, string projectName)
-        //{
-        //    EntityId runStateId = new EntityId("ProjectState", projectName);
-        //    Task<EntityStateResponse<int>> stateTask = client.ReadEntityStateAsync<int>(runStateId);
-
-        //    HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);
-
-        //    await stateTask;
-
-        //    resp.Content = new StringContent(stateTask.Result.EntityState.ToString());
-
-        //    return resp;
-        //}
+            return await client.SetRunState(nameof(GlobalState), globalKey, cmd);
+        }
 
         /// <summary>
-        /// Get project state
+        /// Durable entity check and set if the global state
         /// </summary>
-        [FunctionName("setScaleGroup")]
+        [FunctionName(MicroflowStateKeys.GlobalState)]
+        public static void GlobalState([EntityTrigger] IDurableEntityContext ctx)
+        {
+            ctx.RunState();
+        }
+
+        /// <summary>
+        /// Durable entity check and set project state
+        /// </summary>
+        [FunctionName(MicroflowStateKeys.ProjectState)]
+        public static void ProjectState([EntityTrigger] IDurableEntityContext ctx)
+        {
+            ctx.RunState();
+        }
+
+        /// <summary>
+        /// For project and global key states
+        /// </summary>
+        private static void RunState(this IDurableEntityContext ctx)
+        {
+            switch (ctx.OperationName)
+            {
+                case MicroflowControlKeys.Ready:
+                    ctx.SetState(MicroflowStates.Ready);
+                    break;
+                case MicroflowControlKeys.Pause:
+                    ctx.SetState(MicroflowStates.Paused);
+                    break;
+                case MicroflowControlKeys.Stop:
+                    ctx.SetState(MicroflowStates.Stopped);
+                    break;
+                case MicroflowControlKeys.Read:
+                    ctx.Return(ctx.GetState<int>());
+                    break;
+            }
+        }
+        /// <summary>
+        /// Set the global or project state with the key, and the cmd can be "pause", "ready", or "stop"
+        /// </summary>
+        public static async Task<HttpResponseMessage> SetRunState(this IDurableEntityClient client,
+                                                                   string stateEntityId,
+                                                                   string key,
+                                                                   string cmd)
+        {
+            EntityId runStateId = new EntityId(stateEntityId, key);
+
+            switch (cmd)
+            {
+                case MicroflowControlKeys.Pause:
+                    await client.SignalEntityAsync(runStateId, MicroflowControlKeys.Pause);
+                    break;
+                case MicroflowControlKeys.Ready:
+                    await client.SignalEntityAsync(runStateId, MicroflowControlKeys.Ready);
+                    break;
+                case MicroflowControlKeys.Stop:
+                    await client.SignalEntityAsync(runStateId, MicroflowControlKeys.Stop);
+                    break;
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.OK);
+        }
+
+        /// <summary>
+        /// Get/set  project max instance count for scale group
+        /// </summary>
+        [FunctionName("ScaleGroup")]
         public static async Task<HttpResponseMessage> SetScaleGroup([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
                                                                   Route = "ScaleGroup/{scaleGroupId?}/{maxInstanceCount?}")] HttpRequestMessage req,
                                                                   [DurableClient] IDurableEntityClient client, string scaleGroupId, int? maxInstanceCount)

@@ -96,7 +96,7 @@ namespace Microflow.Helpers
                                                                  ILogger log,
                                                                  string globalKey = null)
         {
-            EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectStateId, projectName);
+            EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectState, projectName);
             Task<int> projStateTask = context.CallEntityAsync<int>(projStateId, MicroflowControlKeys.Read);
 
             bool doGlobal = !string.IsNullOrWhiteSpace(globalKey);
@@ -105,7 +105,7 @@ namespace Microflow.Helpers
             int globalState = 0;
             if (doGlobal)
             {
-                globalStateId = new EntityId(MicroflowStateKeys.GlobalStateId, globalKey);
+                globalStateId = new EntityId(MicroflowStateKeys.GlobalState, globalKey);
                 globalSateTask = context.CallEntityAsync<int>(globalStateId, MicroflowControlKeys.Read);
             }
 
@@ -180,7 +180,7 @@ namespace Microflow.Helpers
         [Deterministic]
         public static void SetProjectStateReady(this IDurableOrchestrationContext context, ProjectRun projectRun)
         {
-            EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectStateId, projectRun.ProjectName);
+            EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectState, projectRun.ProjectName);
 
             context.SignalEntity(projStateId, MicroflowControlKeys.Ready);
         }
