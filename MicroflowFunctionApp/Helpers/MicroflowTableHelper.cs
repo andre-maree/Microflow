@@ -56,42 +56,62 @@ namespace Microflow.Helpers
             AsyncPageable<HttpCallWithRetries> steps = GetStepsHttpCallWithRetries(projectName);
 
             List<Step> outSteps = new List<Step>();
+            bool skip1st = true;
 
             await foreach (HttpCallWithRetries step in steps)
             {
-                Step newstep = new Step()
+                if (skip1st)
                 {
-                    StepId = step.RowKey,
-                    CallbackTimeoutSeconds = step.CallbackTimeoutSeconds,
-                    CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
-                    StopOnActionFailed = step.StopOnActionFailed,
-                    CallbackAction = step.CallbackAction,
-                    IsHttpGet = step.IsHttpGet,
-                    CalloutUrl = step.CalloutUrl,
-                    RetryOptions = step.RetryDelaySeconds == 0 ? null : new MicroflowRetryOptions()
-                    {
-                        BackoffCoefficient = step.RetryBackoffCoefficient,
-                        DelaySeconds = step.RetryDelaySeconds,
-                        MaxDelaySeconds = step.RetryMaxDelaySeconds,
-                        MaxRetries = step.RetryMaxRetries,
-                        TimeOutSeconds = step.RetryTimeoutSeconds
-                    }
-                };
-
-                List<int> subStepsList = new List<int>();
-                List<List<int>> stepEntList = JsonSerializer.Deserialize<List<List<int>>>(step.SubSteps);
-
-                foreach (List<int> s in stepEntList)
-                {
-                    subStepsList.Add(s[0]);
+                    skip1st = false;
                 }
+                else
+                {
+                    Step newstep = new Step()
+                    {
+                        StepId = step.RowKey,
+                        CallbackTimeoutSeconds = step.CallbackTimeoutSeconds,
+                        CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
+                        StopOnActionFailed = step.StopOnActionFailed,
+                        CallbackAction = step.CallbackAction,
+                        IsHttpGet = step.IsHttpGet,
+                        CalloutUrl = step.CalloutUrl,
+                        AsynchronousPollingEnabled = step.AsynchronousPollingEnabled,
+                        ScaleGroupId = step.ScaleGroupId,
+                        StepNumber = Convert.ToInt32(step.RowKey),
+                        RetryOptions = step.RetryDelaySeconds == 0 ? null : new MicroflowRetryOptions()
+                        {
+                            BackoffCoefficient = step.RetryBackoffCoefficient,
+                            DelaySeconds = step.RetryDelaySeconds,
+                            MaxDelaySeconds = step.RetryMaxDelaySeconds,
+                            MaxRetries = step.RetryMaxRetries,
+                            TimeOutSeconds = step.RetryTimeoutSeconds
+                        }
+                    };
 
-                newstep.SubSteps = subStepsList;
+                    List<int> subStepsList = new List<int>();
+                    ;
+                    string[] stepsAndCounts = step.SubSteps.Split(new char[2] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 
-                outSteps.Add(newstep);
+                    for (int i = 0; i < stepsAndCounts.Length; i = i + 2)
+                    {
+                        subStepsList.Add(Convert.ToInt32(stepsAndCounts[i]));
+                    }
+
+                    newstep.SubSteps = subStepsList;
+
+                    outSteps.Add(newstep);
+                }
             }
 
-            return JsonSerializer.Serialize(outSteps);
+            TableClient projConfigsTable = GetProjectConfigsTable();
+
+            ProjectConfigEntity projConfig = await projConfigsTable.GetEntityAsync<ProjectConfigEntity>(projectName, "0");
+
+            MicroflowProject proj = JsonSerializer.Deserialize<MicroflowProject>(projConfig.Config);
+            proj.ProjectName = projectName;
+            proj.Steps = outSteps;
+
+            return JsonSerializer.Serialize(proj);
         }
 
         public static AsyncPageable<HttpCallWithRetries> GetStepsHttpCallWithRetries(string projectName)
@@ -143,6 +163,18 @@ namespace Microflow.Helpers
         }
 
         /// <summary>
+        /// Called on start to save additional project config not looked up during execution
+        /// </summary>
+        public static async Task UpsertProjectConfigString(string projectName, string projectConfigJson)
+        {
+            TableClient projTable = GetProjectConfigsTable();
+
+            ProjectConfigEntity proj = new ProjectConfigEntity(projectName, projectConfigJson);
+
+            await projTable.UpsertEntityAsync(proj);
+        }
+
+        /// <summary>
         /// Called on start to create needed tables
         /// </summary>
         public static async Task CreateTables()
@@ -156,18 +188,23 @@ namespace Microflow.Helpers
             // MicroflowLog table
             TableClient logStepsTable = GetLogStepsTable();
 
-            // ErrorMyProject table
+            // Error table
             TableClient errorsTable = GetErrorsTable();
+
+            // Project table
+            TableClient projectConfigsTable = GetProjectConfigsTable();
 
             Task<Response<TableItem>> t1 = stepsTable.CreateIfNotExistsAsync();
             Task<Response<TableItem>> t2 = logOrchestrationTable.CreateIfNotExistsAsync();
             Task<Response<TableItem>> t3 = logStepsTable.CreateIfNotExistsAsync();
             Task<Response<TableItem>> t4 = errorsTable.CreateIfNotExistsAsync();
+            Task<Response<TableItem>> t5 = projectConfigsTable.CreateIfNotExistsAsync();
 
             await t1;
             await t2;
             await t3;
             await t4;
+            await t5;
         }
 
         #endregion
@@ -200,6 +237,13 @@ namespace Microflow.Helpers
             TableServiceClient tableClient = GetTableClient();
 
             return tableClient.GetTableClient($"MicroflowLogSteps");
+        }
+
+        private static TableClient GetProjectConfigsTable()
+        {
+            TableServiceClient tableClient = GetTableClient();
+
+            return tableClient.GetTableClient($"MicroflowProjectConfigs");
         }
 
         private static TableServiceClient GetTableClient()

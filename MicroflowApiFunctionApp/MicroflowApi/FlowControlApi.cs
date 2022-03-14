@@ -106,9 +106,9 @@ namespace MicroflowApiFunctionApp
                                                                   Route = "ScaleGroup/{scaleGroupId?}/{maxInstanceCount?}")] HttpRequestMessage req,
                                                                   [DurableClient] IDurableEntityClient client, string scaleGroupId, int? maxInstanceCount)
         {
-            if(req.Method.Equals(HttpMethod.Get))
+            if (req.Method.Equals(HttpMethod.Get))
             {
-                Dictionary<string,int> result = new Dictionary<string, int>();
+                Dictionary<string, int> result = new Dictionary<string, int>();
                 EntityQueryResult res = null;
 
                 using (CancellationTokenSource cts = new CancellationTokenSource())
@@ -121,9 +121,19 @@ namespace MicroflowApiFunctionApp
                     }, cts.Token);
                 }
 
-                foreach (var rr in res.Entities)
+                if (string.IsNullOrWhiteSpace(scaleGroupId))
                 {
-                    result.Add(rr.EntityId.EntityKey, ((int)rr.State));
+                    foreach (var rr in res.Entities)
+                    {
+                        result.Add(rr.EntityId.EntityKey, (int)rr.State);
+                    }
+                }
+                else
+                {
+                    foreach (var rr in res.Entities.Where(e => e.EntityId.EntityKey.Equals(scaleGroupId)))
+                    {
+                        result.Add(rr.EntityId.EntityKey, (int)rr.State);
+                    }
                 }
 
                 var content = new StringContent(JsonSerializer.Serialize(result));
@@ -135,7 +145,7 @@ namespace MicroflowApiFunctionApp
             }
 
             EntityId scaleGroupCountId = new EntityId("ScaleGroupMaxConcurrentInstanceCount", scaleGroupId);
-            
+
             await client.SignalEntityAsync(scaleGroupCountId, "set", maxInstanceCount);
 
             HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);

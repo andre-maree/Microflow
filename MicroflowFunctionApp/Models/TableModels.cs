@@ -10,9 +10,30 @@ namespace Microflow.Models
     #region TableEntity
 
     /// <summary>
-    /// Used for step level logging
+    /// Used to save and get project additional config
     /// </summary>
-    public class LogErrorEntity : ITableEntity
+    public class ProjectConfigEntity : ITableEntity
+    {
+        public ProjectConfigEntity() { }
+
+        public ProjectConfigEntity(string projectName, string config)
+        {
+            PartitionKey = projectName;
+            RowKey = "0";
+            Config = config;
+        }
+
+        public string Config { get; set; }
+        public string PartitionKey { get; set; }
+        public string RowKey { get; set; }
+        public DateTimeOffset? Timestamp { get; set; }
+        public ETag ETag { get; set; }
+    }
+
+        /// <summary>
+        /// Used for step level logging
+        /// </summary>
+        public class LogErrorEntity : ITableEntity
     {
         public LogErrorEntity() { }
 

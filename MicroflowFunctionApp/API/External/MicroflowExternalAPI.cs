@@ -47,7 +47,7 @@ namespace Microflow.API.External
         public static async Task<HttpResponseMessage> TestPost(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "testpost")] HttpRequestMessage req)
         {
-            //await Task.Delay(1000);
+            await Task.Delay(1000);
 
             //if (req.Method == HttpMethod.Post)
             //{
@@ -59,7 +59,7 @@ namespace Microflow.API.External
                 {
                 //HttpResponseMessage result2 = await MicroflowHttpClient.HttpClient.GetAsync($"{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}/start/");
                 //var kgkg = 0;
-                //await Task.Delay(100000);
+                await Task.Delay(5000);
             }
             //}
             //else
