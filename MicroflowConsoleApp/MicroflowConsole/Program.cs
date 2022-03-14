@@ -43,7 +43,7 @@ namespace MicroflowConsole
                     MergeFields = CreateMergeFields()
                 };
 
-                string scalegroup = "myscalegroup3";
+                string scalegroup = "myscalegroup4";
                 //workflow[0].ScaleGroupId = "myscalegroup";
                 workflow[3].ScaleGroupId = scalegroup;
                 workflow[4].ScaleGroupId = scalegroup;
@@ -80,7 +80,8 @@ namespace MicroflowConsole
                 // call Microflow insertorupdateproject when something ischanges in the workflow, but do not always call this when corcurrent multiple workflows
                 var result = HttpClient.PostAsJsonAsync(baseUrl + "/insertorupdateproject", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
 
-                var rty = await HttpClient.PostAsJsonAsync($"http://localhost:7071/api/ScaleGroup/{scalegroup}/3", new JsonSerializerOptions(JsonSerializerDefaults.General));
+                //var setScaleGroup = await HttpClient.PostAsJsonAsync($"http://localhost:7071/api/ScaleGroup/{scalegroup}/40", new JsonSerializerOptions(JsonSerializerDefaults.General));
+                //var getScaleGroup = await HttpClient.GetStringAsync($"http://localhost:7071/api/ScaleGroup");
 
                 //project.Steps[0].CalloutUrl = project.Steps[5].CalloutUrl;
                 //var result2 = HttpClient.PostAsJsonAsync(baseUrl + "/insertorupdateproject/", project2, new JsonSerializerOptions(JsonSerializerDefaults.General));

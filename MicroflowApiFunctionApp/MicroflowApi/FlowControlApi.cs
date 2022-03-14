@@ -1,6 +1,9 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
@@ -9,6 +12,12 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 
 namespace MicroflowApiFunctionApp
 {
+    //public class MaxInstanceCount
+    //{
+    //    public string ScaleGroupId { get; set; }
+    //    public int MaxCount { get; set; }
+    //}
+
     public static class RunTimeApi
     {
 
@@ -94,17 +103,42 @@ namespace MicroflowApiFunctionApp
         /// </summary>
         [FunctionName("setScaleGroup")]
         public static async Task<HttpResponseMessage> SetScaleGroup([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-                                                                  Route = "ScaleGroup/{scaleGroupId}/{maxInstanceCount}")] HttpRequestMessage req,
-                                                                  [DurableClient] IDurableEntityClient client, string scaleGroupId, int maxInstanceCount)
+                                                                  Route = "ScaleGroup/{scaleGroupId?}/{maxInstanceCount?}")] HttpRequestMessage req,
+                                                                  [DurableClient] IDurableEntityClient client, string scaleGroupId, int? maxInstanceCount)
         {
+            if(req.Method.Equals(HttpMethod.Get))
+            {
+                Dictionary<string,int> result = new Dictionary<string, int>();
+                EntityQueryResult res = null;
+
+                using (CancellationTokenSource cts = new CancellationTokenSource())
+                {
+                    res = await client.ListEntitiesAsync(new EntityQuery()
+                    {
+                        PageSize = 99999999,
+                        EntityName = "scalegroupmaxconcurrentinstancecount",
+                        FetchState = true
+                    }, cts.Token);
+                }
+
+                foreach (var rr in res.Entities)
+                {
+                    result.Add(rr.EntityId.EntityKey, ((int)rr.State));
+                }
+
+                var content = new StringContent(JsonSerializer.Serialize(result));
+
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = content
+                };
+            }
+
             EntityId scaleGroupCountId = new EntityId("ScaleGroupMaxConcurrentInstanceCount", scaleGroupId);
+            
             await client.SignalEntityAsync(scaleGroupCountId, "set", maxInstanceCount);
 
             HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);
-
-            //await stateTask;
-
-            //resp.Content = new StringContent(stateTask.Result.EntityState.ToString());
 
             return resp;
         }
