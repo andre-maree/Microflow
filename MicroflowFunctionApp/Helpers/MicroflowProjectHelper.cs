@@ -76,7 +76,7 @@ namespace Microflow.Helpers
                 await client.SignalEntityAsync(projStateId, MicroflowControlKeys.Pause);
                 doneReadyFalse = true;
 
-                // reate the storage tables for the project
+                // create the storage tables for the project
                 await MicroflowTableHelper.CreateTables();
 
                 //  clear step table data
@@ -88,7 +88,14 @@ namespace Microflow.Helpers
                 await delTask;
 
                 // prepare the workflow by persisting parent info to table storage
-                await projectRun.PrepareWorkflow(project.Steps);
+                await projectRun.PrepareWorkflow(project);
+
+                project.Steps = null;
+                project.ProjectName= null;
+                string projectConfigJson = JsonSerializer.Serialize(project);
+
+                // create the storage tables for the project
+                await MicroflowTableHelper.UpsertProjectConfigString(projectRun.ProjectName, projectConfigJson);
 
                 return new HttpResponseMessage(HttpStatusCode.Accepted);
             }
@@ -139,13 +146,14 @@ namespace Microflow.Helpers
         /// only call this to create a new workflow or to update an existing 1
         /// Saves step meta data to table storage and read during execution
         /// </summary>
-        public static async Task PrepareWorkflow(this ProjectRun projectRun, List<Step> steps)
+        public static async Task PrepareWorkflow(this ProjectRun projectRun, MicroflowProject project)
         {
             List<TableTransactionAction> batch = new List<TableTransactionAction>();
             List<Task> batchTasks = new List<Task>();
             TableClient stepsTable = MicroflowTableHelper.GetStepsTable();
             Step stepContainer = new Step(-1, null);
             StringBuilder sb = new StringBuilder();
+            List<Step> steps = project.Steps;
             List<(int StepNumber, int ParentCount)> liParentCounts = new List<(int, int)>();
 
             foreach (Step step in steps)
@@ -232,6 +240,9 @@ namespace Microflow.Helpers
             batch.Add(new TableTransactionAction(TableTransactionActionType.UpsertReplace, containerEntity));
 
             batchTasks.Add(stepsTable.SubmitTransactionAsync(batch));
+
+            TableEntity mergeFieldsEnt = new TableEntity($"{projectRun.ProjectName}_MicroflowMergeFields", "");
+            await stepsTable.UpsertEntityAsync(mergeFieldsEnt);
 
             await Task.WhenAll(batchTasks);
         }

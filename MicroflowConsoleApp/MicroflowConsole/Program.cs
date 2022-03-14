@@ -29,8 +29,8 @@ namespace MicroflowConsole
             //var terminate = await client.PostAsync("http://localhost:7071/runtime/webhooks/durabletask/instances/39806875-9c81-4736-81c0-9be562dae71e/terminate?reason=dfgd", null);
             try
             {
-                //var workflow = Tests.CreateTestWorkflow_SimpleSteps();
-                var workflow = Tests.CreateTestWorkflow_10StepsParallel();
+                var workflow = Tests.CreateTestWorkflow_SimpleSteps();
+                //var workflow = Tests.CreateTestWorkflow_10StepsParallel();
                 //var workflow = Tests.CreateTestWorkflow_Complex1();
                 //var workflow = Tests.CreateTestWorkflow_110Steps();
                 //var workflow2 = Tests.CreateTestWorkflow_110Steps();
@@ -40,21 +40,23 @@ namespace MicroflowConsole
                     ProjectName = "MyProject_ClientX",
                     Steps = workflow,
                     Loop = 1,
-                    MergeFields = CreateMergeFields()
+                    MergeFields = CreateMergeFields(), 
+                    DefaultRetryOptions = new MicroflowRetryOptions()
                 };
 
                 string scalegroup = "myscalegroup4";
-                //workflow[0].ScaleGroupId = "myscalegroup";
-                workflow[3].ScaleGroupId = scalegroup;
-                workflow[4].ScaleGroupId = scalegroup;
-                workflow[5].ScaleGroupId = scalegroup;
-                workflow[6].ScaleGroupId = scalegroup;
-                workflow[7].ScaleGroupId = scalegroup;
-                workflow[8].ScaleGroupId = scalegroup;
-                workflow[9].ScaleGroupId = scalegroup;
-                workflow[10].ScaleGroupId = scalegroup;
-                workflow[11].ScaleGroupId = scalegroup;
-                workflow[12].ScaleGroupId = scalegroup;
+                workflow[0].ScaleGroupId = "myscalegroup";
+                //workflow[0].CallbackAction = "approve";
+                //workflow[3].ScaleGroupId = scalegroup;
+                //workflow[4].ScaleGroupId = scalegroup;
+                //workflow[5].ScaleGroupId = scalegroup;
+                //workflow[6].ScaleGroupId = scalegroup;
+                //workflow[7].ScaleGroupId = scalegroup;
+                //workflow[8].ScaleGroupId = scalegroup;
+                //workflow[9].ScaleGroupId = scalegroup;
+                //workflow[10].ScaleGroupId = scalegroup;
+                //workflow[11].ScaleGroupId = scalegroup;
+                //workflow[12].ScaleGroupId = scalegroup;
                 //var project2 = new MicroflowProject()
                 //{
                 //    ProjectName = "yyy",
@@ -80,8 +82,13 @@ namespace MicroflowConsole
                 // call Microflow insertorupdateproject when something ischanges in the workflow, but do not always call this when corcurrent multiple workflows
                 var result = HttpClient.PostAsJsonAsync(baseUrl + "/insertorupdateproject", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
 
-                //var setScaleGroup = await HttpClient.PostAsJsonAsync($"http://localhost:7071/api/ScaleGroup/{scalegroup}/40", new JsonSerializerOptions(JsonSerializerDefaults.General));
-                //var getScaleGroup = await HttpClient.GetStringAsync($"http://localhost:7071/api/ScaleGroup");
+                //// scale groups:
+                //// set max count
+                //await SetMaxInstanceCountForScaleGroup(scalegroup, 999);
+                //// get max count for group
+                //var getScaleGroup = await GetScaleGroupsWithMaxInstanceCounts(scalegroup);
+                //// get max counts for all groups
+                //var getScaleGroup2 = await GetScaleGroupsWithMaxInstanceCounts(null);
 
                 //project.Steps[0].CalloutUrl = project.Steps[5].CalloutUrl;
                 //var result2 = HttpClient.PostAsJsonAsync(baseUrl + "/insertorupdateproject/", project2, new JsonSerializerOptions(JsonSerializerDefaults.General));
@@ -91,7 +98,7 @@ namespace MicroflowConsole
 
                 // save project and get project
                 //var saveprohectjson = await HttpClient.PostAsJsonAsync("http://localhost:7071/api/SaveProjectJson", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
-                //var getprohectjson = await HttpClient.PostAsJsonAsync("http://localhost:7071/api/GetProjectJsonAsLastSaved/" + project.ProjectName, new JsonSerializerOptions(JsonSerializerDefaults.General));
+                var getprohectjson = await HttpClient.PostAsJsonAsync("http://localhost:7071/api/GetProjectJsonWithMergefieldsReplaced/" + project.ProjectName, new JsonSerializerOptions(JsonSerializerDefaults.General));
 
                 //string content = await getprohectjson.Content.ReadAsStringAsync();
                 //MicroflowProject microflowProject = JsonSerializer.Deserialize<MicroflowProject>(content);
@@ -105,7 +112,7 @@ namespace MicroflowConsole
                     await Task.Delay(500);
                     //await posttask;
                     tasks.Add(HttpClient.GetAsync(baseUrl + $"/start/{project.ProjectName}?globalkey=globber"));
-                    //tasks.Add(HttpClient.GetAsync(baseUrl + $"/api/start/{project.ProjectName}/33306875-9c81-4736-81c0-9be562dae777"));
+                    //tasks.Add(HttpClient.GetAsync(baseUrl + $"/start/{project.ProjectName}/33306875-9c81-4736-81c0-9be562dae777"));
                 }
                 //await result;
                 ////await posttask;
@@ -123,6 +130,29 @@ namespace MicroflowConsole
             {
                 var rtrtr = 0;
             }
+        }
+
+        private static async Task<HttpResponseMessage> SetMaxInstanceCountForScaleGroup(string scaleGroupId, int maxInstanceCount)
+        {
+            return await HttpClient.PostAsJsonAsync($"http://localhost:7071/api/ScaleGroup/{scaleGroupId}/{maxInstanceCount}", new JsonSerializerOptions(JsonSerializerDefaults.General));
+        }
+
+        private static async Task<Dictionary<string, int>> GetScaleGroupsWithMaxInstanceCounts(string scaleGroupId)
+        {
+            Dictionary<string, int> li = null;
+            
+            if (!string.IsNullOrWhiteSpace(scaleGroupId))
+            {
+                string t = await HttpClient.GetStringAsync($"http://localhost:7071/api/ScaleGroup/{scaleGroupId}");
+                li = JsonSerializer.Deserialize<Dictionary<string,int>>(t);
+            }
+            else
+            {
+                string t = await HttpClient.GetStringAsync($"http://localhost:7071/api/ScaleGroup");
+                li = JsonSerializer.Deserialize<Dictionary<string, int>>(t);
+            }
+
+            return li;
         }
 
         public static Dictionary<string, string> CreateMergeFields()

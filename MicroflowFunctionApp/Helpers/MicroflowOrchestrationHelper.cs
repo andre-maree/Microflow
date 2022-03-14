@@ -193,7 +193,7 @@ namespace Microflow.Helpers
             var logEntity = new LogOrchestrationEntity(false,
                                                        projectRun.ProjectName,
                                                        logRowKey,
-                                                       $"{projectRun.ProjectName} completed successfully",
+                                                       $"VM: {Environment.MachineName} - {projectRun.ProjectName} completed successfully",
                                                        context.CurrentUtcDateTime,
                                                        projectRun.OrchestratorInstanceId,
                                                        projectRun.RunObject.GlobalKey);
