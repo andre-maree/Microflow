@@ -184,9 +184,9 @@ public class MicroflowPostData
 {
    public int StepNumber { get; set; }
    public string StepId { get; set; }
-   // passed along and logged when a project step calls another project`s start
+   // passed along and logged when a workflow step calls another workflow`s start
    public string GlobalKey { get; set; }
-   public string ProjectName { get; set; }
+   public string WorkflowName { get; set; }
    public string MainOrchestrationId { get; set; }
    public string SubOrchestrationId { get; set; }
    public string CallbackUrl { get; set; }
@@ -196,7 +196,7 @@ public class MicroflowPostData
 ```
 Http querystring:
 ```html
-?ProjectName=<ProjectName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&CallbackUrl=<CallbackUrl>&RunId=<RunId>&StepNumber=<StepNumber>&StepId=<StepId>&GlobalKey=<GlobalKey>
+?WorkflowName=<WorkflowName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&CallbackUrl=<CallbackUrl>&RunId=<RunId>&StepNumber=<StepNumber>&StepId=<StepId>&GlobalKey=<GlobalKey>
 ```
 
 
@@ -206,10 +206,10 @@ Http querystring:
 This is the core of the workflow engine.
 
 #### MicroflowStart
-This contains 3 functions responsible starting project execution.
-  * "Microflow_InsertOrUpdateProject" : Must be called first after project creation or modification before "Microflow_HttpStart" can be called. This will persist the needed project meta data that is needed for the project to run. When running multiple concurrent instances, it is not needed to call this every time when a new instance starts to run.
-  * "Microflow_HttpStart" : This will start the run of a project by calling "Start".
-  * "Start" : This starts the project run by getting a list of top level steps and then calls "ExecuteStep" for each top level step.
+This contains 3 functions responsible starting workflow execution.
+  * "UpsertWorkflow" : Must be called first after workflow creation or modification before "Microflow_HttpStart" can be called. This will persist the needed workflow meta data that is needed for the workflow to run. When running multiple concurrent instances, it is not needed to call this every time when a new instance starts to run.
+  * "Microflow_HttpStart" : This will start the run of a workflow by calling "Start".
+  * "Start" : This starts the workflow run by getting a list of top level steps and then calls "ExecuteStep" for each top level step.
  
 #### FlowControl
 This contains 4 classes responsible for workflow execution.
@@ -222,13 +222,13 @@ This contains 4 classes responsible for workflow execution.
 This is an "admin" Api function app that is used to add functionality that does not impact core execution. For example to get log data or to see live in-progress step counts.
 
 ### MicroflowConsoleApp
-This console app is used to create test workflow projects and post to Microflow. After created or modifying a project, always call "Microflow_InsertOrUpdateProject" before calling the run http call "Microflow_HttpStart". After a call to "Microflow_InsertOrUpdateProject" is made, then "Microflow_HttpStart" can be called multiple times as long as the project definition stays the same.
+This console app is used to create test workflow pworkflows and post to Microflow. After created or modifying a workflow, always call "UpsertWorkflow" before calling the run http call "Microflow_HttpStart". After a call to "UpsertWorkflow" is made, then "Microflow_HttpStart" can be called multiple times as long as the workflow definition stays the same.
 
 ### MicroflowModels
 This library holds model classes that is useful outside of the Microflow function app, but is also used by the Microflow function app.
 
 ### MicroflowSDK
-This library is used to help with project workflow and steps creates.
+This library is used to help with workflow and steps creates.
 
 
 ## Setup Guide
@@ -253,7 +253,7 @@ MicroflowConsoleApp Solution Nugets:<br>
 3. The run will 1st log to console in red: "Started Run ID 2d779289-01a5-50c5-b4f4-e6fa22a9fc96..."
 4. Then each step will log success in orange" "Step 1 done at 10:38:57  -  Run ID: 2d779289-01a5-50c5-b4f4-e6fa22a9fc96"
 5. Then the run end will log in red: "Run ID 2d779289-01a5-50c5-b4f4-e6fa22a9fc96 completed successfully..."
-6. Then the final last log in red: "Project run MicroflowDemo completed successfully..." and "<!!! A GREAT SUCCESS !!!>"
+6. Then the final last log in red: "Workflow run MicroflowDemo completed successfully..." and "<!!! A GREAT SUCCESS !!!>"
 7. The step completions are also logged to storage table "LogSteps"
 8. Main orchestration completions are logged to storage table "LogOrchestration"
 
@@ -265,8 +265,8 @@ MicroflowConsoleApp Solution Nugets:<br>
    * Red at start: "Started Run ID db7d8fd4-e7e3-5e57-9017-e7ec3ad6bb01..."
    * Orange for each completed step: "Step 1 done at 10:55:02  -  Run ID: db7d8fd4-e7e3-5e57-9017-e7ec3ad6bb01"
    * Red at run end: "Run ID db7d8fd4-e7e3-5e57-9017-e7ec3ad6bb01 completed successfully..."
-   * Red at project end: "Project run MicroflowDemo completed successfully..."
-   * Red at project end: "<-----> !!! A GREAT SUCCESS !!! <----->"
+   * Red at workflow end: "Workflow run MicroflowDemo completed successfully..."
+   * Red at workflow end: "<-----> !!! A GREAT SUCCESS !!! <----->"
 
 ### Table Storage Logging
 
