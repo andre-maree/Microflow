@@ -276,7 +276,7 @@ namespace Microflow.FlowControl
                         RunId = MicroflowRun.RunObject.RunId,
                         StepNumber = stepsAndCounts[i],
                         ParentCount = parentCount,
-                        workflowName = MicroflowRun.WorkflowName
+                        WorkflowName = MicroflowRun.WorkflowName
                     }));
                 }
             }

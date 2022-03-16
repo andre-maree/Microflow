@@ -12,7 +12,7 @@ namespace MicroflowConsole
     {
         public static readonly HttpClient HttpClient = new HttpClient();
         private static string baseUrl = "http://localhost:7071";
-        //private static string baseUrl = "https://microflowapp20220203214232.azurewebsites.net";
+        //private static string baseUrl = "https://microflowapp5675763456345345.azurewebsites.net";
 
         static async Task Main(string[] args)
         {
@@ -29,8 +29,8 @@ namespace MicroflowConsole
             //var terminate = await client.PostAsync("http://localhost:7071/runtime/webhooks/durabletask/instances/39806875-9c81-4736-81c0-9be562dae71e/terminate?reason=dfgd", null);
             try
             {
-                //var workflow = Tests.CreateTestWorkflow_SimpleSteps();
-                var workflow = Tests.CreateTestWorkflow_10StepsParallel();
+                var workflow = Tests.CreateTestWorkflow_SimpleSteps();
+                //var workflow = Tests.CreateTestWorkflow_10StepsParallel();
                 //var workflow = Tests.CreateTestWorkflow_Complex1();
                 //var workflow = Tests.CreateTestWorkflow_110Steps();
                 //var workflow2 = Tests.CreateTestWorkflow_110Steps();
@@ -80,7 +80,7 @@ namespace MicroflowConsole
                 //project.Steps[2].CalloutUrl = baseUrl + $"/start/{project2.ProjectName}";
                 //project.Steps[0].AsynchronousPollingEnabled = false;
                 // call Microflow insertorupdateproject when something ischanges in the workflow, but do not always call this when corcurrent multiple workflows
-                //var result = HttpClient.PostAsJsonAsync(baseUrl + "/insertorupdateproject", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
+                var result = HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
 
                 //// scale groups:
                 //// set max count
@@ -104,10 +104,10 @@ namespace MicroflowConsole
                 //MicroflowProject microflowProject = JsonSerializer.Deserialize<MicroflowProject>(content);
                 ////parallel multiple workflow instances
 
-                //await result;
+                await result;
                 //await result2;
 
-                for (int i = 0; i < 1; i++)
+                for (int i = 0; i < 5; i++)
                 {
                     await Task.Delay(500);
                     //await posttask;

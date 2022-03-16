@@ -51,7 +51,7 @@ namespace Microflow.FlowControl
             catch (Exception e)
             {
                 // log to table error
-                LogErrorEntity errorEntity = new LogErrorEntity(canExecuteNowObject.workflowName,
+                LogErrorEntity errorEntity = new LogErrorEntity(canExecuteNowObject.WorkflowName,
                                                                 Convert.ToInt32(canExecuteNowObject.StepNumber),
                                                                 e.Message,
                                                                 canExecuteNowObject.RunId);
@@ -69,6 +69,7 @@ namespace Microflow.FlowControl
         /// <summary>
         /// Durable entity to keep a count for each run and each step in the run
         /// </summary>
+        [Deterministic]
         [FunctionName(MicroflowEntities.CanExecuteNowCount)]
         public static void CanExecuteNowCounter([EntityTrigger] IDurableEntityContext ctx)
         {
