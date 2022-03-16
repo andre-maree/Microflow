@@ -18,12 +18,12 @@ namespace Microflow.FlowControl
         public static async Task ExecuteStep([OrchestrationTrigger] IDurableOrchestrationContext context,
                                              ILogger inLog)
         {
-            ProjectRun projectRun = context.GetInput<ProjectRun>();
+            MicroflowRun workflowRun = context.GetInput<MicroflowRun>();
             MicroflowContext microflowContext = null;
 
             try
             {
-                microflowContext = new MicroflowContext(context, projectRun, inLog);
+                microflowContext = new MicroflowContext(context, workflowRun, inLog);
 
                 await microflowContext.RunMicroflow();
             }
@@ -36,10 +36,10 @@ namespace Microflow.FlowControl
                         : microflowContext.HttpCallWithRetries.RowKey;
 
                     // log to table workflow completed
-                    LogErrorEntity errorEntity = new LogErrorEntity(projectRun?.ProjectName,
+                    LogErrorEntity errorEntity = new LogErrorEntity(workflowRun?.WorkflowName,
                                                                     Convert.ToInt32(stepNumber),
                                                                     e.Message,
-                                                                    projectRun?.RunObject?.RunId);
+                                                                    workflowRun?.RunObject?.RunId);
 
                     await context.CallActivityAsync(CallNames.LogError, errorEntity);
 

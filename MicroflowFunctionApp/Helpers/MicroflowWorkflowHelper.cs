@@ -14,39 +14,39 @@ using static Microflow.Helpers.Constants;
 
 namespace Microflow.Helpers
 {
-    public static class MicroflowProjectHelper
+    public static class MicroflowWorkflowHelper
     {
-        public static ProjectRun CreateProjectRun(HttpRequestMessage req, ref string instanceId, string projectName)
+        public static MicroflowRun CreateMicroflowRun(HttpRequestMessage req, ref string instanceId, string workflowName)
         {
-            ProjectRun projectRun = MicroflowStartupHelper.CreateStartupProjectRun(req.RequestUri.ParseQueryString(), ref instanceId, projectName);
+            MicroflowRun workflowRun = MicroflowStartupHelper.CreateStartupRun(req.RequestUri.ParseQueryString(), ref instanceId, workflowName);
             string baseUrl = $"{Environment.GetEnvironmentVariable("BaseUrl")}";
-            projectRun.BaseUrl = baseUrl.EndsWith('/')
+            workflowRun.BaseUrl = baseUrl.EndsWith('/')
                 ? baseUrl.Remove(baseUrl.Length - 1)
                 : baseUrl;
 
-            return projectRun;
+            return workflowRun;
         }
 
         /// <summary>
         /// From the api call
         /// </summary>
-        public static async Task<HttpResponseMessage> InserOrUpdateProject(this IDurableEntityClient client,
+        public static async Task<HttpResponseMessage> UpsertWorkflow(this IDurableEntityClient client,
                                                                            string content,
                                                                            string globalKey)
         {
             bool doneReadyFalse = false;
 
             // deserialize the workflow json
-            MicroflowProject project = JsonSerializer.Deserialize<MicroflowProject>(content);
+            MicroflowModels.Microflow workflow = JsonSerializer.Deserialize<MicroflowModels.Microflow>(content);
 
-            //    // create a project run
-            ProjectRun projectRun = new ProjectRun() 
+            //    // create a workflow run
+            MicroflowRun workflowRun = new MicroflowRun() 
             { 
-                ProjectName = project.ProjectName, 
-                Loop = project.Loop 
+                WorkflowName = workflow.WorkflowName, 
+                Loop = workflow.Loop 
             };
 
-            EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectState, projectRun.ProjectName);
+            EntityId projStateId = new EntityId(MicroflowStateKeys.WorkflowState, workflowRun.WorkflowName);
 
             try
             {
@@ -57,7 +57,7 @@ namespace Microflow.Helpers
                     EntityId globalStateId = new EntityId(MicroflowStateKeys.GlobalState, globalKey);
                     globStateTask = client.ReadEntityStateAsync<int>(globalStateId);
                 }
-                // do not do anything, wait for the stopped project to be ready
+                // do not do anything, wait for the stopped workflow to be ready
                 var projStateTask = client.ReadEntityStateAsync<int>(projStateId);
                 int globState = MicroflowStates.Ready;
                 if (globStateTask != null)
@@ -72,30 +72,30 @@ namespace Microflow.Helpers
                     return new HttpResponseMessage(HttpStatusCode.Locked);
                 }
 
-                // set project ready to false
+                // set workflow ready to false
                 await client.SignalEntityAsync(projStateId, MicroflowControlKeys.Pause);
                 doneReadyFalse = true;
 
-                // create the storage tables for the project
+                // create the storage tables for the workflow
                 await MicroflowTableHelper.CreateTables();
 
                 //  clear step table data
-                Task delTask = projectRun.DeleteSteps();
+                Task delTask = workflowRun.DeleteSteps();
 
                 //    // parse the mergefields
-                content.ParseMergeFields(ref project);
+                content.ParseMergeFields(ref workflow);
 
                 await delTask;
 
                 // prepare the workflow by persisting parent info to table storage
-                await projectRun.PrepareWorkflow(project);
+                await workflowRun.PrepareWorkflow(workflow);
 
-                project.Steps = null;
-                project.ProjectName= null;
-                string projectConfigJson = JsonSerializer.Serialize(project);
+                workflow.Steps = null;
+                workflow.WorkflowName= null;
+                string workflowConfigJson = JsonSerializer.Serialize(workflow);
 
-                // create the storage tables for the project
-                await MicroflowTableHelper.UpsertProjectConfigString(projectRun.ProjectName, projectConfigJson);
+                // create the storage tables for the workflow
+                await MicroflowTableHelper.UpsertWorkflowConfigString(workflowRun.WorkflowName, workflowConfigJson);
 
                 return new HttpResponseMessage(HttpStatusCode.Accepted);
             }
@@ -117,10 +117,10 @@ namespace Microflow.Helpers
 
                 try
                 {
-                    _ = await MicroflowHelper.LogError(project.ProjectName
-                                                       ?? "no project",
-                                                       projectRun.RunObject.GlobalKey,
-                                                       projectRun.RunObject.RunId,
+                    _ = await MicroflowHelper.LogError(workflow.WorkflowName
+                                                       ?? "no workflow",
+                                                       workflowRun.RunObject.GlobalKey,
+                                                       workflowRun.RunObject.RunId,
                                                        e);
                 }
                 catch
@@ -132,7 +132,7 @@ namespace Microflow.Helpers
             }
             finally
             {
-                // if project ready was set to false, always set it to true
+                // if workflow ready was set to false, always set it to true
                 if (doneReadyFalse)
                 {
                     await client.SignalEntityAsync(projStateId, MicroflowControlKeys.Ready);
@@ -146,14 +146,14 @@ namespace Microflow.Helpers
         /// only call this to create a new workflow or to update an existing 1
         /// Saves step meta data to table storage and read during execution
         /// </summary>
-        public static async Task PrepareWorkflow(this ProjectRun projectRun, MicroflowProject project)
+        public static async Task PrepareWorkflow(this MicroflowRun workflowRun, MicroflowModels.Microflow workflow)
         {
             List<TableTransactionAction> batch = new List<TableTransactionAction>();
             List<Task> batchTasks = new List<Task>();
             TableClient stepsTable = MicroflowTableHelper.GetStepsTable();
             Step stepContainer = new Step(-1, null);
             StringBuilder sb = new StringBuilder();
-            List<Step> steps = project.Steps;
+            List<Step> steps = workflow.Steps;
             List<(int StepNumber, int ParentCount)> liParentCounts = new List<(int, int)>();
 
             foreach (Step step in steps)
@@ -182,7 +182,7 @@ namespace Microflow.Helpers
 
                 if (step.RetryOptions != null)
                 {
-                    HttpCallWithRetries httpCallRetriesEntity = new HttpCallWithRetries(projectRun.ProjectName, step.StepNumber.ToString(), step.StepId, sb.ToString())
+                    HttpCallWithRetries httpCallRetriesEntity = new HttpCallWithRetries(workflowRun.WorkflowName, step.StepNumber.ToString(), step.StepId, sb.ToString())
                     {
                         CallbackAction = step.CallbackAction,
                         StopOnActionFailed = step.StopOnActionFailed,
@@ -205,7 +205,7 @@ namespace Microflow.Helpers
                 }
                 else
                 {
-                    HttpCall httpCallEntity = new HttpCall(projectRun.ProjectName, step.StepNumber.ToString(), step.StepId, sb.ToString())
+                    HttpCall httpCallEntity = new HttpCall(workflowRun.WorkflowName, step.StepNumber.ToString(), step.StepId, sb.ToString())
                     {
                         CallbackAction = step.CallbackAction,
                         StopOnActionFailed = step.StopOnActionFailed,
@@ -235,31 +235,31 @@ namespace Microflow.Helpers
                 sb.Append(subId).Append(",1;");
             }
 
-            HttpCall containerEntity = new HttpCall(projectRun.ProjectName, "-1", null, sb.ToString());
+            HttpCall containerEntity = new HttpCall(workflowRun.WorkflowName, "-1", null, sb.ToString());
 
             batch.Add(new TableTransactionAction(TableTransactionActionType.UpsertReplace, containerEntity));
 
             batchTasks.Add(stepsTable.SubmitTransactionAsync(batch));
 
-            TableEntity mergeFieldsEnt = new TableEntity($"{projectRun.ProjectName}_MicroflowMergeFields", "");
+            TableEntity mergeFieldsEnt = new TableEntity($"{workflowRun.WorkflowName}_MicroflowMergeFields", "");
             await stepsTable.UpsertEntityAsync(mergeFieldsEnt);
 
             await Task.WhenAll(batchTasks);
         }
 
         /// <summary>
-        /// Parse all the merge fields in the project
+        /// Parse all the merge fields in the workflow
         /// </summary>
-        public static void ParseMergeFields(this string strWorkflow, ref MicroflowProject project)
+        public static void ParseMergeFields(this string strWorkflow, ref MicroflowModels.Microflow workflow)
         {
             StringBuilder sb = new StringBuilder(strWorkflow);
 
-            foreach (KeyValuePair<string, string> field in project.MergeFields)
+            foreach (KeyValuePair<string, string> field in workflow.MergeFields)
             {
                 sb.Replace("{" + field.Key + "}", field.Value);
             }
 
-            project = JsonSerializer.Deserialize<MicroflowProject>(sb.ToString());
+            workflow = JsonSerializer.Deserialize<MicroflowModels.Microflow>(sb.ToString());
         }
     }
 }

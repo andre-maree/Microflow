@@ -51,9 +51,9 @@ namespace Microflow.Helpers
         }
 
         // TODO: move out to api app
-        public static async Task<string> GetProjectAsJson(string projectName)
+        public static async Task<string> GetWorkflowAsJson(string workflowName)
         {
-            AsyncPageable<HttpCallWithRetries> steps = GetStepsHttpCallWithRetries(projectName);
+            AsyncPageable<HttpCallWithRetries> steps = GetStepsHttpCallWithRetries(workflowName);
 
             List<Step> outSteps = new List<Step>();
             bool skip1st = true;
@@ -103,43 +103,43 @@ namespace Microflow.Helpers
                 }
             }
 
-            TableClient projConfigsTable = GetProjectConfigsTable();
+            TableClient wfConfigsTable = GetWorkflowConfigsTable();
 
-            ProjectConfigEntity projConfig = await projConfigsTable.GetEntityAsync<ProjectConfigEntity>(projectName, "0");
+            MicroflowConfigEntity projConfig = await wfConfigsTable.GetEntityAsync<MicroflowConfigEntity>(workflowName, "0");
 
-            MicroflowProject proj = JsonSerializer.Deserialize<MicroflowProject>(projConfig.Config);
-            proj.ProjectName = projectName;
+            MicroflowModels.Microflow proj = JsonSerializer.Deserialize<MicroflowModels.Microflow>(projConfig.Config);
+            proj.WorkflowName = workflowName;
             proj.Steps = outSteps;
 
             return JsonSerializer.Serialize(proj);
         }
 
-        public static AsyncPageable<HttpCallWithRetries> GetStepsHttpCallWithRetries(string projectName)
+        public static AsyncPageable<HttpCallWithRetries> GetStepsHttpCallWithRetries(string workflowName)
         {
             TableClient tableClient = GetStepsTable();
 
-            return tableClient.QueryAsync<HttpCallWithRetries>(filter: $"PartitionKey eq '{projectName}'");
+            return tableClient.QueryAsync<HttpCallWithRetries>(filter: $"PartitionKey eq '{workflowName}'");
         }
 
-        public static async Task<HttpCallWithRetries> GetStep(this ProjectRun projectRun)
+        public static async Task<HttpCallWithRetries> GetStep(this MicroflowRun workflowRun)
         {
             TableClient tableClient = GetStepsTable();
 
-            return await tableClient.GetEntityAsync<HttpCallWithRetries>(projectRun.ProjectName, projectRun.RunObject.StepNumber);
+            return await tableClient.GetEntityAsync<HttpCallWithRetries>(workflowRun.WorkflowName, workflowRun.RunObject.StepNumber);
         }
 
-        public static AsyncPageable<TableEntity> GetStepEntities(string projectName)
+        public static AsyncPageable<TableEntity> GetStepEntities(string workflowName)
         {
             TableClient tableClient = GetStepsTable();
 
-            return tableClient.QueryAsync<TableEntity>(filter: $"PartitionKey eq '{projectName}'", select: new List<string>() { "PartitionKey", "RowKey" });
+            return tableClient.QueryAsync<TableEntity>(filter: $"PartitionKey eq '{workflowName}'", select: new List<string>() { "PartitionKey", "RowKey" });
         }
 
-        public static async Task DeleteSteps(this ProjectRun projectRun)
+        public static async Task DeleteSteps(this MicroflowRun workflowRun)
         {
             TableClient tableClient = GetStepsTable();
 
-            var steps = GetStepEntities(projectRun.ProjectName);
+            var steps = GetStepEntities(workflowRun.WorkflowName);
             List<TableTransactionAction> batch = new List<TableTransactionAction>();
             List<Task> batchTasks = new List<Task>();
 
@@ -163,13 +163,13 @@ namespace Microflow.Helpers
         }
 
         /// <summary>
-        /// Called on start to save additional project config not looked up during execution
+        /// Called on start to save additional workflow config not looked up during execution
         /// </summary>
-        public static async Task UpsertProjectConfigString(string projectName, string projectConfigJson)
+        public static async Task UpsertWorkflowConfigString(string workflowName, string workflowConfigJson)
         {
-            TableClient projTable = GetProjectConfigsTable();
+            TableClient projTable = GetWorkflowConfigsTable();
 
-            ProjectConfigEntity proj = new ProjectConfigEntity(projectName, projectConfigJson);
+            MicroflowConfigEntity proj = new MicroflowConfigEntity(workflowName, workflowConfigJson);
 
             await projTable.UpsertEntityAsync(proj);
         }
@@ -179,7 +179,7 @@ namespace Microflow.Helpers
         /// </summary>
         public static async Task CreateTables()
         {
-            // StepsMyProject for step config
+            // StepsMyworkflow for step config
             TableClient stepsTable = GetStepsTable();
 
             // MicroflowLog table
@@ -191,14 +191,14 @@ namespace Microflow.Helpers
             // Error table
             TableClient errorsTable = GetErrorsTable();
 
-            // Project table
-            TableClient projectConfigsTable = GetProjectConfigsTable();
+            // workflow table
+            TableClient workflowConfigsTable = GetWorkflowConfigsTable();
 
             Task<Response<TableItem>> t1 = stepsTable.CreateIfNotExistsAsync();
             Task<Response<TableItem>> t2 = logOrchestrationTable.CreateIfNotExistsAsync();
             Task<Response<TableItem>> t3 = logStepsTable.CreateIfNotExistsAsync();
             Task<Response<TableItem>> t4 = errorsTable.CreateIfNotExistsAsync();
-            Task<Response<TableItem>> t5 = projectConfigsTable.CreateIfNotExistsAsync();
+            Task<Response<TableItem>> t5 = workflowConfigsTable.CreateIfNotExistsAsync();
 
             await t1;
             await t2;
@@ -239,11 +239,11 @@ namespace Microflow.Helpers
             return tableClient.GetTableClient($"MicroflowLogSteps");
         }
 
-        private static TableClient GetProjectConfigsTable()
+        private static TableClient GetWorkflowConfigsTable()
         {
             TableServiceClient tableClient = GetTableClient();
 
-            return tableClient.GetTableClient($"MicroflowProjectConfigs");
+            return tableClient.GetTableClient($"MicroflowWorkflowConfigs");
         }
 
         private static TableServiceClient GetTableClient()

@@ -10,15 +10,15 @@ namespace Microflow.Models
     #region TableEntity
 
     /// <summary>
-    /// Used to save and get project additional config
+    /// Used to save and get workflow additional config
     /// </summary>
-    public class ProjectConfigEntity : ITableEntity
+    public class MicroflowConfigEntity : ITableEntity
     {
-        public ProjectConfigEntity() { }
+        public MicroflowConfigEntity() { }
 
-        public ProjectConfigEntity(string projectName, string config)
+        public MicroflowConfigEntity(string workflowName, string config)
         {
-            PartitionKey = projectName;
+            PartitionKey = workflowName;
             RowKey = "0";
             Config = config;
         }
@@ -37,9 +37,9 @@ namespace Microflow.Models
     {
         public LogErrorEntity() { }
 
-        public LogErrorEntity(string projectName, int stepNumber, string message, string globalKey, string runId = null)
+        public LogErrorEntity(string workflowName, int stepNumber, string message, string globalKey, string runId = null)
         {
-            PartitionKey = projectName + "__" + runId;
+            PartitionKey = workflowName + "__" + runId;
             RowKey = MicroflowTableHelper.GetTableRowKeyDescendingByDate();
             StepNumber = stepNumber;
             Message = message;
@@ -64,9 +64,9 @@ namespace Microflow.Models
     {
         public LogStepEntity() { }
 
-        public LogStepEntity(bool isStart, string projectName, string rowKey, int stepNumber, string mainOrchestrationId, string runId, string globalKey, bool? success = null, int? httpStatusCode = null, string message = null)
+        public LogStepEntity(bool isStart, string workflowName, string rowKey, int stepNumber, string mainOrchestrationId, string runId, string globalKey, bool? success = null, int? httpStatusCode = null, string message = null)
         {
-            PartitionKey = projectName + "__" + mainOrchestrationId;
+            PartitionKey = workflowName + "__" + mainOrchestrationId;
             RowKey = rowKey;
             StepNumber = stepNumber;
             GlobalKey = globalKey;
@@ -103,9 +103,9 @@ namespace Microflow.Models
     {
         public LogOrchestrationEntity() { }
 
-        public LogOrchestrationEntity(bool isStart, string projectName, string rowKey, string logMessage, DateTime date, string orchestrationId, string globalKey)
+        public LogOrchestrationEntity(bool isStart, string workflowName, string rowKey, string logMessage, DateTime date, string orchestrationId, string globalKey)
         {
-            PartitionKey = projectName;
+            PartitionKey = workflowName;
             LogMessage = logMessage;
             RowKey = rowKey;
             OrchestrationId = orchestrationId;
@@ -150,9 +150,9 @@ namespace Microflow.Models
     {
         public HttpCall() { }
 
-        public HttpCall(string project, string stepNumber, string stepId, string subSteps)
+        public HttpCall(string workflow, string stepNumber, string stepId, string subSteps)
         {
-            PartitionKey = project;
+            PartitionKey = workflow;
             RowKey = stepNumber;
             SubSteps = subSteps;
             StepId = stepId;
@@ -188,9 +188,9 @@ namespace Microflow.Models
     {
         public HttpCallWithRetries() { }
 
-        public HttpCallWithRetries(string project, string stepNumber, string stepId, string subSteps)
+        public HttpCallWithRetries(string workflow, string stepNumber, string stepId, string subSteps)
         {
-            PartitionKey = project;
+            PartitionKey = workflow;
             RowKey = stepNumber;
             SubSteps = subSteps;
             StepId = stepId;

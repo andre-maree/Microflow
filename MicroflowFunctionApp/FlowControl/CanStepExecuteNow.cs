@@ -51,7 +51,7 @@ namespace Microflow.FlowControl
             catch (Exception e)
             {
                 // log to table error
-                LogErrorEntity errorEntity = new LogErrorEntity(canExecuteNowObject.ProjectName,
+                LogErrorEntity errorEntity = new LogErrorEntity(canExecuteNowObject.workflowName,
                                                                 Convert.ToInt32(canExecuteNowObject.StepNumber),
                                                                 e.Message,
                                                                 canExecuteNowObject.RunId);

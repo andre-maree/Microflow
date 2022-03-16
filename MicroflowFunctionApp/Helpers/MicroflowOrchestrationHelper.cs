@@ -12,29 +12,29 @@ namespace Microflow.Helpers
     public static class MicroflowOrchestrationHelper
     {
         /// <summary>
-        /// Start a new project run
+        /// Start a new workflow run
         /// </summary>
         /// <returns></returns>
         [Deterministic]
-        public static async Task StartMicroflowProject(this IDurableOrchestrationContext context,
+        public static async Task StartMicroflow(this IDurableOrchestrationContext context,
                                                        ILogger log,
-                                                       ProjectRun projectRun)
+                                                       MicroflowRun workflowRun)
         {
             // log start
-            string logRowKey = MicroflowTableHelper.GetTableLogRowKeyDescendingByDate(context.CurrentUtcDateTime, $"_{projectRun.OrchestratorInstanceId}");
+            string logRowKey = MicroflowTableHelper.GetTableLogRowKeyDescendingByDate(context.CurrentUtcDateTime, $"_{workflowRun.OrchestratorInstanceId}");
 
-            await context.LogOrchestrationStartAsync(log, projectRun, logRowKey);
+            await context.LogOrchestrationStartAsync(log, workflowRun, logRowKey);
 
-            await context.MicroflowStartProjectRun(log, projectRun);
+            await context.MicroflowStart(log, workflowRun);
 
             // log to table workflow completed
-            Task logTask = context.LogOrchestrationEnd(projectRun, logRowKey);
+            Task logTask = context.LogOrchestrationEnd(workflowRun, logRowKey);
 
-            context.SetProjectStateReady(projectRun);
+            context.SetMicroflowStateReady(workflowRun);
 
             await logTask;
             // done
-            log.LogError($"Project run {projectRun.ProjectName} completed successfully...");
+            log.LogError($"Workflow run {workflowRun.WorkflowName} completed successfully...");
             log.LogError("<<<<<<<<<<<<<<<<<<<<<<<<<-----> !!! A GREAT SUCCESS  !!! <----->>>>>>>>>>>>>>>>>>>>>>>>>");
         }
 
@@ -44,24 +44,24 @@ namespace Microflow.Helpers
         /// by getting step -1 from table storage
         /// </summary>
         [Deterministic]
-        public static async Task MicroflowStartProjectRun(this IDurableOrchestrationContext context,
+        public static async Task MicroflowStart(this IDurableOrchestrationContext context,
                                                           ILogger log,
-                                                          ProjectRun projectRun)
+                                                          MicroflowRun workflowRun)
         {
             // do the looping
-            for (int i = 1; i <= projectRun.Loop; i++)
+            for (int i = 1; i <= workflowRun.Loop; i++)
             {
                 // get the top container step from table storage (from PrepareWorkflow)
-                Task<HttpCallWithRetries> httpTask = context.CallActivityAsync<HttpCallWithRetries>(CallNames.GetStep, projectRun);
+                Task<HttpCallWithRetries> httpTask = context.CallActivityAsync<HttpCallWithRetries>(CallNames.GetStep, workflowRun);
 
                 string guid = context.NewGuid().ToString();
 
-                projectRun.RunObject.RunId = guid;
+                workflowRun.RunObject.RunId = guid;
 
-                log.LogError($"Started Run ID {projectRun.RunObject.RunId}...");
+                log.LogError($"Started Run ID {workflowRun.RunObject.RunId}...");
 
                 // pass in the current loop count so it can be used downstream/passed to the micro-services
-                projectRun.CurrentLoop = i;
+                workflowRun.CurrentLoop = i;
 
                 List<Task> subTasks = new List<Task>();
 
@@ -71,14 +71,14 @@ namespace Microflow.Helpers
 
                 for (int j = 0; j < stepsAndCounts.Length; j += 2)
                 {
-                    projectRun.RunObject = new RunObject()
+                    workflowRun.RunObject = new RunObject()
                     {
                         RunId = guid,
                         StepNumber = stepsAndCounts[j],
-                        GlobalKey = projectRun.RunObject.GlobalKey
+                        GlobalKey = workflowRun.RunObject.GlobalKey
                     };
 
-                    subTasks.Add(context.CallSubOrchestratorAsync(CallNames.ExecuteStep, projectRun));
+                    subTasks.Add(context.CallSubOrchestratorAsync(CallNames.ExecuteStep, workflowRun));
                 }
 
                 await Task.WhenAll(subTasks);
@@ -88,15 +88,15 @@ namespace Microflow.Helpers
         }
 
         /// <summary>
-        /// Check if project ready is true, else wait with a timer (this is a durable monitor), called from start
+        /// Check if workflow ready is true, else wait with a timer (this is a durable monitor), called from start
         /// </summary>
         [Deterministic]
         public static async Task<bool> CheckAndWaitForReadyToRun(this IDurableOrchestrationContext context,
-                                                                 string projectName,
+                                                                 string workflowName,
                                                                  ILogger log,
                                                                  string globalKey = null)
         {
-            EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectState, projectName);
+            EntityId projStateId = new EntityId(MicroflowStateKeys.WorkflowState, workflowName);
             Task<int> projStateTask = context.CallEntityAsync<int>(projStateId, MicroflowControlKeys.Read);
 
             bool doGlobal = !string.IsNullOrWhiteSpace(globalKey);
@@ -116,12 +116,12 @@ namespace Microflow.Helpers
                 globalState = await globalSateTask;
             }
 
-            // check project and global states, run step if both states are ready
+            // check workflow and global states, run step if both states are ready
             if (projState == MicroflowStates.Ready && globalState == MicroflowStates.Ready)
             {
                 return true;
             }
-            // if project or global key state is paused, then pause this step, and wait and poll states by timer
+            // if workflow or global key state is paused, then pause this step, and wait and poll states by timer
             else if (projState == MicroflowStates.Paused || globalState == MicroflowStates.Paused)
             {
                 // 7 days in paused state till exit
@@ -167,7 +167,7 @@ namespace Microflow.Helpers
                     }
                 }
 
-                // if project and global key state is ready, then continue to run step
+                // if workflow and global key state is ready, then continue to run step
                 if (projState == MicroflowStates.Ready && globalState == MicroflowStates.Ready)
                 {
                     return true;
@@ -178,25 +178,25 @@ namespace Microflow.Helpers
         }
 
         [Deterministic]
-        public static void SetProjectStateReady(this IDurableOrchestrationContext context, ProjectRun projectRun)
+        public static void SetMicroflowStateReady(this IDurableOrchestrationContext context, MicroflowRun workflowRun)
         {
-            EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectState, projectRun.ProjectName);
+            EntityId projStateId = new EntityId(MicroflowStateKeys.WorkflowState, workflowRun.WorkflowName);
 
             context.SignalEntity(projStateId, MicroflowControlKeys.Ready);
         }
 
         [Deterministic]
         public static async Task LogOrchestrationEnd(this IDurableOrchestrationContext context,
-                                                     ProjectRun projectRun,
+                                                     MicroflowRun workflowRun,
                                                      string logRowKey)
         {
             var logEntity = new LogOrchestrationEntity(false,
-                                                       projectRun.ProjectName,
+                                                       workflowRun.WorkflowName,
                                                        logRowKey,
-                                                       $"VM: {Environment.MachineName} - {projectRun.ProjectName} completed successfully",
+                                                       $"VM: {Environment.MachineName} - {workflowRun.WorkflowName} completed successfully",
                                                        context.CurrentUtcDateTime,
-                                                       projectRun.OrchestratorInstanceId,
-                                                       projectRun.RunObject.GlobalKey);
+                                                       workflowRun.OrchestratorInstanceId,
+                                                       workflowRun.RunObject.GlobalKey);
 
             await context.CallActivityAsync(CallNames.LogOrchestration, logEntity);
         }
@@ -204,20 +204,20 @@ namespace Microflow.Helpers
         [Deterministic]
         public static async Task LogOrchestrationStartAsync(this IDurableOrchestrationContext context,
                                                             ILogger log,
-                                                            ProjectRun projectRun,
+                                                            MicroflowRun workflowRun,
                                                             string logRowKey)
         {
             LogOrchestrationEntity logEntity = new LogOrchestrationEntity(true,
-                                                                          projectRun.ProjectName,
+                                                                          workflowRun.WorkflowName,
                                                                           logRowKey,
-                                                                          $"{projectRun.ProjectName} started...",
+                                                                          $"{workflowRun.WorkflowName} started...",
                                                                           context.CurrentUtcDateTime,
-                                                                          projectRun.OrchestratorInstanceId,
-                                                                          projectRun.RunObject.GlobalKey);
+                                                                          workflowRun.OrchestratorInstanceId,
+                                                                          workflowRun.RunObject.GlobalKey);
 
             await context.CallActivityAsync(CallNames.LogOrchestration, logEntity);
 
-            log.LogInformation($"Started orchestration with ID = '{context.InstanceId}', Project = '{projectRun.ProjectName}'");
+            log.LogInformation($"Started orchestration with ID = '{context.InstanceId}', workflow = '{workflowRun.WorkflowName}'");
         }
     }
 }

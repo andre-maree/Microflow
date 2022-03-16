@@ -7,11 +7,11 @@ namespace Microflow.Helpers
     public static class MicroflowStartupHelper
     {
         /// <summary>
-        /// Create a new ProjectRun for stratup, set GlobalKey
+        /// Create a new workflowRun for stratup, set GlobalKey
         /// </summary>
-        public static ProjectRun CreateStartupProjectRun(NameValueCollection data,
+        public static MicroflowRun CreateStartupRun(NameValueCollection data,
                                                          ref string instanceId,
-                                                         string projectName)
+                                                         string workflowName)
         {
             var input = new
             {
@@ -19,10 +19,10 @@ namespace Microflow.Helpers
                 GlobalKey = data["globalkey"]
             };
 
-            // create a project run
-            ProjectRun projectRun = new ProjectRun()
+            // create a workflow run
+            MicroflowRun workflowRun = new MicroflowRun()
             {
-                ProjectName = projectName,
+                WorkflowName = workflowName,
                 Loop = input.Loop != 0
                 ? input.Loop
                 : 1
@@ -30,7 +30,7 @@ namespace Microflow.Helpers
 
             // create a new run object
             RunObject runObj = new RunObject() { StepNumber = "-1" };
-            projectRun.RunObject = runObj;
+            workflowRun.RunObject = runObj;
 
             // instanceId is set/singleton
             if (!string.IsNullOrWhiteSpace(instanceId))
@@ -60,10 +60,10 @@ namespace Microflow.Helpers
                 }
             }
 
-            projectRun.RunObject.StepNumber = "-1";
-            projectRun.OrchestratorInstanceId = instanceId;
+            workflowRun.RunObject.StepNumber = "-1";
+            workflowRun.OrchestratorInstanceId = instanceId;
 
-            return projectRun;
+            return workflowRun;
         }
     }
 }

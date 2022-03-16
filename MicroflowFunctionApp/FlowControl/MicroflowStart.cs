@@ -14,28 +14,28 @@ using Azure;
 namespace Microflow.FlowControl
 {
     /// <summary>
-    /// "Microflow_InsertOrUpdateProject" must be called to save project step meta data to table storage
+    /// "Microflow_InsertOrUpdateworkflow" must be called to save workflow step meta data to table storage
     /// after this, "Microflow_HttpStart" can be called multiple times,
-    /// if a change is made to the project, call "Microflow_InsertOrUpdateProject" again to apply the changes
+    /// if a change is made to the workflow, call "Microflow_InsertOrUpdateworkflow" again to apply the changes
     /// </summary>
     public static class MicroflowStart
     {
         /// <summary>
-        /// This is the entry point, project payload is in the http body
+        /// This is the entry point, workflow payload is in the http body
         /// </summary>
         /// <param name="instanceId">If an instanceId is passed in, it will run as a singleton, else it will run concurrently with each with a new instanceId</param>
         [FunctionName("Microflow_HttpStart")]
-        public static async Task<HttpResponseMessage> HttpStart([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "start/{projectName}/{instanceId?}")]
+        public static async Task<HttpResponseMessage> HttpStart([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "start/{workflowName}/{instanceId?}")]
                                                                 HttpRequestMessage req,
                                                                 [DurableClient] IDurableOrchestrationClient client,
-                                                                string instanceId, string projectName)
+                                                                string instanceId, string workflowName)
         {
             try
             {
-                ProjectRun projectRun = MicroflowProjectHelper.CreateProjectRun(req, ref instanceId, projectName);
+                MicroflowRun workflowRun = MicroflowWorkflowHelper.CreateMicroflowRun(req, ref instanceId, workflowName);
 
                 // start
-                await client.StartNewAsync("Start", instanceId, projectRun);
+                await client.StartNewAsync("Start", instanceId, workflowRun);
 
                 return await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromSeconds(1));
 
@@ -44,7 +44,7 @@ namespace Microflow.FlowControl
             {
                 HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.InternalServerError)
                 {
-                    Content = new StringContent(ex.Message + " - Project in error state, call 'InsertOrUpdateProject' at least once before running a project.")
+                    Content = new StringContent(ex.Message + " - workflow in error state, call 'InsertOrUpdateworkflow' at least once before running a workflow.")
                 };
 
                 return resp;
@@ -71,53 +71,53 @@ namespace Microflow.FlowControl
         {
             ILogger log = context.CreateReplaySafeLogger(inLog);
 
-            // read ProjectRun payload
-            ProjectRun projectRun = context.GetInput<ProjectRun>();
+            // read workflowRun payload
+            MicroflowRun workflowRun = context.GetInput<MicroflowRun>();
 
             try
             {
-                var resp = context.CheckAndWaitForReadyToRun(projectRun.ProjectName, log);
+                var resp = context.CheckAndWaitForReadyToRun(workflowRun.WorkflowName, log);
 
-                if (!await context.CheckAndWaitForReadyToRun(projectRun.ProjectName, log))
+                if (!await context.CheckAndWaitForReadyToRun(workflowRun.WorkflowName, log))
                 {
                     return;
                 }
 
-                await context.StartMicroflowProject(log, projectRun);
+                await context.StartMicroflow(log, workflowRun);
             }
             catch (RequestFailedException e)
             {
                 // log to table workflow completed
-                LogErrorEntity errorEntity = new LogErrorEntity(projectRun.ProjectName,
-                                                                Convert.ToInt32(projectRun.RunObject.StepNumber),
+                LogErrorEntity errorEntity = new LogErrorEntity(workflowRun.WorkflowName,
+                                                                Convert.ToInt32(workflowRun.RunObject.StepNumber),
                                                                 e.Message,
-                                                                projectRun.RunObject.RunId);
+                                                                workflowRun.RunObject.RunId);
 
                 await context.CallActivityAsync(CallNames.LogError, errorEntity);
             }
             catch (Exception e)
             {
                 // log to table workflow completed
-                LogErrorEntity errorEntity = new LogErrorEntity(projectRun.ProjectName,
-                                                                Convert.ToInt32(projectRun.RunObject.StepNumber),
+                LogErrorEntity errorEntity = new LogErrorEntity(workflowRun.WorkflowName,
+                                                                Convert.ToInt32(workflowRun.RunObject.StepNumber),
                                                                 e.Message,
-                                                                projectRun.RunObject.RunId);
+                                                                workflowRun.RunObject.RunId);
 
                 await context.CallActivityAsync(CallNames.LogError, errorEntity);
             }
         }
 
         /// <summary>
-        /// This must be called at least once before a project runs,
-        /// this is to prevent multiple concurrent instances from writing step data at project run,
-        /// call Microflow InsertOrUpdateProject when something changed in the workflow, but do not always call this when concurrent multiple workflows
+        /// This must be called at least once before a workflow runs,
+        /// this is to prevent multiple concurrent instances from writing step data at workflow run,
+        /// call Microflow InsertOrUpdateworkflow when something changed in the workflow, but do not always call this when concurrent multiple workflows
         /// </summary>
-        [FunctionName("Microflow_InsertOrUpdateProject")]
-        public static async Task<HttpResponseMessage> SaveProject([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-                                                                  Route = "InsertOrUpdateProject/{globalKey?}")] HttpRequestMessage req,
+        [FunctionName("UpsertWorkflow")]
+        public static async Task<HttpResponseMessage> SaveWorflow([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
+                                                                  Route = "UpsertWorkflow/{globalKey?}")] HttpRequestMessage req,
                                                                   [DurableClient] IDurableEntityClient client, string globalKey)
         {
-            return await client.InserOrUpdateProject(await req.Content.ReadAsStringAsync(), globalKey);
+            return await client.UpsertWorkflow(await req.Content.ReadAsStringAsync(), globalKey);
         }
     }
 }

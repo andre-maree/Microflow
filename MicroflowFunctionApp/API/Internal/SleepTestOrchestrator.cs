@@ -88,7 +88,7 @@ namespace Microflow.API.Internal
                 {
                     CallbackUrl = data["CallbackUrl"],
                     MainOrchestrationId = data["MainOrchestrationId"],
-                    ProjectName = data["ProjectName"],
+                    WorkflowName = data["WorkflowName"],
                     RunId = data["RunId"],
                     StepNumber = Convert.ToInt32(data["StepNumber"]),
                     StepId = data["StepId"],

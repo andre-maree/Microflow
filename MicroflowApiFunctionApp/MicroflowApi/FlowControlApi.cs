@@ -32,7 +32,7 @@ namespace MicroflowApiFunctionApp
         {
             if (cmd.Equals(MicroflowControlKeys.Read, StringComparison.OrdinalIgnoreCase))
             {
-                EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectState, projectName);
+                EntityId projStateId = new EntityId(MicroflowStateKeys.WorkflowState, projectName);
                 EntityStateResponse<string> stateRes = await client.ReadEntityStateAsync<string>(projStateId);
 
                 HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK)
@@ -82,7 +82,7 @@ namespace MicroflowApiFunctionApp
         /// <summary>
         /// Durable entity check and set project state
         /// </summary>
-        [FunctionName(MicroflowStateKeys.ProjectState)]
+        [FunctionName(MicroflowStateKeys.WorkflowState)]
         public static void ProjectState([EntityTrigger] IDurableEntityContext ctx)
         {
             ctx.RunState();

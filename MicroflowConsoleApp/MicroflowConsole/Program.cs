@@ -35,9 +35,9 @@ namespace MicroflowConsole
                 //var workflow = Tests.CreateTestWorkflow_110Steps();
                 //var workflow2 = Tests.CreateTestWorkflow_110Steps();
 
-                var project = new MicroflowProject()
+                var project = new Microflow()
                 {
-                    ProjectName = "MyProject_ClientX",
+                    WorkflowName = "MyProject_ClientX",
                     Steps = workflow,
                     Loop = 1,
                     MergeFields = CreateMergeFields(), 
@@ -73,14 +73,14 @@ namespace MicroflowConsole
                 //        topsteps.Add(step.StepId);
                 //    }
                 //}
-                var dr = JsonSerializer.Serialize(project);
+                //var dr = JsonSerializer.Serialize(project);
                 var tasks = new List<Task<HttpResponseMessage>>();
 
                 // call microflow from microflow
                 //project.Steps[2].CalloutUrl = baseUrl + $"/start/{project2.ProjectName}";
                 //project.Steps[0].AsynchronousPollingEnabled = false;
                 // call Microflow insertorupdateproject when something ischanges in the workflow, but do not always call this when corcurrent multiple workflows
-                var result = HttpClient.PostAsJsonAsync(baseUrl + "/insertorupdateproject", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
+                //var result = HttpClient.PostAsJsonAsync(baseUrl + "/insertorupdateproject", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
 
                 //// scale groups:
                 //// set max count
@@ -98,20 +98,20 @@ namespace MicroflowConsole
 
                 // save project and get project
                 //var saveprohectjson = await HttpClient.PostAsJsonAsync("http://localhost:7071/api/SaveProjectJson", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
-                var getprohectjson = await HttpClient.PostAsJsonAsync("http://localhost:7071/api/GetProjectJson/" + project.ProjectName, new JsonSerializerOptions(JsonSerializerDefaults.General));
+                //var getprohectjson = await HttpClient.PostAsJsonAsync("http://localhost:7071/api/GetProjectJson/" + project.ProjectName, new JsonSerializerOptions(JsonSerializerDefaults.General));
 
                 //string content = await getprohectjson.Content.ReadAsStringAsync();
                 //MicroflowProject microflowProject = JsonSerializer.Deserialize<MicroflowProject>(content);
                 ////parallel multiple workflow instances
 
-                await result;
+                //await result;
                 //await result2;
 
                 for (int i = 0; i < 1; i++)
                 {
                     await Task.Delay(500);
                     //await posttask;
-                    tasks.Add(HttpClient.GetAsync(baseUrl + $"/start/{project.ProjectName}?globalkey=globber"));
+                    tasks.Add(HttpClient.GetAsync(baseUrl + $"/start/{project.WorkflowName}?globalkey=globber"));
                     //tasks.Add(HttpClient.GetAsync(baseUrl + $"/start/{project.ProjectName}/33306875-9c81-4736-81c0-9be562dae777"));
                 }
                 //await result;

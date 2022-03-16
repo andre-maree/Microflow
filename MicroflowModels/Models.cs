@@ -8,7 +8,7 @@ namespace MicroflowModels
 
     public class MicroflowPostData
     {
-        public string ProjectName { get; set; }
+        public string WorkflowName { get; set; }
         public string MainOrchestrationId { get; set; }
         public string SubOrchestrationId { get; set; }
         public string CallbackUrl { get; set; }
@@ -20,11 +20,11 @@ namespace MicroflowModels
 
     public class MicroflowProjectBase
     {
-        public string ProjectName { get; set; }
+        public string WorkflowName { get; set; }
         public int Loop { get; set; } = 1;
     }
 
-    public class MicroflowProject : MicroflowProjectBase
+    public class Microflow : MicroflowProjectBase
     {
         public List<Step> Steps { get; set; }
 

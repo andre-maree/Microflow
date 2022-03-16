@@ -49,7 +49,7 @@ namespace Microflow.Helpers
             {
                 MicroflowPostData postData = new MicroflowPostData()
                 {
-                    ProjectName = httpCall.PartitionKey,
+                    WorkflowName = httpCall.PartitionKey,
                     SubOrchestrationId = instanceId,
                     RunId = httpCall.RunId,
                     StepId = httpCall.StepId,
@@ -104,7 +104,7 @@ namespace Microflow.Helpers
         {
             StringBuilder sb = new StringBuilder(httpCall.CalloutUrl);
 
-            sb.Replace("<ProjectName>", httpCall.PartitionKey);
+            sb.Replace("<workflowName>", httpCall.PartitionKey);
             sb.Replace("<MainOrchestrationId>", httpCall.MainOrchestrationId);
             sb.Replace("<SubOrchestrationId>", instanceId);
             sb.Replace("<CallbackUrl>", callbackUrl);

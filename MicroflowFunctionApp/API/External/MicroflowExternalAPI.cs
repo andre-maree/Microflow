@@ -20,7 +20,7 @@ namespace Microflow.API.External
         /// Called from Microflow.ExecuteStep to get the current step table config
         /// </summary>
         [FunctionName(CallNames.GetStep)]
-        public static async Task<IHttpCallWithRetries> GetStep([ActivityTrigger] ProjectRun projectRun) => await projectRun.GetStep();
+        public static async Task<IHttpCallWithRetries> GetStep([ActivityTrigger] MicroflowRun workflowRun) => await workflowRun.GetStep();
 
         /// <summary>
         /// use this to test some things like causing an exception
@@ -37,7 +37,7 @@ namespace Microflow.API.External
 
                 MicroflowPostData result = JsonSerializer.Deserialize<MicroflowPostData>(r);
 
-               if (result.StepNumber == 6 || result.StepNumber == 8 || result.StepNumber == 10)// && result.ProjectName.Equals("xxx"))
+               if (result.StepNumber == 6 || result.StepNumber == 8 || result.StepNumber == 10)// && result.workflowName.Equals("xxx"))
                 {
                 //HttpResponseMessage result2 = await MicroflowHttpClient.HttpClient.GetAsync($"{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}/start/");
                 //var kgkg = 0;
@@ -51,7 +51,7 @@ namespace Microflow.API.External
             //    {
             //        CallbackUrl = data["CallbackUrl"],
             //        MainOrchestrationId = data["MainOrchestrationId"],
-            //        ProjectName = data["ProjectName"],
+            //        workflowName = data["workflowName"],
             //        RunId = data["RunId"],
             //        StepNumber = Convert.ToInt32(data["StepNumber"]),
             //        StepId = data["StepId"],

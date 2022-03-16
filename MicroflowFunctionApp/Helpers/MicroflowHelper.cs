@@ -14,16 +14,16 @@ namespace Microflow.Helpers
     public static class MicroflowHelper
     {
         /// <summary>
-        /// Pause, run, or stop the project, cmd can be "run", "pause", or "stop"
+        /// Pause, run, or stop the workflow, cmd can be "run", "pause", or "stop"
         /// </summary>
         //[FunctionName("Microflow_ProjectControl")]
         //public static async Task<HttpResponseMessage> ProjectControl([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-        //                                                          Route = "ProjectControl/{cmd}/{projectName}")] HttpRequestMessage req,
-        //                                                          [DurableClient] IDurableEntityClient client, string projectName, string cmd)
+        //                                                          Route = "ProjectControl/{cmd}/{workflowName}")] HttpRequestMessage req,
+        //                                                          [DurableClient] IDurableEntityClient client, string workflowName, string cmd)
         //{
         //    if (cmd.Equals(MicroflowControlKeys.Read, StringComparison.OrdinalIgnoreCase))
         //    {
-        //        EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectStateId, projectName);
+        //        EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectStateId, workflowName);
         //        EntityStateResponse<string> stateRes = await client.ReadEntityStateAsync<string>(projStateId);
 
         //        HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK)
@@ -34,7 +34,7 @@ namespace Microflow.Helpers
         //        return resp;
         //    }
 
-        //    return await client.SetRunState(nameof(ProjectState), projectName, cmd);
+        //    return await client.SetRunState(nameof(ProjectState), workflowName, cmd);
         //}
 
         /// <summary>
@@ -71,16 +71,16 @@ namespace Microflow.Helpers
         }
 
         /// <summary>
-        /// Durable entity check and set project state
+        /// Durable entity check and set workflow state
         /// </summary>
-        [FunctionName(MicroflowStateKeys.ProjectState)]
-        public static void ProjectState([EntityTrigger] IDurableEntityContext ctx)
+        [FunctionName(MicroflowStateKeys.WorkflowState)]
+        public static void WorkflowState([EntityTrigger] IDurableEntityContext ctx)
         {
             ctx.RunState();
         }
 
         /// <summary>
-        /// For project and global key states
+        /// For workflow and global key states
         /// </summary>
         private static void RunState(this IDurableEntityContext ctx)
         {
@@ -102,7 +102,7 @@ namespace Microflow.Helpers
         }
 
         /// <summary>
-        /// Set the global or project state with the key, and the cmd can be "pause", "ready", or "stop"
+        /// Set the global or workflow state with the key, and the cmd can be "pause", "ready", or "stop"
         /// </summary>
         //public static async Task<HttpResponseMessage> SetRunState(this IDurableEntityClient client,
         //                                                           string stateEntityId,
@@ -167,9 +167,9 @@ namespace Microflow.Helpers
             return ops;
         }
 
-        public static async Task<HttpResponseMessage> LogError(string projectName, string globalKey, string runId, Exception e)
+        public static async Task<HttpResponseMessage> LogError(string workflowName, string globalKey, string runId, Exception e)
         {
-            await new LogErrorEntity(projectName, -999, e.Message, globalKey, runId).LogError();
+            await new LogErrorEntity(workflowName, -999, e.Message, globalKey, runId).LogError();
 
             HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.InternalServerError)
             {

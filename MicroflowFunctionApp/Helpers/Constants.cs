@@ -40,7 +40,7 @@ namespace Microflow.Helpers
 
         public static class MicroflowStateKeys
         {
-            public const string ProjectState = "ProjectState";
+            public const string WorkflowState = "WorkflowState";
             public const string GlobalState = "GlobalState";
         }
 

@@ -15,11 +15,11 @@ namespace Microflow.Models
     }
 
     /// <summary>
-    /// This is the minimalist project object that is passed during execution
+    /// This is the minimalist workflow object that is passed during execution
     /// </summary>
-    public class ProjectRun : IProjectRun
+    public class MicroflowRun : IMicroflowRun
     {
-        public string ProjectName { get; set; }
+        public string WorkflowName { get; set; }
         public RunObject RunObject { get; set; }
         public int PausedStepId { get; set; }
         public int Loop { get; set; } = 1;
@@ -37,7 +37,7 @@ namespace Microflow.Models
         public string StepNumber { get; set; }
         public int ParentCount { get; set; }
         public string ScaleGroupId { get; set; }
-        public string ProjectName { get; set; }
+        public string workflowName { get; set; }
     }
 
     /// <summary>
@@ -50,7 +50,7 @@ namespace Microflow.Models
     }
 
     /// <summary>
-    /// This is the minimalist run object that is passed during execution inside the project run object
+    /// This is the minimalist run object that is passed during execution inside the workflow run object
     /// </summary>
     public class RunObject
     {
