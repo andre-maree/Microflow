@@ -6,14 +6,14 @@ Microflow functionality:
 - auto scale out to 200 small virtual machines in the Consumption Plan, and to 100, 4 core CPU, 14GB memory virtual machines in the Premium Plan
 - parent-child-sibling-parent dependencies - complex inter step dependencies, parallel optimized execution, parent steps execute in parallel
 - very complex workflows can be created (be careful of creating endless loops -  in the future validation will be built in to check this)
-- Microflow workflow projects can run as single instances (like a risk model that should always run as 1 instance), or can run as multiple parallel overlapping instances (like ecommerce orders)
+- Microflow workflows can run as single instances (like a risk model that should always run as 1 instance), or can run as multiple parallel overlapping instances (like ecommerce orders)
 - for custom logic like response interpretations, this can be included in Microflow, but best practice is to separate these response proxies as functions outside of Microflow, and then these will call back to Microflow
 - easily manage step configs with merge fields
 - do batch processing by looping the workflow execution with Microflow`s "Loop" setting, set up variation sets, 1 variation set per loop/batch
 - set outgoing http calls to be inline (wait for response at the point of out call), or wait asynchronously by setting CallbackAction (wait for external action/callback)
 - set AsynchronousPollingEnabled (per step) to true and the step will poll for completion before moving on, embed other Microflow workflows and wait for them; or set it to false for fire and forget, call another Microflow workflow and continue immediately with the next step, no waiting for completion
-- there is a global id called "GlobalKey" in the logs (orchestrations, steps, errors) that can be used to tie up cross Microflow workflow calls, this key is passed along for logging purposes when a Microflow workflow calls/embeds other Microflow projects
-- projects, as well as based on a GlobalKey, can be controlled via api calls for: stop, pause, and run
+- there is a global id called "GlobalKey" in the logs (orchestrations, steps, errors) that can be used to tie up cross Microflow workflow calls, this key is passed along for logging purposes when a Microflow workflow calls/embeds other Microflow workflows
+- workflows, as well as based on a GlobalKey, can be controlled via api calls for: stop, pause, and run
 - timeouts can be set per step for inline and callback
 - retry policies can be set for each step and there can also be a default retry policy for the entire workflow
 - StopOnActionFailed can be set per step to indicate for when there is a failure (not a success callback), which will make Microflow stop the workflow execution or to log the failure and continue with the workflow
@@ -29,11 +29,11 @@ Controlling execution with the Microflow Api calls: Ready, Pause, and Stop,
 cmd is 1 of the following commands: "ready", "pause", or "stop":
 
 - Microflow_GlobalControl: "/GlobalControl/{cmd}/{globalKey}"
-- Microflow_ProjectControl: "/ProjectControl/{cmd}/{projectName}"
+- Microflow_WorkflowControl: "/WorkflowControl/{cmd}/{workflowName}"
 
 To get states:
 - getGlobalState: "/GlobalState/{globalKey}"
-- getProjectState: "/ProjectState/{projectName}"
+- getWorkflowState: "/WorkflowState/{workflowName}"
 
 Microflow use cases:
 - any business workflow that needs to leverage serverless autoscaling durable stateful workflows
@@ -77,9 +77,9 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
 ```
    - **StepNumber**: Used internally by Microflow, but is also settable, must be unique
    - **StepId**: String can be set and used as a key or part of a key in the worker micro-service that is being called, must be unique
-   - **CalloutUrl**: Worker micro-service http end-point, or another Microflow project`s start endpoint, that is called by Microflow
+   - **CalloutUrl**: Worker micro-service http end-point, or another Microflow workflow`s start endpoint, that is called by Microflow
    - **CallbackAction**: When this is set Microflow will create a callback webhook and wait for this to be called, and when not set, Microflow will not create and wait for a callback, but will log the http response, and continue to the next step
-   - **AsynchronousPollingEnabled**: set this to true and the step will poll for completion before moving on/embed other Microflow projects and wait for them; or set it to false for fire and forget/call another Microflow project and continue immediately with the next step, no waiting for completion
+   - **AsynchronousPollingEnabled**: set this to true and the step will poll for completion before moving on/embed other Microflow workflows and wait for them; or set it to false for fire and forget/call another Microflow workflow and continue immediately with the next step, no waiting for completion
    - **StopOnActionFailed**: If there is any type of failure for callouts or callbacks, including timeouts, and any non-success http responses, this will stop all execution if true, and log and continue to the next step if it is false
    - **IsHttpGet**: Http post to micro-service endpoint if false
    - **CalloutTimeoutSeconds**: This is for how long to wait for the http callout, no cloud costs are incurred during the wait
@@ -93,7 +93,7 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
 This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 2 and StepId 3), and each sub step has 1 common sub step (StepId 4). This is the same structure as the included test Tests.CreateTestWorkflow_SimpleSteps(). StepId 1 has a callback action set, and StepId 3 has a retry set. There is 1 merge field set and is used as a default callout URL.
 ```
 {
-  "ProjectName": "MicroflowTestProject",
+  "WorkflowName": "MicroflowTest",
   "DefaultRetryOptions": null,
   "Loop": 1,
   "MergeFields": {
