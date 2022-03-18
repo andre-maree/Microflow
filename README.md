@@ -7,6 +7,7 @@ Microflow functionality:
 - parent-child-sibling-parent dependencies - complex inter step dependencies, parallel optimized execution, parent steps execute in parallel
 - very complex workflows can be created (be careful of creating endless loops -  in the future validation will be built in to check this)
 - Microflow workflows can run as single instances (like a risk model that should always run as 1 instance), or can run as multiple parallel overlapping instances (like ecommerce orders)
+- run in split mode or standalone mode: split mode sepatates all non-workflow execution code from the admin API calls for optimum scaling performance and reauires both the Microflow and MicroflowApi function apps to be deployed, whereas standalone mode includes admin API calls within the Microflow app and thus only requires the Microflow app to be deployed but has a slightly larger code footprint to scale
 - for custom logic like response interpretations, this can be included in Microflow, but best practice is to separate these response proxies as functions outside of Microflow, and then these will call back to Microflow
 - easily manage step configs with merge fields
 - do batch processing by looping the workflow execution with Microflow`s "Loop" setting, set up variation sets, 1 variation set per loop/batch
