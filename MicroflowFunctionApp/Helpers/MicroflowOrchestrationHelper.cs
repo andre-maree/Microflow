@@ -1,11 +1,13 @@
 ﻿using Microflow.Models;
+using MicroflowModels;
+using MicroflowModels.Helpers;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using static Microflow.Helpers.Constants;
+using static MicroflowModels.Constants.Constants;
 
 namespace Microflow.Helpers
 {
@@ -21,7 +23,7 @@ namespace Microflow.Helpers
                                                        MicroflowRun workflowRun)
         {
             // log start
-            string logRowKey = MicroflowTableHelper.GetTableLogRowKeyDescendingByDate(context.CurrentUtcDateTime, $"_{workflowRun.OrchestratorInstanceId}");
+            string logRowKey = TableHelpers.GetTableLogRowKeyDescendingByDate(context.CurrentUtcDateTime, $"_{workflowRun.OrchestratorInstanceId}");
 
             await context.LogOrchestrationStartAsync(log, workflowRun, logRowKey);
 

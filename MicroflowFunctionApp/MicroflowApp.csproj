@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MicroFlowModels\MicroflowModels.csproj" />
+    <ProjectReference Include="..\MicroflowShared\MicroflowShared.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">

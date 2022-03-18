@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Microflow.Helpers
+namespace MicroflowModels.Constants
 {
     public static class Constants
     {

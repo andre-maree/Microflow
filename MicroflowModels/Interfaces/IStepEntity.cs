@@ -1,7 +1,7 @@
 ﻿using Azure.Data.Tables;
 using System.Collections.Generic;
 
-namespace Microflow.Models
+namespace MicroflowModels
 {
     public interface IStepEntity : ITableEntity
     {

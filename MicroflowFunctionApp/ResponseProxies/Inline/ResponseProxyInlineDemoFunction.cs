@@ -4,7 +4,7 @@ using System.Net.Http;
 using Microflow.API;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using System.Threading;
-using Microflow.Models;
+using MicroflowModels;
 
 namespace Microflow
 {

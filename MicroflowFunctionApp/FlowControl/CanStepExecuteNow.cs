@@ -1,9 +1,10 @@
 using System;
 using System.Threading.Tasks;
 using Microflow.Models;
+using MicroflowModels;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using static Microflow.Helpers.Constants;
+using static MicroflowModels.Constants.Constants;
 
 namespace Microflow.FlowControl
 {

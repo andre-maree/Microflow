@@ -1,9 +1,10 @@
 using System.Threading.Tasks;
 using Microflow.Helpers;
-using Microflow.Models;
+using MicroflowModels;
+using MicroflowModels.Helpers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using static Microflow.Helpers.Constants;
+using static MicroflowModels.Constants.Constants;
 
 namespace Microflow.TableLogging
 {
@@ -12,7 +13,7 @@ namespace Microflow.TableLogging
         [FunctionName(CallNames.LogError)]
         public static async Task TableLogActivity([ActivityTrigger] LogErrorEntity logEntity)
         {
-            await MicroflowTableHelper.LogError(logEntity);
+            await TableHelpers.LogError(logEntity);
         }
     }
 }

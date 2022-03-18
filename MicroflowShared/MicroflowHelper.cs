@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Specialized;
+using System.Net;
 using System.Net.Http;
-using MicroflowModels;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using static MicroflowModels.Constants.Constants;
+using System.Threading.Tasks;
 
-namespace Microflow.Helpers
+namespace MicroflowShared
 {
     public static class MicroflowHelper
     {
@@ -61,42 +58,42 @@ namespace Microflow.Helpers
         /// <summary>
         /// Durable entity check and set if the global state
         /// </summary>
-        [FunctionName(MicroflowStateKeys.GlobalState)]
-        public static void GlobalState([EntityTrigger] IDurableEntityContext ctx)
-        {
-            ctx.RunState();
-        }
+        //[FunctionName(MicroflowStateKeys.GlobalState)]
+        //public static void GlobalState([EntityTrigger] IDurableEntityContext ctx)
+        //{
+        //    ctx.RunState();
+        //}
 
         /// <summary>
         /// Durable entity check and set workflow state
         /// </summary>
-        [FunctionName(MicroflowStateKeys.WorkflowState)]
-        public static void WorkflowState([EntityTrigger] IDurableEntityContext ctx)
-        {
-            ctx.RunState();
-        }
+        //[FunctionName(MicroflowStateKeys.WorkflowState)]
+        //public static void WorkflowState([EntityTrigger] IDurableEntityContext ctx)
+        //{
+        //    ctx.RunState();
+        //}
 
         /// <summary>
         /// For workflow and global key states
         /// </summary>
-        private static void RunState(this IDurableEntityContext ctx)
-        {
-            switch (ctx.OperationName)
-            {
-                case MicroflowControlKeys.Ready:
-                    ctx.SetState(MicroflowStates.Ready);
-                    break;
-                case MicroflowControlKeys.Pause:
-                    ctx.SetState(MicroflowStates.Paused);
-                    break;
-                case MicroflowControlKeys.Stop:
-                    ctx.SetState(MicroflowStates.Stopped);
-                    break;
-                case MicroflowControlKeys.Read:
-                    ctx.Return(ctx.GetState<int>());
-                    break;
-            }
-        }
+        //private static void RunState(this IDurableEntityContext ctx)
+        //{
+        //    switch (ctx.OperationName)
+        //    {
+        //        case MicroflowControlKeys.Ready:
+        //            ctx.SetState(MicroflowStates.Ready);
+        //            break;
+        //        case MicroflowControlKeys.Pause:
+        //            ctx.SetState(MicroflowStates.Paused);
+        //            break;
+        //        case MicroflowControlKeys.Stop:
+        //            ctx.SetState(MicroflowStates.Stopped);
+        //            break;
+        //        case MicroflowControlKeys.Read:
+        //            ctx.Return(ctx.GetState<int>());
+        //            break;
+        //    }
+        //}
 
         /// <summary>
         /// Set the global or workflow state with the key, and the cmd can be "pause", "ready", or "stop"
@@ -127,53 +124,55 @@ namespace Microflow.Helpers
         /// <summary>
         /// Work out what the global key is for this call
         /// </summary>
-        [Deterministic]
-        public static void CalculateGlobalKey(this HttpCall httpCall)
-        {
-            // check if it is call to Microflow
-            if (httpCall.CalloutUrl.StartsWith($"{httpCall.BaseUrl}/start/"))
-            {
-                // parse query string
-                NameValueCollection data = new Uri(httpCall.CalloutUrl).ParseQueryString();
-                // if there is query string data
-                if (data.Count > 0)
-                {
-                    // check if there is a global key (maybe if it is an assigned key)
-                    if (string.IsNullOrEmpty(data.Get("globalkey")))
-                    {
-                        httpCall.CalloutUrl += $"&globalkey={httpCall.GlobalKey}";
-                    }
-                }
-                else
-                {
-                    httpCall.CalloutUrl += $"?globalkey={httpCall.GlobalKey}";
-                }
-            }
-        }
-
-        public static RetryOptions GetRetryOptions(this IHttpCallWithRetries httpCallWithRetries)
-        {
-            RetryOptions ops = new RetryOptions(TimeSpan.FromSeconds(httpCallWithRetries.RetryDelaySeconds),
-                                                httpCallWithRetries.RetryMaxRetries)
-            {
-                RetryTimeout = TimeSpan.FromSeconds(httpCallWithRetries.RetryTimeoutSeconds),
-                MaxRetryInterval = TimeSpan.FromSeconds(httpCallWithRetries.RetryMaxDelaySeconds),
-                BackoffCoefficient = httpCallWithRetries.RetryBackoffCoefficient
-            };
-
-            return ops;
-        }
-
-        //public static async Task<HttpResponseMessage> LogError(string workflowName, string globalKey, string runId, Exception e)
+        //[Deterministic]
+        //public static void CalculateGlobalKey(this HttpCall httpCall)
         //{
-        //    await new LogErrorEntity(workflowName, -999, e.Message, globalKey, runId).LogError();
-
-        //    HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.InternalServerError)
+        //    // check if it is call to Microflow
+        //    if (httpCall.CalloutUrl.StartsWith($"{httpCall.BaseUrl}/start/"))
         //    {
-        //        Content = new StringContent(e.Message)
+        //        // parse query string
+        //        NameValueCollection data = new Uri(httpCall.CalloutUrl).ParseQueryString();
+        //        // if there is query string data
+        //        if (data.Count > 0)
+        //        {
+        //            // check if there is a global key (maybe if it is an assigned key)
+        //            if (string.IsNullOrEmpty(data.Get("globalkey")))
+        //            {
+        //                httpCall.CalloutUrl += $"&globalkey={httpCall.GlobalKey}";
+        //            }
+        //        }
+        //        else
+        //        {
+        //            httpCall.CalloutUrl += $"?globalkey={httpCall.GlobalKey}";
+        //        }
+        //    }
+        //}
+
+        //public static RetryOptions GetRetryOptions(this IHttpCallWithRetries httpCallWithRetries)
+        //{
+        //    RetryOptions ops = new RetryOptions(TimeSpan.FromSeconds(httpCallWithRetries.RetryDelaySeconds),
+        //                                        httpCallWithRetries.RetryMaxRetries)
+        //    {
+        //        RetryTimeout = TimeSpan.FromSeconds(httpCallWithRetries.RetryTimeoutSeconds),
+        //        MaxRetryInterval = TimeSpan.FromSeconds(httpCallWithRetries.RetryMaxDelaySeconds),
+        //        BackoffCoefficient = httpCallWithRetries.RetryBackoffCoefficient
         //    };
 
-        //    return resp;
+        //    return ops;
         //}
+        //public static RetryOptions GetRetryOptions(this IHttpCallWithRetries httpCallWithRetries)
+        //{
+        //    RetryOptions ops = new RetryOptions(TimeSpan.FromSeconds(httpCallWithRetries.RetryDelaySeconds),
+        //                                        httpCallWithRetries.RetryMaxRetries)
+        //    {
+        //        RetryTimeout = TimeSpan.FromSeconds(httpCallWithRetries.RetryTimeoutSeconds),
+        //        MaxRetryInterval = TimeSpan.FromSeconds(httpCallWithRetries.RetryMaxDelaySeconds),
+        //        BackoffCoefficient = httpCallWithRetries.RetryBackoffCoefficient
+        //    };
+
+        //    return ops;
+        //}
+
+        
     }
 }

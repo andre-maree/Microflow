@@ -1,5 +1,11 @@
-﻿using Microflow.Helpers;
+﻿//using Microflow.Helpers;
+//using Microflow.Helpers;
+//using Microflow.Helpers;
+//using Microflow.Helpers;
+using Microflow.Helpers;
 using Microflow.Models;
+using MicroflowModels;
+using MicroflowModels.Helpers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
@@ -7,7 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using static Microflow.Helpers.Constants;
+using static MicroflowModels.Constants.Constants;
 
 namespace Microflow.FlowControl
 {
@@ -31,7 +37,7 @@ namespace Microflow.FlowControl
         {
             MicroflowDurableContext = microflowContext;
             MicroflowRun = workflowRun;
-            LogRowKey = MicroflowTableHelper.GetTableLogRowKeyDescendingByDate(MicroflowDurableContext.CurrentUtcDateTime, MicroflowDurableContext.NewGuid().ToString());
+            LogRowKey = TableHelpers.GetTableLogRowKeyDescendingByDate(MicroflowDurableContext.CurrentUtcDateTime, MicroflowDurableContext.NewGuid().ToString());
             MicroflowTasks = new List<Task>();
             Logger = MicroflowDurableContext.CreateReplaySafeLogger(logger);
         }

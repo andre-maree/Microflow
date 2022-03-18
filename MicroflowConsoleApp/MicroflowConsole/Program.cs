@@ -80,7 +80,7 @@ namespace MicroflowConsole
                 //project.Steps[2].CalloutUrl = baseUrl + $"/start/{project2.ProjectName}";
                 //project.Steps[0].AsynchronousPollingEnabled = false;
                 // call Microflow insertorupdateproject when something ischanges in the workflow, but do not always call this when corcurrent multiple workflows
-                var result = HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
+                //var result = HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
 
                 //// scale groups:
                 //// set max count
@@ -104,10 +104,10 @@ namespace MicroflowConsole
                 //MicroflowProject microflowProject = JsonSerializer.Deserialize<MicroflowProject>(content);
                 ////parallel multiple workflow instances
 
-                await result;
+                //await result;
                 //await result2;
 
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < 1; i++)
                 {
                     await Task.Delay(500);
                     //await posttask;

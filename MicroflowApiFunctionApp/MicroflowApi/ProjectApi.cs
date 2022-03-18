@@ -1,6 +1,7 @@
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microflow.Helpers;
+using MicroflowModels;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 
@@ -15,7 +16,7 @@ namespace MicroflowApiFunctionApp
         public static async Task<string> GetProjectJsonWithMergefieldsReplaced([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "GetProjectJson/{projectName}")] HttpRequestMessage req,
                                                         string projectName)
         {
-            return await MicroflowTableHelper.GetWorkflowAsJson(projectName);
+            return await SharedTableHelper.GetWorkflowAsJson(projectName);
         }
     }
 }

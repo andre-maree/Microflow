@@ -7,9 +7,9 @@ using System.Net.Http;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microflow.Helpers;
 using System.Net;
-using Microflow.Models;
-using static Microflow.Helpers.Constants;
+using MicroflowModels;
 using Azure;
+using static MicroflowModels.Constants.Constants;
 
 namespace Microflow.FlowControl
 {
@@ -105,19 +105,6 @@ namespace Microflow.FlowControl
 
                 await context.CallActivityAsync(CallNames.LogError, errorEntity);
             }
-        }
-
-        /// <summary>
-        /// This must be called at least once before a workflow runs,
-        /// this is to prevent multiple concurrent instances from writing step data at workflow run,
-        /// call Microflow InsertOrUpdateworkflow when something changed in the workflow, but do not always call this when concurrent multiple workflows
-        /// </summary>
-        [FunctionName("UpsertWorkflow")]
-        public static async Task<HttpResponseMessage> SaveWorflow([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-                                                                  Route = "UpsertWorkflow/{globalKey?}")] HttpRequestMessage req,
-                                                                  [DurableClient] IDurableEntityClient client, string globalKey)
-        {
-            return await client.UpsertWorkflow(await req.Content.ReadAsStringAsync(), globalKey);
         }
     }
 }

@@ -14,27 +14,27 @@ namespace Microflow.Helpers
     {
         #region Formatting
 
-        public static string GetTableLogRowKeyDescendingByDate(DateTime date, string postfix)
-        {
-            return $"{String.Format("{0:D19}", DateTime.MaxValue.Ticks - date.Ticks)}{postfix}";
-        }
+        //public static string GetTableLogRowKeyDescendingByDate(DateTime date, string postfix)
+        //{
+        //    return $"{String.Format("{0:D19}", DateTime.MaxValue.Ticks - date.Ticks)}{postfix}";
+        //}
 
-        public static string GetTableRowKeyDescendingByDate()
-        {
-            return $"{String.Format("{0:D19}", DateTime.MaxValue.Ticks - DateTime.UtcNow.Ticks)}{Guid.NewGuid()}";
-        }
+        //public static string GetTableRowKeyDescendingByDate()
+        //{
+        //    return $"{String.Format("{0:D19}", DateTime.MaxValue.Ticks - DateTime.UtcNow.Ticks)}{Guid.NewGuid()}";
+        //}
 
         #endregion
 
         #region Table operations
 
-        public static async Task LogError(this LogErrorEntity logEntity)
-        {
-            TableClient tableClient = GetErrorsTable();
+        //public static async Task LogError(this LogErrorEntity logEntity)
+        //{
+        //    TableClient tableClient = GetErrorsTable();
 
 
-            await tableClient.UpsertEntityAsync(logEntity);
-        }
+        //    await tableClient.UpsertEntityAsync(logEntity);
+        //}
 
         public static async Task LogStep(this LogStepEntity logEntity)
         {
@@ -51,82 +51,82 @@ namespace Microflow.Helpers
         }
 
         // TODO: move out to api app
-        public static async Task<string> GetWorkflowAsJson(string workflowName)
-        {
-            AsyncPageable<HttpCallWithRetries> steps = GetStepsHttpCallWithRetries(workflowName);
+        //public static async Task<string> GetWorkflowAsJson(string workflowName)
+        //{
+        //    AsyncPageable<HttpCallWithRetries> steps = GetStepsHttpCallWithRetries(workflowName);
 
-            List<Step> outSteps = new List<Step>();
-            bool skip1st = true;
+        //    List<Step> outSteps = new List<Step>();
+        //    bool skip1st = true;
 
-            await foreach (HttpCallWithRetries step in steps)
-            {
-                if (skip1st)
-                {
-                    skip1st = false;
-                }
-                else
-                {
-                    Step newstep = new Step()
-                    {
-                        StepId = step.RowKey,
-                        CallbackTimeoutSeconds = step.CallbackTimeoutSeconds,
-                        CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
-                        StopOnActionFailed = step.StopOnActionFailed,
-                        CallbackAction = step.CallbackAction,
-                        IsHttpGet = step.IsHttpGet,
-                        CalloutUrl = step.CalloutUrl,
-                        AsynchronousPollingEnabled = step.AsynchronousPollingEnabled,
-                        ScaleGroupId = step.ScaleGroupId,
-                        StepNumber = Convert.ToInt32(step.RowKey),
-                        RetryOptions = step.RetryDelaySeconds == 0 ? null : new MicroflowRetryOptions()
-                        {
-                            BackoffCoefficient = step.RetryBackoffCoefficient,
-                            DelaySeconds = step.RetryDelaySeconds,
-                            MaxDelaySeconds = step.RetryMaxDelaySeconds,
-                            MaxRetries = step.RetryMaxRetries,
-                            TimeOutSeconds = step.RetryTimeoutSeconds
-                        }
-                    };
+        //    await foreach (HttpCallWithRetries step in steps)
+        //    {
+        //        if (skip1st)
+        //        {
+        //            skip1st = false;
+        //        }
+        //        else
+        //        {
+        //            Step newstep = new Step()
+        //            {
+        //                StepId = step.RowKey,
+        //                CallbackTimeoutSeconds = step.CallbackTimeoutSeconds,
+        //                CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
+        //                StopOnActionFailed = step.StopOnActionFailed,
+        //                CallbackAction = step.CallbackAction,
+        //                IsHttpGet = step.IsHttpGet,
+        //                CalloutUrl = step.CalloutUrl,
+        //                AsynchronousPollingEnabled = step.AsynchronousPollingEnabled,
+        //                ScaleGroupId = step.ScaleGroupId,
+        //                StepNumber = Convert.ToInt32(step.RowKey),
+        //                RetryOptions = step.RetryDelaySeconds == 0 ? null : new MicroflowRetryOptions()
+        //                {
+        //                    BackoffCoefficient = step.RetryBackoffCoefficient,
+        //                    DelaySeconds = step.RetryDelaySeconds,
+        //                    MaxDelaySeconds = step.RetryMaxDelaySeconds,
+        //                    MaxRetries = step.RetryMaxRetries,
+        //                    TimeOutSeconds = step.RetryTimeoutSeconds
+        //                }
+        //            };
 
-                    List<int> subStepsList = new List<int>();
-                    ;
-                    string[] stepsAndCounts = step.SubSteps.Split(new char[2] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+        //            List<int> subStepsList = new List<int>();
+        //            ;
+        //            string[] stepsAndCounts = step.SubSteps.Split(new char[2] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 
-                    for (int i = 0; i < stepsAndCounts.Length; i = i + 2)
-                    {
-                        subStepsList.Add(Convert.ToInt32(stepsAndCounts[i]));
-                    }
+        //            for (int i = 0; i < stepsAndCounts.Length; i = i + 2)
+        //            {
+        //                subStepsList.Add(Convert.ToInt32(stepsAndCounts[i]));
+        //            }
 
-                    newstep.SubSteps = subStepsList;
+        //            newstep.SubSteps = subStepsList;
 
-                    outSteps.Add(newstep);
-                }
-            }
+        //            outSteps.Add(newstep);
+        //        }
+        //    }
 
-            TableClient wfConfigsTable = GetWorkflowConfigsTable();
+        //    TableClient wfConfigsTable = GetWorkflowConfigsTable();
 
-            MicroflowConfigEntity projConfig = await wfConfigsTable.GetEntityAsync<MicroflowConfigEntity>(workflowName, "0");
+        //    MicroflowConfigEntity projConfig = await wfConfigsTable.GetEntityAsync<MicroflowConfigEntity>(workflowName, "0");
 
-            MicroflowModels.Microflow proj = JsonSerializer.Deserialize<MicroflowModels.Microflow>(projConfig.Config);
-            proj.WorkflowName = workflowName;
-            proj.Steps = outSteps;
+        //    MicroflowModels.Microflow proj = JsonSerializer.Deserialize<MicroflowModels.Microflow>(projConfig.Config);
+        //    proj.WorkflowName = workflowName;
+        //    proj.Steps = outSteps;
 
-            return JsonSerializer.Serialize(proj);
-        }
+        //    return JsonSerializer.Serialize(proj);
+        //}
 
-        public static AsyncPageable<HttpCallWithRetries> GetStepsHttpCallWithRetries(string workflowName)
-        {
-            TableClient tableClient = GetStepsTable();
+        //public static AsyncPageable<HttpCallWithRetries> GetStepsHttpCallWithRetries(string workflowName)
+        //{
+        //    TableClient tableClient = GetStepsTable();
 
-            return tableClient.QueryAsync<HttpCallWithRetries>(filter: $"PartitionKey eq '{workflowName}'");
-        }
+        //    return tableClient.QueryAsync<HttpCallWithRetries>(filter: $"PartitionKey eq '{workflowName}'");
+        //}
 
-        public static async Task<HttpCallWithRetries> GetStep(this MicroflowRun workflowRun)
-        {
-            TableClient tableClient = GetStepsTable();
+        //public static async Task<HttpCallWithRetries> GetStep(this MicroflowRun workflowRun)
+        //{
+        //    TableClient tableClient = GetStepsTable();
 
-            return await tableClient.GetEntityAsync<HttpCallWithRetries>(workflowRun.WorkflowName, workflowRun.RunObject.StepNumber);
-        }
+        //    return await tableClient.GetEntityAsync<HttpCallWithRetries>(workflowRun.WorkflowName, workflowRun.RunObject.StepNumber);
+        //}
 
         public static AsyncPageable<TableEntity> GetStepEntities(string workflowName)
         {
@@ -165,47 +165,47 @@ namespace Microflow.Helpers
         /// <summary>
         /// Called on start to save additional workflow config not looked up during execution
         /// </summary>
-        public static async Task UpsertWorkflowConfigString(string workflowName, string workflowConfigJson)
-        {
-            TableClient projTable = GetWorkflowConfigsTable();
+        //public static async Task UpsertWorkflowConfigString(string workflowName, string workflowConfigJson)
+        //{
+        //    TableClient projTable = GetWorkflowConfigsTable();
 
-            MicroflowConfigEntity proj = new MicroflowConfigEntity(workflowName, workflowConfigJson);
+        //    MicroflowConfigEntity proj = new MicroflowConfigEntity(workflowName, workflowConfigJson);
 
-            await projTable.UpsertEntityAsync(proj);
-        }
+        //    await projTable.UpsertEntityAsync(proj);
+        //}
 
         /// <summary>
         /// Called on start to create needed tables
         /// </summary>
-        public static async Task CreateTables()
-        {
-            // StepsMyworkflow for step config
-            TableClient stepsTable = GetStepsTable();
+        //public static async Task CreateTables()
+        //{
+        //    // StepsMyworkflow for step config
+        //    TableClient stepsTable = GetStepsTable();
 
-            // MicroflowLog table
-            TableClient logOrchestrationTable = GetLogOrchestrationTable();
+        //    // MicroflowLog table
+        //    TableClient logOrchestrationTable = GetLogOrchestrationTable();
 
-            // MicroflowLog table
-            TableClient logStepsTable = GetLogStepsTable();
+        //    // MicroflowLog table
+        //    TableClient logStepsTable = GetLogStepsTable();
 
-            // Error table
-            TableClient errorsTable = GetErrorsTable();
+        //    // Error table
+        //    TableClient errorsTable = GetErrorsTable();
 
-            // workflow table
-            TableClient workflowConfigsTable = GetWorkflowConfigsTable();
+        //    // workflow table
+        //    TableClient workflowConfigsTable = GetWorkflowConfigsTable();
 
-            Task<Response<TableItem>> t1 = stepsTable.CreateIfNotExistsAsync();
-            Task<Response<TableItem>> t2 = logOrchestrationTable.CreateIfNotExistsAsync();
-            Task<Response<TableItem>> t3 = logStepsTable.CreateIfNotExistsAsync();
-            Task<Response<TableItem>> t4 = errorsTable.CreateIfNotExistsAsync();
-            Task<Response<TableItem>> t5 = workflowConfigsTable.CreateIfNotExistsAsync();
+        //    Task<Response<TableItem>> t1 = stepsTable.CreateIfNotExistsAsync();
+        //    Task<Response<TableItem>> t2 = logOrchestrationTable.CreateIfNotExistsAsync();
+        //    Task<Response<TableItem>> t3 = logStepsTable.CreateIfNotExistsAsync();
+        //    Task<Response<TableItem>> t4 = errorsTable.CreateIfNotExistsAsync();
+        //    Task<Response<TableItem>> t5 = workflowConfigsTable.CreateIfNotExistsAsync();
 
-            await t1;
-            await t2;
-            await t3;
-            await t4;
-            await t5;
-        }
+        //    await t1;
+        //    await t2;
+        //    await t3;
+        //    await t4;
+        //    await t5;
+        //}
 
         #endregion
 
