@@ -1,3 +1,4 @@
+#if !DEBUG_NOUPSERT_NOFLOWCONTROL_NOSCALEGROUPS && !DEBUG_NOUPSERT_NOSCALEGROUPS
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,7 +19,7 @@ namespace Microflow.FlowControl
 
             EntityId scaleGroupCountId = new EntityId(CallNames.ScaleGroupMaxConcurrentInstanceCount, canExecuteNowObject.ScaleGroupId);
             int scaleGroupMaxCount = await context.CallEntityAsync<int>(scaleGroupCountId, MicroflowControlKeys.Read);
-            
+
             if (scaleGroupMaxCount == 0)
             {
                 return;
@@ -27,7 +28,7 @@ namespace Microflow.FlowControl
             using (await context.LockAsync(countId))
             {
                 int scaleGroupInProcessCount = await context.CallEntityAsync<int>(countId, MicroflowCounterKeys.Read);
-                
+
                 if (scaleGroupInProcessCount < scaleGroupMaxCount)
                 {
                     await context.CallEntityAsync(countId, MicroflowCounterKeys.Add);
@@ -39,9 +40,9 @@ namespace Microflow.FlowControl
             // 7 days in paused state till exit
             DateTime endDate = context.CurrentUtcDateTime.AddDays(7);
             // start interval seconds
-            int count = 10;
+            int count = 5;
             // max interval seconds
-            const int max = 60; // 1 mins
+            const int max = 10; // 1 mins
 
             using (CancellationTokenSource cts = new CancellationTokenSource())
             {
@@ -57,7 +58,7 @@ namespace Microflow.FlowControl
                         {
                             int scaleGroupInProcessCount = await context.CallEntityAsync<int>(countId, MicroflowCounterKeys.Read);
 
-                            if (scaleGroupMaxCount == 0 || scaleGroupInProcessCount < scaleGroupMaxCount)
+                            if (scaleGroupInProcessCount < scaleGroupMaxCount)
                             {
                                 await context.CallEntityAsync<int>(countId, MicroflowCounterKeys.Add);
 
@@ -65,10 +66,10 @@ namespace Microflow.FlowControl
                             }
                         }
 
-                        if (count % 5 == 0)
-                        {
-                            scaleGroupMaxCount = await context.CallEntityAsync<int>(scaleGroupCountId, MicroflowControlKeys.Read);
-                        }
+                        //if (count % 5 == 0)
+                        //{
+                        //    scaleGroupMaxCount = await context.CallEntityAsync<int>(scaleGroupCountId, MicroflowControlKeys.Read);
+                        //}
                     }
                 }
                 catch (TaskCanceledException)
@@ -94,7 +95,8 @@ namespace Microflow.FlowControl
                     ctx.SetState(ctx.GetState<int>() + 1);
                     break;
                 case MicroflowCounterKeys.Subtract:
-                    ctx.SetState(ctx.GetState<int>() - 1);
+                    int state = ctx.GetState<int>();
+                    ctx.SetState(state <= 0 ? 0 : state - 1);
                     break;
                 case MicroflowCounterKeys.Read:
                     ctx.Return(ctx.GetState<int>());
@@ -123,3 +125,4 @@ namespace Microflow.FlowControl
         }
     }
 }
+#endif

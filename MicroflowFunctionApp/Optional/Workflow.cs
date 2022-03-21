@@ -1,4 +1,4 @@
-#if !DEBUGSPLITMODE
+#if !DEBUG_NOUPSERT_NOFLOWCONTROL_NOSCALEGROUPS && !DEBUG_NOUPSERT_NOFLOWCONTROL && !DEBUG_NOUPSERT
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -9,11 +9,11 @@ using MicroflowShared;
 namespace Microflow.SplitMode
 {
     public class WorkflowSplitCode
-    { 
+    {
         /// <summary>
         /// This must be called at least once before a workflow runs,
         /// this is to prevent multiple concurrent instances from writing step data at workflow run,
-        /// call Microflow InsertOrUpdateworkflow when something changed in the workflow, but do not always call this when concurrent multiple workflows
+        /// call UpsertWorkflow when something changed in the workflow, but do not always call this when concurrent multiple workflows
         /// </summary>
         [FunctionName("UpsertWorkflow")]
         public static async Task<HttpResponseMessage> UpsertWorkflow([HttpTrigger(AuthorizationLevel.Anonymous, "post",
@@ -23,13 +23,16 @@ namespace Microflow.SplitMode
             return await client.UpsertWorkflow(await req.Content.ReadAsStringAsync(), globalKey);
         }
 
-        [FunctionName("GetWorkflowJson")]
-        public static async Task<string> GetWorkflowJson([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "GetWorkflowJson/{workflowName}")] HttpRequestMessage req,
+
+        /// <summary>
+        /// Returns the workflow Json that was saved with UpsertWorkflow
+        /// </summary>
+        [FunctionName("GetWorkflow")]
+        public static async Task<string> GetWorkflowJson([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "GetWorkflow/{workflowName}")] HttpRequestMessage req,
                                                            string workflowName)
         {
-            return await SharedTableHelper.GetWorkflowJson(workflowName);
+            return await WorkflowHelper.GetWorkflowJson(workflowName);
         }
     }
 }
-
 #endif

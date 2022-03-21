@@ -1,4 +1,7 @@
-﻿using Azure.Data.Tables;
+﻿#if !DEBUG_NOUPSERT && !DEBUG_NOUPSERT_NOFLOWCONTROL && !DEBUG_NOUPSERT_NOFLOWCONTROL && !DEBUG_NOUPSERT_NOFLOWCONTROL_NOSCALEGROUPS
+using Azure;
+using Azure.Data.Tables;
+using Azure.Data.Tables.Models;
 using MicroflowModels;
 using MicroflowModels.Helpers;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
@@ -61,7 +64,7 @@ namespace MicroflowShared
                 doneReadyFalse = true;
 
                 // create the storage tables for the workflow
-                await SharedTableHelper.CreateTables();
+                await CreateTables();
 
                 //  clear step table data
                 Task delTask = workflowRun.DeleteSteps();
@@ -79,7 +82,7 @@ namespace MicroflowShared
                 string workflowConfigJson = JsonSerializer.Serialize(workflow);
 
                 // create the storage tables for the workflow
-                await SharedTableHelper.UpsertWorkflowConfigString(workflowRun.WorkflowName, workflowConfigJson);
+                await UpsertWorkflowConfigString(workflowRun.WorkflowName, workflowConfigJson);
 
                 return new HttpResponseMessage(HttpStatusCode.Accepted);
             }
@@ -101,7 +104,7 @@ namespace MicroflowShared
 
                 try
                 {
-                    _ = await TableHelpers.LogError(workflow.WorkflowName
+                    _ = await TableHelper.LogError(workflow.WorkflowName
                                                        ?? "no workflow",
                                                        workflowRun.RunObject.GlobalKey,
                                                        workflowRun.RunObject.RunId,
@@ -134,7 +137,7 @@ namespace MicroflowShared
         {
             List<TableTransactionAction> batch = new List<TableTransactionAction>();
             List<Task> batchTasks = new List<Task>();
-            TableClient stepsTable = TableHelpers.GetStepsTable();
+            TableClient stepsTable = TableHelper.GetStepsTable();
             Step stepContainer = new Step(-1, null);
             StringBuilder sb = new StringBuilder();
             List<Step> steps = workflow.Steps;
@@ -245,5 +248,190 @@ namespace MicroflowShared
 
             workflow = JsonSerializer.Deserialize<Microflow>(sb.ToString());
         }
+
+        #region Table operations
+
+        // TODO: move out to api app
+        public static async Task<string> GetWorkflowJson(string workflowName)
+        {
+            AsyncPageable<HttpCallWithRetries> steps = GetStepsHttpCallWithRetries(workflowName);
+
+            List<Step> outSteps = new List<Step>();
+            bool skip1st = true;
+
+            await foreach (HttpCallWithRetries step in steps)
+            {
+                if (skip1st)
+                {
+                    skip1st = false;
+                }
+                else
+                {
+                    Step newstep = new Step()
+                    {
+                        StepId = step.RowKey,
+                        CallbackTimeoutSeconds = step.CallbackTimeoutSeconds,
+                        CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
+                        StopOnActionFailed = step.StopOnActionFailed,
+                        CallbackAction = step.CallbackAction,
+                        IsHttpGet = step.IsHttpGet,
+                        CalloutUrl = step.CalloutUrl,
+                        AsynchronousPollingEnabled = step.AsynchronousPollingEnabled,
+                        ScaleGroupId = step.ScaleGroupId,
+                        StepNumber = Convert.ToInt32(step.RowKey),
+                        RetryOptions = step.RetryDelaySeconds == 0 ? null : new MicroflowRetryOptions()
+                        {
+                            BackoffCoefficient = step.RetryBackoffCoefficient,
+                            DelaySeconds = step.RetryDelaySeconds,
+                            MaxDelaySeconds = step.RetryMaxDelaySeconds,
+                            MaxRetries = step.RetryMaxRetries,
+                            TimeOutSeconds = step.RetryTimeoutSeconds
+                        }
+                    };
+
+                    List<int> subStepsList = new List<int>();
+                    ;
+                    string[] stepsAndCounts = step.SubSteps.Split(new char[2] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+
+                    for (int i = 0; i < stepsAndCounts.Length; i = i + 2)
+                    {
+                        subStepsList.Add(Convert.ToInt32(stepsAndCounts[i]));
+                    }
+
+                    newstep.SubSteps = subStepsList;
+
+                    outSteps.Add(newstep);
+                }
+            }
+
+            TableClient wfConfigsTable = GetWorkflowConfigsTable();
+
+            MicroflowConfigEntity projConfig = await wfConfigsTable.GetEntityAsync<MicroflowConfigEntity>(workflowName, "0");
+
+            Microflow proj = JsonSerializer.Deserialize<Microflow>(projConfig.Config);
+            proj.WorkflowName = workflowName;
+            proj.Steps = outSteps;
+
+            return JsonSerializer.Serialize(proj);
+        }
+
+        public static AsyncPageable<HttpCallWithRetries> GetStepsHttpCallWithRetries(string workflowName)
+        {
+            TableClient tableClient = TableHelper.GetStepsTable();
+
+            return tableClient.QueryAsync<HttpCallWithRetries>(filter: $"PartitionKey eq '{workflowName}'");
+        }
+
+
+
+        public static AsyncPageable<TableEntity> GetStepEntities(string workflowName)
+        {
+            TableClient tableClient = TableHelper.GetStepsTable();
+
+            return tableClient.QueryAsync<TableEntity>(filter: $"PartitionKey eq '{workflowName}'", select: new List<string>() { "PartitionKey", "RowKey" });
+        }
+
+        public static async Task DeleteSteps(this MicroflowRun workflowRun)
+        {
+            TableClient tableClient = TableHelper.GetStepsTable();
+
+            var steps = GetStepEntities(workflowRun.WorkflowName);
+            List<TableTransactionAction> batch = new List<TableTransactionAction>();
+            List<Task> batchTasks = new List<Task>();
+
+            await foreach (TableEntity entity in steps)
+            {
+                batch.Add(new TableTransactionAction(TableTransactionActionType.Delete, entity));
+
+                if (batch.Count == 100)
+                {
+                    batchTasks.Add(tableClient.SubmitTransactionAsync(batch));
+                    batch = new List<TableTransactionAction>();
+                }
+            }
+
+            if (batch.Count > 0)
+            {
+                batchTasks.Add(tableClient.SubmitTransactionAsync(batch));
+            }
+
+            await Task.WhenAll(batchTasks);
+        }
+
+        /// <summary>
+        /// Called on start to save additional workflow config not looked up during execution
+        /// </summary>
+        public static async Task UpsertWorkflowConfigString(string workflowName, string workflowConfigJson)
+        {
+            TableClient projTable = GetWorkflowConfigsTable();
+
+            MicroflowConfigEntity proj = new MicroflowConfigEntity(workflowName, workflowConfigJson);
+
+            await projTable.UpsertEntityAsync(proj);
+        }
+
+        /// <summary>
+        /// Called on start to create needed tables
+        /// </summary>
+        public static async Task CreateTables()
+        {
+            // StepsMyworkflow for step config
+            TableClient stepsTable = TableHelper.GetStepsTable();
+
+            // MicroflowLog table
+            TableClient logOrchestrationTable = TableReferences.GetLogOrchestrationTable();
+
+            // MicroflowLog table
+            TableClient logStepsTable = TableReferences.GetLogStepsTable();
+
+            // Error table
+            TableClient errorsTable = TableHelper.GetErrorsTable();
+
+            // workflow table
+            TableClient workflowConfigsTable = GetWorkflowConfigsTable();
+
+            Task<Response<TableItem>> t1 = stepsTable.CreateIfNotExistsAsync();
+            Task<Response<TableItem>> t2 = logOrchestrationTable.CreateIfNotExistsAsync();
+            Task<Response<TableItem>> t3 = logStepsTable.CreateIfNotExistsAsync();
+            Task<Response<TableItem>> t4 = errorsTable.CreateIfNotExistsAsync();
+            Task<Response<TableItem>> t5 = workflowConfigsTable.CreateIfNotExistsAsync();
+
+            await t1;
+            await t2;
+            await t3;
+            await t4;
+            await t5;
+        }
+
+        private static TableClient GetWorkflowConfigsTable()
+        {
+            TableServiceClient tableClient = TableHelper.GetTableClient();
+
+            return tableClient.GetTableClient($"MicroflowWorkflowConfigs");
+        }
+
+        /// <summary>
+        /// Used to save and get workflow additional config
+        /// </summary>
+        public class MicroflowConfigEntity : ITableEntity
+        {
+            public MicroflowConfigEntity() { }
+
+            public MicroflowConfigEntity(string workflowName, string config)
+            {
+                PartitionKey = workflowName;
+                RowKey = "0";
+                Config = config;
+            }
+
+            public string Config { get; set; }
+            public string PartitionKey { get; set; }
+            public string RowKey { get; set; }
+            public DateTimeOffset? Timestamp { get; set; }
+            public ETag ETag { get; set; }
+        }
+
+        #endregion
     }
 }
+#endif

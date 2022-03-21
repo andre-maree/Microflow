@@ -8,28 +8,7 @@ using MicroflowModels.Helpers;
 namespace MicroflowModels
 {
     #region TableEntity
-
-    /// <summary>
-    /// Used to save and get workflow additional config
-    /// </summary>
-    public class MicroflowConfigEntity : ITableEntity
-    {
-        public MicroflowConfigEntity() { }
-
-        public MicroflowConfigEntity(string workflowName, string config)
-        {
-            PartitionKey = workflowName;
-            RowKey = "0";
-            Config = config;
-        }
-
-        public string Config { get; set; }
-        public string PartitionKey { get; set; }
-        public string RowKey { get; set; }
-        public DateTimeOffset? Timestamp { get; set; }
-        public ETag ETag { get; set; }
-    }
-
+    
         /// <summary>
         /// Used for step level logging
         /// </summary>
@@ -40,7 +19,7 @@ namespace MicroflowModels
         public LogErrorEntity(string workflowName, int stepNumber, string message, string globalKey, string runId = null)
         {
             PartitionKey = workflowName + "__" + runId;
-            RowKey = TableHelpers.GetTableRowKeyDescendingByDate();
+            RowKey = TableHelper.GetTableRowKeyDescendingByDate();
             StepNumber = stepNumber;
             Message = message;
             Date = DateTime.UtcNow;

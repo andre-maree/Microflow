@@ -23,7 +23,7 @@ namespace Microflow.Helpers
                                                        MicroflowRun workflowRun)
         {
             // log start
-            string logRowKey = TableHelpers.GetTableLogRowKeyDescendingByDate(context.CurrentUtcDateTime, $"_{workflowRun.OrchestratorInstanceId}");
+            string logRowKey = TableHelper.GetTableLogRowKeyDescendingByDate(context.CurrentUtcDateTime, $"_{workflowRun.OrchestratorInstanceId}");
 
             await context.LogOrchestrationStartAsync(log, workflowRun, logRowKey);
 

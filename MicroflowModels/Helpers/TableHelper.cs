@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MicroflowModels.Helpers
 {
-    public static class TableHelpers
+    public static class TableHelper
     {
         #region Formatting
 
@@ -26,7 +26,6 @@ namespace MicroflowModels.Helpers
         {
             TableClient tableClient = GetErrorsTable();
 
-
             await tableClient.UpsertEntityAsync(logEntity);
         }
 
@@ -41,6 +40,7 @@ namespace MicroflowModels.Helpers
 
             return resp;
         }
+
         public static async Task<HttpCallWithRetries> GetStep(this MicroflowRun workflowRun)
         {
             TableClient tableClient = GetStepsTable();
@@ -54,9 +54,10 @@ namespace MicroflowModels.Helpers
 
             return tableClient.GetTableClient($"MicroflowLogErrors");
         }
+
         public static TableClient GetStepsTable()
         {
-            TableServiceClient tableClient = TableHelpers.GetTableClient();
+            TableServiceClient tableClient = TableHelper.GetTableClient();
 
             return tableClient.GetTableClient($"MicroflowStepConfigs");
         }

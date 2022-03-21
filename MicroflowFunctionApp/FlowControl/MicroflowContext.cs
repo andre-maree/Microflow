@@ -37,7 +37,7 @@ namespace Microflow.FlowControl
         {
             MicroflowDurableContext = microflowContext;
             MicroflowRun = workflowRun;
-            LogRowKey = TableHelpers.GetTableLogRowKeyDescendingByDate(MicroflowDurableContext.CurrentUtcDateTime, MicroflowDurableContext.NewGuid().ToString());
+            LogRowKey = TableHelper.GetTableLogRowKeyDescendingByDate(MicroflowDurableContext.CurrentUtcDateTime, MicroflowDurableContext.NewGuid().ToString());
             MicroflowTasks = new List<Task>();
             Logger = MicroflowDurableContext.CreateReplaySafeLogger(logger);
         }
@@ -48,6 +48,29 @@ namespace Microflow.FlowControl
         [Deterministic]
         public async Task RunMicroflow()
         {
+            // get the step data from table storage (from PrepareWorkflow)
+            await GetHttpCall();
+
+#if (!DEBUG_NOUPSERT_NOFLOWCONTROL_NOSCALEGROUPS && !DEBUG_NOUPSERT_NOSCALEGROUPS) || DEBUG_NOUPSERT_NOFLOWCONTROL
+
+            if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.ScaleGroupId))
+            {
+                EntityId scaleId = new EntityId(CallNames.ScaleGroupMaxConcurrentInstanceCount, HttpCallWithRetries.ScaleGroupId);
+
+                CanExecuteNowObject canExeNow = new CanExecuteNowObject()
+                {
+                    ScaleGroupId = HttpCallWithRetries.ScaleGroupId,
+                    RunId = MicroflowRun.RunObject.RunId,
+                    StepNumber = MicroflowRun.RunObject.StepNumber
+                };
+
+                await MicroflowDurableContext.CallSubOrchestratorAsync(CallNames.CanExecuteNowInScaleGroup, canExeNow);
+            }
+
+#endif
+
+#if !DEBUG_NOUPSERT_NOFLOWCONTROL_NOSCALEGROUPS && !DEBUG_NOUPSERT_NOFLOWCONTROL
+
             EntityId projStateId = new EntityId(MicroflowStateKeys.WorkflowState, MicroflowRun.WorkflowName);
             EntityId globalStateId = new EntityId(MicroflowStateKeys.GlobalState, MicroflowRun.RunObject.GlobalKey);
             Task<int> projStateTask = MicroflowDurableContext.CallEntityAsync<int>(projStateId, MicroflowControlKeys.Read);
@@ -111,6 +134,9 @@ namespace Microflow.FlowControl
                     await RunMicroflowStep();
                 }
             }
+#else
+            await RunMicroflowStep();
+#endif
         }
 
         /// <summary>
@@ -121,23 +147,6 @@ namespace Microflow.FlowControl
         {
             try
             {
-                // get the step data from table storage (from PrepareWorkflow)
-                await GetHttpCall();
-
-                if(!string.IsNullOrWhiteSpace(HttpCallWithRetries.ScaleGroupId))
-                {
-                    EntityId scaleId = new EntityId(CallNames.ScaleGroupMaxConcurrentInstanceCount, HttpCallWithRetries.ScaleGroupId);
-
-                    CanExecuteNowObject canExeNow = new CanExecuteNowObject()
-                    {
-                        ScaleGroupId = HttpCallWithRetries.ScaleGroupId,
-                        RunId = MicroflowRun.RunObject.RunId,
-                        StepNumber = MicroflowRun.RunObject.StepNumber
-                    };
-
-                    await MicroflowDurableContext.CallSubOrchestratorAsync(CallNames.CanExecuteNowInScaleGroup, canExeNow);
-                }
-
                 string id = MicroflowDurableContext.NewGuid().ToString();
 
                 // log start of step
@@ -157,12 +166,16 @@ namespace Microflow.FlowControl
                     await HttpCallout(id);
                 }
 
+#if (!DEBUG_NOUPSERT_NOFLOWCONTROL_NOSCALEGROUPS && !DEBUG_NOUPSERT_NOSCALEGROUPS) || DEBUG_NOUPSERT_NOFLOWCONTROL
+
                 if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.ScaleGroupId))
                 {
                     EntityId countId = new EntityId(CallNames.CanExecuteNowInScaleGroupCount, HttpCallWithRetries.ScaleGroupId);
                     
                     await MicroflowDurableContext.CallEntityAsync(countId, MicroflowCounterKeys.Subtract);
                 }
+
+#endif
 
                 MicroflowTasks.Add(ProcessSubSteps());
 

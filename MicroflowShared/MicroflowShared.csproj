@@ -4,6 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Configurations>Debug;Release;DEBUG_NOUPSERT_NOFLOWCONTROL;Debug_NoUpsert_NoFlowControl_NoScaleGroups;DEBUG_NOUPSERT_NOSCALEGROUPS;DEBUG_NOUPSERT;DEBUG_UPSERTINAPI</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

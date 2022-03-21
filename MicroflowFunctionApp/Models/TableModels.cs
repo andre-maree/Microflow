@@ -1,34 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
 using Azure;
 using Azure.Data.Tables;
-using Microflow.Helpers;
 
 namespace Microflow.Models
 {
     #region TableEntity
-
-    /// <summary>
-    /// Used to save and get workflow additional config
-    /// </summary>
-    public class MicroflowConfigEntity : ITableEntity
-    {
-        public MicroflowConfigEntity() { }
-
-        public MicroflowConfigEntity(string workflowName, string config)
-        {
-            PartitionKey = workflowName;
-            RowKey = "0";
-            Config = config;
-        }
-
-        public string Config { get; set; }
-        public string PartitionKey { get; set; }
-        public string RowKey { get; set; }
-        public DateTimeOffset? Timestamp { get; set; }
-        public ETag ETag { get; set; }
-    }
 
     /// <summary>
     /// Used for orchestration level logging
@@ -61,82 +37,6 @@ namespace Microflow.Models
         public DateTimeOffset? Timestamp { get; set; }
         public ETag ETag { get; set; }
     }
-
-    /// <summary>
-    /// Base class for http calls
-    /// </summary>
-    //public class StepEntity : ITableEntity, IStepEntity
-    //{
-    //    public StepEntity() { }
-
-    //    public string SubSteps { get; set; }
-    //    public Dictionary<string, string> MergeFields { get; set; }
-    //    public string PartitionKey { get; set; }
-    //    public string RowKey { get; set; }
-    //    public DateTimeOffset? Timestamp { get; set; }
-    //    public ETag ETag { get; set; }
-    //}
-
-    /// <summary>
-    /// Basic http call with no retries
-    /// </summary>
-    //public class HttpCall : StepEntity, IHttpCall
-    //{
-    //    public HttpCall() { }
-
-    //    public HttpCall(string workflow, string stepNumber, string stepId, string subSteps)
-    //    {
-    //        PartitionKey = workflow;
-    //        RowKey = stepNumber;
-    //        SubSteps = subSteps;
-    //        StepId = stepId;
-    //    }
-    //    public bool AsynchronousPollingEnabled { get; set; }
-    //    public string CalloutUrl { get; set; }
-    //    public string CallbackAction { get; set; }
-    //    public bool StopOnActionFailed { get; set; }
-    //    public int CallbackTimeoutSeconds { get; set; }
-    //    public int CalloutTimeoutSeconds { get; set; }
-    //    public bool IsHttpGet { get; set; }
-    //    public string StepId { get; set; }
-    //    public string ScaleGroupId { get; set; }
-
-
-    //    [IgnoreDataMember]
-    //    public string GlobalKey { get; set; }
-
-    //    [IgnoreDataMember]
-    //    public string RunId { get; set; }
-
-    //    [IgnoreDataMember]
-    //    public string MainOrchestrationId { get; set; }
-
-    //    [IgnoreDataMember]
-    //    public string BaseUrl { get; set; }
-    //}
-
-    ///// <summary>
-    ///// Http call with retries
-    ///// </summary>
-    //public class HttpCallWithRetries : HttpCall, IHttpCallWithRetries
-    //{
-    //    public HttpCallWithRetries() { }
-
-    //    public HttpCallWithRetries(string workflow, string stepNumber, string stepId, string subSteps)
-    //    {
-    //        PartitionKey = workflow;
-    //        RowKey = stepNumber;
-    //        SubSteps = subSteps;
-    //        StepId = stepId;
-    //    }
-
-    //    // retry options
-    //    public int RetryDelaySeconds { get; set; }
-    //    public int RetryMaxDelaySeconds { get; set; }
-    //    public int RetryMaxRetries { get; set; }
-    //    public double RetryBackoffCoefficient { get; set; }
-    //    public int RetryTimeoutSeconds { get; set; }
-    //}
 
     /// <summary>
     /// This is used to check if all parents have completed

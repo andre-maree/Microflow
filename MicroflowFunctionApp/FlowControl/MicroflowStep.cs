@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
-using Microflow.Models;
 using MicroflowModels;
+using MicroflowModels.Helpers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
@@ -11,6 +11,12 @@ namespace Microflow.FlowControl
 {
     public static class MicroflowStep
     {
+        /// <summary>
+        /// Called from Microflow.ExecuteStep to get the current step table config
+        /// </summary>
+        [FunctionName(CallNames.GetStep)]
+        public static async Task<IHttpCallWithRetries> GetStep([ActivityTrigger] MicroflowRun workflowRun) => await workflowRun.GetStep();
+
         /// <summary>
         /// Recursive step execution and sub-step can execute now calculations
         /// </summary>

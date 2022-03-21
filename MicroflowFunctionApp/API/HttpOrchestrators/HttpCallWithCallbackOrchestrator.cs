@@ -9,9 +9,9 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 using static MicroflowModels.Constants.Constants;
 
-namespace Microflow.API.Internal
+namespace Microflow.HttpOrchestrators
 {
-    public static class HttpCallWithCallbackOrchestrator
+    public static class MicroflowHttpCallWithCallback
     {
         /// <summary>
         /// Does the call out and then waits for the callback

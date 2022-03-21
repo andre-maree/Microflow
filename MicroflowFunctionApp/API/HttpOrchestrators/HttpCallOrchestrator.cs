@@ -7,9 +7,9 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using static MicroflowModels.Constants.Constants;
 
-namespace Microflow.API.Internal
+namespace Microflow.HttpOrchestrators
 {
-    public static class MicroflowInternalApi
+    public static class MicroflowHttpCall
     {
         /// <summary>
         /// Inline http call, wait for response

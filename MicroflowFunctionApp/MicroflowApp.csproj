@@ -3,7 +3,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
     <RootNamespace>Microflow</RootNamespace>
-    <Configurations>Debug;Release;DebugSplitMode</Configurations>
+    <Configurations>Debug;Release;Debug_NoUpsert_NoFlowControl_NoScaleGroups;DEBUG_NOUPSERT_NOFLOWCONTROL;DEBUG_NOUPSERT;DEBUG_NOUPSERT_NOSCALEGROUPS</Configurations>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Azure.Data.Tables" Version="12.5.0" />
