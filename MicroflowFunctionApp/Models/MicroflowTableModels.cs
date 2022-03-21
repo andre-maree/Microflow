@@ -2,7 +2,7 @@
 using Azure;
 using Azure.Data.Tables;
 
-namespace Microflow.Models
+namespace Microflow.MicroflowTableModels
 {
     #region TableEntity
 
@@ -39,19 +39,38 @@ namespace Microflow.Models
     }
 
     /// <summary>
-    /// This is used to check if all parents have completed
+    /// Used for step level logging
     /// </summary>
-    public class ParentCountCompletedEntity : ITableEntity
+    public class LogStepEntity : ITableEntity
     {
-        public ParentCountCompletedEntity() { }
+        public LogStepEntity() { }
 
-        public ParentCountCompletedEntity(string runId, string stepId)
+        public LogStepEntity(bool isStart, string workflowName, string rowKey, int stepNumber, string mainOrchestrationId, string runId, string globalKey, bool? success = null, int? httpStatusCode = null, string message = null)
         {
-            PartitionKey = runId;
-            RowKey = stepId;
+            PartitionKey = workflowName + "__" + mainOrchestrationId;
+            RowKey = rowKey;
+            StepNumber = stepNumber;
+            GlobalKey = globalKey;
+            RunId = runId;
+            if (isStart)
+                StartDate = DateTime.UtcNow;
+            else
+            {
+                Success = success;
+                HttpStatusCode = httpStatusCode;
+                Message = message;
+                EndDate = DateTime.UtcNow;
+            }
         }
 
-        public int ParentCountCompleted { get; set; }
+        public bool? Success { get; set; }
+        public int? HttpStatusCode { get; set; }
+        public string Message { get; set; }
+        public int StepNumber { get; set; }
+        public string RunId { get; set; }
+        public string GlobalKey { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
         public string PartitionKey { get; set; }
         public string RowKey { get; set; }
         public DateTimeOffset? Timestamp { get; set; }

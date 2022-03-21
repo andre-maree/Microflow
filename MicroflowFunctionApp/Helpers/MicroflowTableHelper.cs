@@ -1,7 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Azure.Data.Tables;
-using Microflow.Models;
-using MicroflowModels;
+using Microflow.MicroflowTableModels;
 using MicroflowShared;
 
 namespace Microflow.Helpers

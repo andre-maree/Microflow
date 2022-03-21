@@ -11,13 +11,13 @@ namespace Microflow.FlowControl
 {
     public static class CanStepExecuteNowForScalingGroup
     {
-        [FunctionName(CallNames.CanExecuteNowInScaleGroup)]
+        [FunctionName(ScaleGroupCalls.CanExecuteNowInScaleGroup)]
         public static async Task CheckMaxScaleCountForGroup([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
             CanExecuteNowObject canExecuteNowObject = context.GetInput<CanExecuteNowObject>();
-            EntityId countId = new EntityId(CallNames.CanExecuteNowInScaleGroupCount, canExecuteNowObject.ScaleGroupId);
+            EntityId countId = new EntityId(ScaleGroupCalls.CanExecuteNowInScaleGroupCount, canExecuteNowObject.ScaleGroupId);
 
-            EntityId scaleGroupCountId = new EntityId(CallNames.ScaleGroupMaxConcurrentInstanceCount, canExecuteNowObject.ScaleGroupId);
+            EntityId scaleGroupCountId = new EntityId(ScaleGroupCalls.ScaleGroupMaxConcurrentInstanceCount, canExecuteNowObject.ScaleGroupId);
             int scaleGroupMaxCount = await context.CallEntityAsync<int>(scaleGroupCountId, MicroflowControlKeys.Read);
 
             if (scaleGroupMaxCount == 0)
@@ -40,9 +40,9 @@ namespace Microflow.FlowControl
             // 7 days in paused state till exit
             DateTime endDate = context.CurrentUtcDateTime.AddDays(7);
             // start interval seconds
-            int count = 5;
+            int count = 5; // seconds
             // max interval seconds
-            const int max = 10; // 1 mins
+            const int max = 15; // seconds
 
             using (CancellationTokenSource cts = new CancellationTokenSource())
             {
@@ -72,9 +72,13 @@ namespace Microflow.FlowControl
                         //}
                     }
                 }
-                catch (TaskCanceledException)
+                catch (TaskCanceledException tex)
                 {
-                    //Logger.LogCritical("========================TaskCanceledException==========================");
+                    throw tex;
+                }
+                catch (Exception)
+                {
+                    throw;
                 }
                 finally
                 {
@@ -86,7 +90,7 @@ namespace Microflow.FlowControl
         /// <summary>
         /// Durable entity to keep a count for each run and each step in the run
         /// </summary>
-        [FunctionName(CallNames.CanExecuteNowInScaleGroupCount)]
+        [FunctionName(ScaleGroupCalls.CanExecuteNowInScaleGroupCount)]
         public static void CanExecuteNowInScalingGroupCounter([EntityTrigger] IDurableEntityContext ctx)
         {
             switch (ctx.OperationName)
@@ -107,20 +111,20 @@ namespace Microflow.FlowControl
             }
         }
 
-        [FunctionName(CallNames.ScaleGroupMaxConcurrentInstanceCount)]
-        public static void ScaleGroupMaxConcurrentInstanceCount([EntityTrigger] IDurableEntityContext ctx)
+        [FunctionName(ScaleGroupCalls.ScaleGroupMaxConcurrentInstanceCount)]
+        public static void ScaleGroupMaxConcurrentInstanceCounter([EntityTrigger] IDurableEntityContext ctx)
         {
             switch (ctx.OperationName.ToLowerInvariant())
             {
-                case "set":
+                case MicroflowCounterKeys.Set:
                     ctx.SetState(ctx.GetInput<int>());
                     break;
                 case MicroflowCounterKeys.Read:
                     ctx.Return(ctx.GetState<int>());
                     break;
-                case "delete":
-                    ctx.DeleteState();
-                    break;
+                //case "delete":
+                //    ctx.DeleteState();
+                //    break;
             }
         }
     }

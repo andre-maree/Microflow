@@ -1,8 +1,5 @@
-﻿//using Microflow.Helpers;
-//using Microflow.Helpers;
-//using Microflow.Helpers;
-//using Microflow.Helpers;
-using Microflow.Helpers;
+﻿using Microflow.Helpers;
+using Microflow.MicroflowTableModels;
 using Microflow.Models;
 using MicroflowModels;
 using MicroflowModels.Helpers;
@@ -51,11 +48,10 @@ namespace Microflow.FlowControl
             // get the step data from table storage (from PrepareWorkflow)
             await GetHttpCall();
 
-#if (!DEBUG_NOUPSERT_NOFLOWCONTROL_NOSCALEGROUPS && !DEBUG_NOUPSERT_NOSCALEGROUPS) || DEBUG_NOUPSERT_NOFLOWCONTROL
-
+#if !DEBUG_NOUPSERT_NOFLOWCONTROL_NOSCALEGROUPS && !DEBUG_NOUPSERT_NOSCALEGROUPS
             if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.ScaleGroupId))
             {
-                EntityId scaleId = new EntityId(CallNames.ScaleGroupMaxConcurrentInstanceCount, HttpCallWithRetries.ScaleGroupId);
+                EntityId scaleId = new EntityId(ScaleGroupCalls.ScaleGroupMaxConcurrentInstanceCount, HttpCallWithRetries.ScaleGroupId);
 
                 CanExecuteNowObject canExeNow = new CanExecuteNowObject()
                 {
@@ -64,13 +60,11 @@ namespace Microflow.FlowControl
                     StepNumber = MicroflowRun.RunObject.StepNumber
                 };
 
-                await MicroflowDurableContext.CallSubOrchestratorAsync(CallNames.CanExecuteNowInScaleGroup, canExeNow);
+                await MicroflowDurableContext.CallSubOrchestratorAsync(ScaleGroupCalls.CanExecuteNowInScaleGroup, canExeNow);
             }
-
 #endif
 
 #if !DEBUG_NOUPSERT_NOFLOWCONTROL_NOSCALEGROUPS && !DEBUG_NOUPSERT_NOFLOWCONTROL
-
             EntityId projStateId = new EntityId(MicroflowStateKeys.WorkflowState, MicroflowRun.WorkflowName);
             EntityId globalStateId = new EntityId(MicroflowStateKeys.GlobalState, MicroflowRun.RunObject.GlobalKey);
             Task<int> projStateTask = MicroflowDurableContext.CallEntityAsync<int>(projStateId, MicroflowControlKeys.Read);
@@ -166,15 +160,13 @@ namespace Microflow.FlowControl
                     await HttpCallout(id);
                 }
 
-#if (!DEBUG_NOUPSERT_NOFLOWCONTROL_NOSCALEGROUPS && !DEBUG_NOUPSERT_NOSCALEGROUPS) || DEBUG_NOUPSERT_NOFLOWCONTROL
-
+#if !DEBUG_NOUPSERT_NOFLOWCONTROL_NOSCALEGROUPS && !DEBUG_NOUPSERT_NOSCALEGROUPS
                 if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.ScaleGroupId))
                 {
-                    EntityId countId = new EntityId(CallNames.CanExecuteNowInScaleGroupCount, HttpCallWithRetries.ScaleGroupId);
+                    EntityId countId = new EntityId(ScaleGroupCalls.CanExecuteNowInScaleGroupCount, HttpCallWithRetries.ScaleGroupId);
                     
                     await MicroflowDurableContext.CallEntityAsync(countId, MicroflowCounterKeys.Subtract);
                 }
-
 #endif
 
                 MicroflowTasks.Add(ProcessSubSteps());

@@ -11,13 +11,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using static MicroflowModels.Constants.Constants;
 
-namespace Microflow.SplitMode
+namespace Microflow.Optional
 {
     public class ScaleGroups
     {
+
         /// <summary>
-     /// Get/set max instance count for scale group
-     /// </summary>
+        /// Get/set max instance count for scale group
+        /// </summary>
         [FunctionName("ScaleGroup")]
         public static async Task<HttpResponseMessage> SetScaleGroup([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
                                                                   Route = "ScaleGroup/{scaleGroupId?}/{maxInstanceCount?}")] HttpRequestMessage req,
@@ -33,7 +34,7 @@ namespace Microflow.SplitMode
                     res = await client.ListEntitiesAsync(new EntityQuery()
                     {
                         PageSize = 99999999,
-                        EntityName = CallNames.ScaleGroupMaxConcurrentInstanceCount,
+                        EntityName = ScaleGroupCalls.ScaleGroupMaxConcurrentInstanceCount,
                         FetchState = true
                     }, cts.Token);
                 }
@@ -61,9 +62,9 @@ namespace Microflow.SplitMode
                 };
             }
 
-            EntityId scaleGroupCountId = new EntityId(CallNames.ScaleGroupMaxConcurrentInstanceCount, scaleGroupId);
+            EntityId scaleGroupCountId = new EntityId(ScaleGroupCalls.ScaleGroupMaxConcurrentInstanceCount, scaleGroupId);
 
-            await client.SignalEntityAsync(scaleGroupCountId, "set", maxInstanceCount);
+            await client.SignalEntityAsync(scaleGroupCountId, MicroflowCounterKeys.Set, maxInstanceCount);
 
             HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);
 

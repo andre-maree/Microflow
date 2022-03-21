@@ -47,8 +47,8 @@ namespace MicroflowConsole
             try
             {
                 //var workflow = Tests.CreateTestWorkflow_SimpleSteps();
-                var workflow = Tests.CreateTestWorkflow_10StepsParallel();
-                //var workflow = Tests.CreateTestWorkflow_Complex1();
+                //var workflow = Tests.CreateTestWorkflow_10StepsParallel();
+                var workflow = Tests.CreateTestWorkflow_Complex1();
                 //var workflow = Tests.CreateTestWorkflow_110Steps();
                 //var workflow2 = Tests.CreateTestWorkflow_110Steps();
 
@@ -66,14 +66,14 @@ namespace MicroflowConsole
                 //workflow[0].CallbackAction = "approve";
                 workflow[3].ScaleGroupId = scalegroup;
                 workflow[4].ScaleGroupId = scalegroup;
-                workflow[5].ScaleGroupId = scalegroup;
-                workflow[6].ScaleGroupId = scalegroup;
-                workflow[7].ScaleGroupId = scalegroup;
-                workflow[8].ScaleGroupId = scalegroup;
-                workflow[9].ScaleGroupId = scalegroup;
-                workflow[10].ScaleGroupId = scalegroup;
-                workflow[11].ScaleGroupId = scalegroup;
-                workflow[12].ScaleGroupId = scalegroup;
+                //workflow[5].ScaleGroupId = scalegroup;
+                //workflow[6].ScaleGroupId = scalegroup;
+                //workflow[7].ScaleGroupId = scalegroup;
+                //workflow[8].ScaleGroupId = scalegroup;
+                //workflow[9].ScaleGroupId = scalegroup;
+                //workflow[10].ScaleGroupId = scalegroup;
+                //workflow[11].ScaleGroupId = scalegroup;
+                //workflow[12].ScaleGroupId = scalegroup;
                 //var project2 = new MicroflowProject()
                 //{
                 //    ProjectName = "yyy",
@@ -97,11 +97,11 @@ namespace MicroflowConsole
                 //project.Steps[2].CalloutUrl = baseUrl + $"/start/{project2.ProjectName}";
                 //project.Steps[0].AsynchronousPollingEnabled = false;
                 // call Microflow insertorupdateproject when something ischanges in the workflow, but do not always call this when corcurrent multiple workflows
-                var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
+                //var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", project, new JsonSerializerOptions(JsonSerializerDefaults.General));
 
                 //// scale groups:
                 //// set max count
-                var scaleres = await SetMaxInstanceCountForScaleGroup(scalegroup, 5);
+                //var scaleres = await SetMaxInstanceCountForScaleGroup(scalegroup, 5);
                 //// get max count for group
                 //var getScaleGroup = await GetScaleGroupsWithMaxInstanceCounts(scalegroup);
                 //// get max counts for all groups
@@ -128,8 +128,8 @@ namespace MicroflowConsole
                 {
                     await Task.Delay(500);
                     //await posttask;
-                    tasks.Add(HttpClient.GetAsync(baseUrl + $"/start/{project.WorkflowName}?globalkey=globber"));
-                    //tasks.Add(HttpClient.GetAsync(baseUrl + $"/start/{project.ProjectName}/33306875-9c81-4736-81c0-9be562dae777"));
+                    tasks.Add(HttpClient.GetAsync(baseUrl + $"/MicroflowStart/{project.WorkflowName}?globalkey=globber"));
+                    //tasks.Add(HttpClient.GetAsync(baseUrl + $"/MicroflowStart/{project.ProjectName}/33306875-9c81-4736-81c0-9be562dae777"));
                 }
                 //await result;
                 ////await posttask;

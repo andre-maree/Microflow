@@ -1,4 +1,4 @@
-﻿using Microflow.Models;
+﻿using Microflow.MicroflowTableModels;
 using MicroflowModels;
 using MicroflowModels.Helpers;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;

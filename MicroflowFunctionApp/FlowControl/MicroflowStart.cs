@@ -18,14 +18,14 @@ namespace Microflow.FlowControl
     /// after this, "Microflow_HttpStart" can be called multiple times,
     /// if a change is made to the workflow, call "Microflow_InsertOrUpdateworkflow" again to apply the changes
     /// </summary>
-    public static class MicroflowStart
+    public static class MicroflowStartFunctions
     {
         /// <summary>
         /// This is the entry point, workflow payload is in the http body
         /// </summary>
         /// <param name="instanceId">If an instanceId is passed in, it will run as a singleton, else it will run concurrently with each with a new instanceId</param>
         [FunctionName("Microflow_HttpStart")]
-        public static async Task<HttpResponseMessage> HttpStart([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "start/{workflowName}/{instanceId?}")]
+        public static async Task<HttpResponseMessage> HttpStart([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "MicroflowStart/{workflowName}/{instanceId?}")]
                                                                 HttpRequestMessage req,
                                                                 [DurableClient] IDurableOrchestrationClient client,
                                                                 string instanceId, string workflowName)
@@ -35,7 +35,7 @@ namespace Microflow.FlowControl
                 MicroflowRun workflowRun = MicroflowWorkflowHelper.CreateMicroflowRun(req, ref instanceId, workflowName);
 
                 // start
-                await client.StartNewAsync("Start", instanceId, workflowRun);
+                await client.StartNewAsync("MicroflowStart", instanceId, workflowRun);
 
                 return await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromSeconds(1));
 
@@ -65,8 +65,8 @@ namespace Microflow.FlowControl
         /// </summary>
         /// <returns></returns>
         [Deterministic]
-        [FunctionName("Start")]
-        public static async Task Start([OrchestrationTrigger] IDurableOrchestrationContext context,
+        [FunctionName("MicroflowStart")]
+        public static async Task MicroflowStart([OrchestrationTrigger] IDurableOrchestrationContext context,
                                        ILogger inLog)
         {
             ILogger log = context.CreateReplaySafeLogger(inLog);

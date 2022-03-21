@@ -24,30 +24,41 @@ namespace Microflow.FlowControl
                 EntityId countId = new EntityId(MicroflowEntities.CanExecuteNowCount,
                                                 canExecuteNowObject.RunId + canExecuteNowObject.StepNumber);
 
+                CanExecuteResult canExecuteResult = null;
+
                 using (await context.LockAsync(countId))
                 {
                     int parentCompletedCount = await context.CallEntityAsync<int>(countId, MicroflowCounterKeys.Read);
 
                     if (parentCompletedCount + 1 >= canExecuteNowObject.ParentCount)
                     {
-                        // maybe needed cleanup
-                        //await context.CallEntityAsync(countId, "delete");
+                        // cleanup with silnalentity
+                        //context.SignalEntity(countId, "delete");
 
-                        return new CanExecuteResult() 
-                        { 
-                            CanExecute = true, 
-                            StepNumber = canExecuteNowObject.StepNumber 
+                        canExecuteResult = new CanExecuteResult()
+                        {
+                            CanExecute = true,
+                            StepNumber = canExecuteNowObject.StepNumber
                         };
                     }
-
-                    await context.CallEntityAsync<int>(countId, MicroflowCounterKeys.Add);
-
-                    return new CanExecuteResult() 
+                    else
                     {
-                        CanExecute = false, 
-                        StepNumber = canExecuteNowObject.StepNumber 
-                    };
+                        await context.CallEntityAsync<int>(countId, MicroflowCounterKeys.Add);
+
+                        canExecuteResult = new CanExecuteResult()
+                        {
+                            CanExecute = false,
+                            StepNumber = canExecuteNowObject.StepNumber
+                        };
+                    }
                 }
+
+                if(canExecuteResult.CanExecute)
+                {
+                    context.SignalEntity(countId, MicroflowCounterKeys.Delete);
+                }
+
+                return canExecuteResult;
             }
             catch (Exception e)
             {
@@ -85,9 +96,9 @@ namespace Microflow.FlowControl
                 case MicroflowCounterKeys.Read:
                     ctx.Return(ctx.GetState<int>());
                     break;
-                //case "delete":
-                //    ctx.DeleteState();
-                //    break;
+                case MicroflowCounterKeys.Delete:
+                    ctx.DeleteState();
+                    break;
             }
         }
     }
