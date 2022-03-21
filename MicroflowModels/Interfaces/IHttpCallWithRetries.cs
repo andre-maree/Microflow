@@ -1,4 +1,4 @@
-﻿namespace Microflow.Models
+﻿namespace MicroflowModels
 {
     public interface IHttpCallWithRetries : IHttpCall
     {

@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Configurations>Debug;Release;DEBUG_NOUPSERT_NOFLOWCONTROL;Debug_NoUpsert_NoFlowControl_NoScaleGroups;DEBUG_NOUPSERT_NOSCALEGROUPS;DEBUG_NOUPSERT;DEBUG_UPSERTINAPI</Configurations>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Data.Tables" Version="12.5.0" />
+    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.6.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MicroflowModels\MicroflowModels.csproj" />
+  </ItemGroup>
+
+</Project>

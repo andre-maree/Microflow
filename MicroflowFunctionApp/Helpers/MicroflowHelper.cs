@@ -1,65 +1,65 @@
 ﻿using System;
-using System.Collections.Specialized;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Microflow.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using static Microflow.Helpers.Constants;
+using static MicroflowModels.Constants.Constants;
 
 namespace Microflow.Helpers
 {
     public static class MicroflowHelper
     {
+#if !DEBUG_NOUPSERT_NOFLOWCONTROL && !DEBUG_NOUPSERT_NOFLOWCONTROL && !DEBUG_NOUPSERT_NOFLOWCONTROL_NOSCALEGROUPS
         /// <summary>
         /// Pause, run, or stop the workflow, cmd can be "run", "pause", or "stop"
         /// </summary>
-        //[FunctionName("Microflow_ProjectControl")]
-        //public static async Task<HttpResponseMessage> ProjectControl([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-        //                                                          Route = "ProjectControl/{cmd}/{workflowName}")] HttpRequestMessage req,
-        //                                                          [DurableClient] IDurableEntityClient client, string workflowName, string cmd)
-        //{
-        //    if (cmd.Equals(MicroflowControlKeys.Read, StringComparison.OrdinalIgnoreCase))
-        //    {
-        //        EntityId projStateId = new EntityId(MicroflowStateKeys.ProjectStateId, workflowName);
-        //        EntityStateResponse<string> stateRes = await client.ReadEntityStateAsync<string>(projStateId);
+        [FunctionName("WorkflowControl")]
+        public static async Task<HttpResponseMessage> WorkflowControl([HttpTrigger(AuthorizationLevel.Anonymous, "get",
+                                                                  Route = "WorkflowControl/{cmd}/{workflowName}")] HttpRequestMessage req,
+                                                                  [DurableClient] IDurableEntityClient client, string workflowName, string cmd)
+        {
+            if (cmd.Equals(MicroflowControlKeys.Read, StringComparison.OrdinalIgnoreCase))
+            {
+                EntityId projStateId = new EntityId(MicroflowStateKeys.WorkflowState, workflowName);
+                EntityStateResponse<string> stateRes = await client.ReadEntityStateAsync<string>(projStateId);
 
-        //        HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK)
-        //        {
-        //            Content = new StringContent(stateRes.EntityState)
-        //        };
+                HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(stateRes.EntityState)
+                };
 
-        //        return resp;
-        //    }
+                return resp;
+            }
 
-        //    return await client.SetRunState(nameof(ProjectState), workflowName, cmd);
-        //}
+            return await client.SetRunState(nameof(WorkflowState), workflowName, cmd);
+        }
 
         /// <summary>
         /// Pause, run, or stop all with the same global key, cmd can be "run", "pause", or "stop"
         /// </summary>
-        //[FunctionName("Microflow_GlobalControl")]
-        //public static async Task<HttpResponseMessage> GlobalControl([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-        //                                                          Route = "GlobalControl/{cmd}/{globalKey}")] HttpRequestMessage req,
-        //                                                          [DurableClient] IDurableEntityClient client, string globalKey, string cmd)
-        //{
-        //    if (cmd.Equals(MicroflowControlKeys.Read, StringComparison.OrdinalIgnoreCase))
-        //    {
-        //        EntityId globStateId = new EntityId(MicroflowStateKeys.GlobalStateId, globalKey);
-        //        EntityStateResponse<string> stateRes = await client.ReadEntityStateAsync<string>(globStateId);
+        [FunctionName("GlobalControl")]
+        public static async Task<HttpResponseMessage> GlobalControl([HttpTrigger(AuthorizationLevel.Anonymous, "get",
+                                                                  Route = "GlobalControl/{cmd}/{globalKey}")] HttpRequestMessage req,
+                                                                  [DurableClient] IDurableEntityClient client, string globalKey, string cmd)
+        {
+            if (cmd.Equals(MicroflowControlKeys.Read, StringComparison.OrdinalIgnoreCase))
+            {
+                EntityId globStateId = new EntityId(MicroflowStateKeys.GlobalState, globalKey);
+                EntityStateResponse<string> stateRes = await client.ReadEntityStateAsync<string>(globStateId);
 
-        //        HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK)
-        //        {
-        //            Content = new StringContent(stateRes.EntityState)
-        //        };
+                HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(stateRes.EntityState)
+                };
 
-        //        return resp;
-        //    }
+                return resp;
+            }
 
-        //    return await client.SetRunState(nameof(GlobalState), globalKey, cmd);
-        //}
+            return await client.SetRunState(nameof(GlobalState), globalKey, cmd);
+        }
+#endif
 
         /// <summary>
         /// Durable entity check and set if the global state
@@ -104,79 +104,27 @@ namespace Microflow.Helpers
         /// <summary>
         /// Set the global or workflow state with the key, and the cmd can be "pause", "ready", or "stop"
         /// </summary>
-        //public static async Task<HttpResponseMessage> SetRunState(this IDurableEntityClient client,
-        //                                                           string stateEntityId,
-        //                                                           string key,
-        //                                                           string cmd)
-        //{
-        //    EntityId runStateId = new EntityId(stateEntityId, key);
-
-        //    switch (cmd)
-        //    {
-        //        case MicroflowControlKeys.Pause:
-        //            await client.SignalEntityAsync(runStateId, MicroflowControlKeys.Pause);
-        //            break;
-        //        case MicroflowControlKeys.Ready:
-        //            await client.SignalEntityAsync(runStateId, MicroflowControlKeys.Ready);
-        //            break;
-        //        case MicroflowControlKeys.Stop:
-        //            await client.SignalEntityAsync(runStateId, MicroflowControlKeys.Stop);
-        //            break;
-        //    }
-
-        //    return new HttpResponseMessage(HttpStatusCode.OK);
-        //}
-
-        /// <summary>
-        /// Work out what the global key is for this call
-        /// </summary>
-        [Deterministic]
-        public static void CalculateGlobalKey(this HttpCall httpCall)
+        public static async Task<HttpResponseMessage> SetRunState(this IDurableEntityClient client,
+                                                                   string stateEntityId,
+                                                                   string key,
+                                                                   string cmd)
         {
-            // check if it is call to Microflow
-            if (httpCall.CalloutUrl.StartsWith($"{httpCall.BaseUrl}/start/"))
+            EntityId runStateId = new EntityId(stateEntityId, key);
+
+            switch (cmd)
             {
-                // parse query string
-                NameValueCollection data = new Uri(httpCall.CalloutUrl).ParseQueryString();
-                // if there is query string data
-                if (data.Count > 0)
-                {
-                    // check if there is a global key (maybe if it is an assigned key)
-                    if (string.IsNullOrEmpty(data.Get("globalkey")))
-                    {
-                        httpCall.CalloutUrl += $"&globalkey={httpCall.GlobalKey}";
-                    }
-                }
-                else
-                {
-                    httpCall.CalloutUrl += $"?globalkey={httpCall.GlobalKey}";
-                }
+                case MicroflowControlKeys.Pause:
+                    await client.SignalEntityAsync(runStateId, MicroflowControlKeys.Pause);
+                    break;
+                case MicroflowControlKeys.Ready:
+                    await client.SignalEntityAsync(runStateId, MicroflowControlKeys.Ready);
+                    break;
+                case MicroflowControlKeys.Stop:
+                    await client.SignalEntityAsync(runStateId, MicroflowControlKeys.Stop);
+                    break;
             }
-        }
 
-        public static RetryOptions GetRetryOptions(this IHttpCallWithRetries httpCallWithRetries)
-        {
-            RetryOptions ops = new RetryOptions(TimeSpan.FromSeconds(httpCallWithRetries.RetryDelaySeconds),
-                                                httpCallWithRetries.RetryMaxRetries)
-            {
-                RetryTimeout = TimeSpan.FromSeconds(httpCallWithRetries.RetryTimeoutSeconds),
-                MaxRetryInterval = TimeSpan.FromSeconds(httpCallWithRetries.RetryMaxDelaySeconds),
-                BackoffCoefficient = httpCallWithRetries.RetryBackoffCoefficient
-            };
-
-            return ops;
-        }
-
-        public static async Task<HttpResponseMessage> LogError(string workflowName, string globalKey, string runId, Exception e)
-        {
-            await new LogErrorEntity(workflowName, -999, e.Message, globalKey, runId).LogError();
-
-            HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.InternalServerError)
-            {
-                Content = new StringContent(e.Message)
-            };
-
-            return resp;
+            return new HttpResponseMessage(HttpStatusCode.OK);
         }
     }
 }

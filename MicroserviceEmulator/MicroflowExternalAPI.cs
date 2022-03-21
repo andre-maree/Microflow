@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Specialized;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Microflow.Helpers;
-using Microflow.Models;
 using MicroflowModels;
+using MicroflowModels.Helpers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using static Microflow.Helpers.Constants;
+using static MicroflowModels.Constants.Constants;
 
 namespace Microflow.API.External
 {

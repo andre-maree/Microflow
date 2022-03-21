@@ -2,6 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
+    <Configurations>Debug;Release;DEBUG_NOUPSERT;DEBUG_NOUPSERT_NOFLOWCONTROL;Debug_NoUpsert_NoFlowControl_NoScaleGroups;DEBUG_NOUPSERT_NOSCALEGROUPS</Configurations>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Data.Tables" Version="12.5.0" />
+  </ItemGroup>
 
 </Project>

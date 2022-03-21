@@ -1,38 +1,28 @@
+﻿#if !DEBUG_NOUPSERT_NOFLOWCONTROL && !DEBUG_NOUPSERT_NOFLOWCONTROL && !DEBUG_NOUPSERT_NOFLOWCONTROL_NOSCALEGROUPS
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using static Microflow.Helpers.Constants;
+using static MicroflowModels.Constants.Constants;
 
-namespace MicroflowApiFunctionApp
+namespace MicroflowApi
 {
-    //public class MaxInstanceCount
-    //{
-    //    public string ScaleGroupId { get; set; }
-    //    public int MaxCount { get; set; }
-    //}
-
-    public static class RunTimeApi
+    public static class FlowControlApi
     {
-
         /// <summary>
-        /// Pause, run, or stop the project, cmd can be "run", "pause", or "stop"
+        /// Pause, run, or stop the workflow, cmd can be "run", "pause", or "stop"
         /// </summary>
-        [FunctionName("Microflow_ProjectControl")]
-        public static async Task<HttpResponseMessage> ProjectControl([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-                                                                  Route = "ProjectControl/{cmd}/{projectName}")] HttpRequestMessage req,
-                                                                  [DurableClient] IDurableEntityClient client, string projectName, string cmd)
+        [FunctionName("WorkflowControl")]
+        public static async Task<HttpResponseMessage> WorkflowControl([HttpTrigger(AuthorizationLevel.Anonymous, "get",
+                                                                  Route = "WorkflowControl/{cmd}/{workflowName}")] HttpRequestMessage req,
+                                                                  [DurableClient] IDurableEntityClient client, string workflowName, string cmd)
         {
             if (cmd.Equals(MicroflowControlKeys.Read, StringComparison.OrdinalIgnoreCase))
             {
-                EntityId projStateId = new EntityId(MicroflowStateKeys.WorkflowState, projectName);
+                EntityId projStateId = new EntityId(MicroflowStateKeys.WorkflowState, workflowName);
                 EntityStateResponse<string> stateRes = await client.ReadEntityStateAsync<string>(projStateId);
 
                 HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK)
@@ -43,14 +33,14 @@ namespace MicroflowApiFunctionApp
                 return resp;
             }
 
-            return await client.SetRunState(nameof(ProjectState), projectName, cmd);
+            return await client.SetRunState(nameof(WorkflowState), workflowName, cmd);
         }
 
         /// <summary>
         /// Pause, run, or stop all with the same global key, cmd can be "run", "pause", or "stop"
         /// </summary>
-        [FunctionName("Microflow_GlobalControl")]
-        public static async Task<HttpResponseMessage> GlobalControl([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
+        [FunctionName("GlobalControl")]
+        public static async Task<HttpResponseMessage> GlobalControl([HttpTrigger(AuthorizationLevel.Anonymous, "get",
                                                                   Route = "GlobalControl/{cmd}/{globalKey}")] HttpRequestMessage req,
                                                                   [DurableClient] IDurableEntityClient client, string globalKey, string cmd)
         {
@@ -80,16 +70,16 @@ namespace MicroflowApiFunctionApp
         }
 
         /// <summary>
-        /// Durable entity check and set project state
+        /// Durable entity check and set workflow state
         /// </summary>
         [FunctionName(MicroflowStateKeys.WorkflowState)]
-        public static void ProjectState([EntityTrigger] IDurableEntityContext ctx)
+        public static void WorkflowState([EntityTrigger] IDurableEntityContext ctx)
         {
             ctx.RunState();
         }
 
         /// <summary>
-        /// For project and global key states
+        /// For workflow and global key states
         /// </summary>
         private static void RunState(this IDurableEntityContext ctx)
         {
@@ -109,8 +99,9 @@ namespace MicroflowApiFunctionApp
                     break;
             }
         }
+
         /// <summary>
-        /// Set the global or project state with the key, and the cmd can be "pause", "ready", or "stop"
+        /// Set the global or workflow state with the key, and the cmd can be "pause", "ready", or "stop"
         /// </summary>
         public static async Task<HttpResponseMessage> SetRunState(this IDurableEntityClient client,
                                                                    string stateEntityId,
@@ -134,77 +125,6 @@ namespace MicroflowApiFunctionApp
 
             return new HttpResponseMessage(HttpStatusCode.OK);
         }
-
-        /// <summary>
-        /// Get/set  project max instance count for scale group
-        /// </summary>
-        [FunctionName("ScaleGroup")]
-        public static async Task<HttpResponseMessage> SetScaleGroup([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-                                                                  Route = "ScaleGroup/{scaleGroupId?}/{maxInstanceCount?}")] HttpRequestMessage req,
-                                                                  [DurableClient] IDurableEntityClient client, string scaleGroupId, int? maxInstanceCount)
-        {
-            if (req.Method.Equals(HttpMethod.Get))
-            {
-                Dictionary<string, int> result = new Dictionary<string, int>();
-                EntityQueryResult res = null;
-
-                using (CancellationTokenSource cts = new CancellationTokenSource())
-                {
-                    res = await client.ListEntitiesAsync(new EntityQuery()
-                    {
-                        PageSize = 99999999,
-                        EntityName = "scalegroupmaxconcurrentinstancecount",
-                        FetchState = true
-                    }, cts.Token);
-                }
-
-                if (string.IsNullOrWhiteSpace(scaleGroupId))
-                {
-                    foreach (var rr in res.Entities)
-                    {
-                        result.Add(rr.EntityId.EntityKey, (int)rr.State);
-                    }
-                }
-                else
-                {
-                    foreach (var rr in res.Entities.Where(e => e.EntityId.EntityKey.Equals(scaleGroupId)))
-                    {
-                        result.Add(rr.EntityId.EntityKey, (int)rr.State);
-                    }
-                }
-
-                var content = new StringContent(JsonSerializer.Serialize(result));
-
-                return new HttpResponseMessage(HttpStatusCode.OK)
-                {
-                    Content = content
-                };
-            }
-
-            EntityId scaleGroupCountId = new EntityId("ScaleGroupMaxConcurrentInstanceCount", scaleGroupId);
-
-            await client.SignalEntityAsync(scaleGroupCountId, "set", maxInstanceCount);
-
-            HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);
-
-            return resp;
-        }
-
-        [FunctionName("ScaleGroupMaxConcurrentInstanceCount")]
-        public static void ScaleGroupMaxConcurrentInstanceCount([EntityTrigger] IDurableEntityContext ctx)
-        {
-            switch (ctx.OperationName.ToLowerInvariant())
-            {
-                case "set":
-                    ctx.SetState(ctx.GetInput<int>());
-                    break;
-                case "get":
-                    ctx.Return(ctx.GetState<int>());
-                    break;
-                case "delete":
-                    ctx.DeleteState();
-                    break;
-            }
-        }
     }
 }
+#endif
