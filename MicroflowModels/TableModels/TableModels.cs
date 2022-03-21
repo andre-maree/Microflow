@@ -84,9 +84,6 @@ namespace MicroflowModels
 
         [IgnoreDataMember]
         public string MainOrchestrationId { get; set; }
-
-        [IgnoreDataMember]
-        public string BaseUrl { get; set; }
     }
 
     /// <summary>

@@ -21,7 +21,6 @@ namespace MicroflowModels
     public class MicroflowProjectBase
     {
         public string WorkflowName { get; set; }
-        public int Loop { get; set; } = 1;
     }
 
     public class Microflow : MicroflowProjectBase
@@ -78,11 +77,11 @@ namespace MicroflowModels
 
     public class MicroflowRetryOptions
     {
-        public int DelaySeconds { get; set; }
-        public int MaxDelaySeconds { get; set; }
-        public int MaxRetries { get; set; }
-        public double BackoffCoefficient { get; set; } = 1;
-        public int TimeOutSeconds { get; set; }
+        public int DelaySeconds { get; set; } = 5;
+        public int MaxDelaySeconds { get; set; } = 300;
+        public int MaxRetries { get; set; } = 15;
+        public double BackoffCoefficient { get; set; } = 5;
+        public int TimeOutSeconds { get; set; } = 30;
     }
 
     #endregion

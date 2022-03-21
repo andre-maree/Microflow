@@ -18,8 +18,8 @@ namespace MicroflowConsole
             //steps[0].StopOnActionFailed = true;
             //steps[0].CalloutTimeoutSeconds = 190;
 
-            steps[0].AddSubSteps(steps[1].StepNumber, steps[2].StepNumber);
-            steps[3].AddParentSteps(steps[1], steps[2]);
+            steps[1].AddSubSteps(steps[2], steps[3]);
+            steps[4].AddParentSteps(steps[2], steps[3]);
 
             //steps[0].CallbackAction = "approve"; 
             //steps[1].CallbackAction = "approve"; 
@@ -31,6 +31,8 @@ namespace MicroflowConsole
             //StepsManager.SetRetryForSteps(5, 10, 2, 30, 5, steps.Values.ToArray());
             //StepsManager.SetRetryForSteps(5, 10, 2, 30, 5, steps[2]);
             //steps[1].CalloutUrl = "";// this now acts as a container for a list of top level steps
+            steps.Remove(steps[0]);
+
             return steps;
         }
 
@@ -38,18 +40,19 @@ namespace MicroflowConsole
         {
             List<Step> steps = ProjectManager.CreateSteps(14, 1, "{default_post_url}");
 
-            steps[0].AddSubSteps(steps[1].StepNumber, steps[2].StepNumber);
+            steps[1].AddSubSteps(steps[2], steps[3]);
 
-            steps[1].AddSubSteps(steps[3].StepNumber, steps[4].StepNumber, steps[5].StepNumber, steps[6].StepNumber, steps[7].StepNumber);
+            steps[2].AddSubSteps(steps[4], steps[5], steps[6], steps[7], steps[8]);
 
-            steps[2].AddSubSteps(steps[8].StepNumber, steps[9].StepNumber, steps[10].StepNumber, steps[11].StepNumber, steps[12].StepNumber);
+            steps[3].AddSubSteps(steps[9], steps[10], steps[11], steps[12], steps[13]);
 
             // 2 groups of 5 parallel steps = 10 parallel steps
-            steps[13].AddParentSteps(steps[3], steps[4], steps[5], steps[6], steps[7], steps[8], steps[9], steps[10], steps[11], steps[12]);
+            steps[14].AddParentSteps(steps[4], steps[5], steps[6], steps[7], steps[8], steps[9], steps[10], steps[11], steps[12], steps[13]);
 
             // step configs
             //steps[0].CallbackAction = "approve_process_start";
             //steps[13].CallbackAction = "approve_process_end";
+            steps.Remove(steps[0]);
 
             return steps;
         }
@@ -58,21 +61,22 @@ namespace MicroflowConsole
         {
             List<Step> steps = ProjectManager.CreateSteps(8, 1, "{default_post_url}");
 
-            steps[0].AddSubSteps(steps[1].StepNumber, steps[2].StepNumber, steps[3].StepNumber);
+            steps[1].AddSubSteps(steps[2], steps[3], steps[4]);
 
-            steps[3].AddSubSteps(steps[4].StepNumber, steps[5].StepNumber);
+            steps[4].AddSubSteps(steps[5], steps[6]);
 
-            steps[2].AddSubSteps(steps[5].StepNumber, steps[6].StepNumber);
+            steps[3].AddSubSteps(steps[6], steps[7]);
 
-            steps[3].AddSubSteps(steps[6].StepNumber, steps[7].StepNumber);
+            steps[4].AddSubSteps(steps[7], steps[8]);
 
-            steps[4].AddSubSteps(steps[5].StepNumber, steps[2].StepNumber);
+            steps[5].AddSubSteps(steps[6], steps[3]);
 
-            steps[5].AddSubSteps(steps[7].StepNumber);
+            steps[6].AddSubSteps(steps[8]);
 
-            steps[6].AddSubSteps(steps[7].StepNumber);
+            steps[7].AddSubSteps(steps[8]);
 
             //steps[7].CallbackAction = "approve";
+            steps.Remove(steps[0]);
 
             return steps;
         }

@@ -41,7 +41,7 @@ namespace Microflow.Helpers
 
             string callback = string.IsNullOrWhiteSpace(httpCall.CallbackAction)
                     ? ""
-                    : $"{httpCall.BaseUrl}/{CallNames.CallbackBase}/{httpCall.CallbackAction}/{instanceId}/{httpCall.RowKey}";
+                    : $"{Environment.GetEnvironmentVariable("BaseUrl")}{CallNames.CallbackBase}/{httpCall.CallbackAction}/{instanceId}/{httpCall.RowKey}";
 
             httpCall.CalculateGlobalKey();
 

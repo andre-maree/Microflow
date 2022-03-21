@@ -14,11 +14,11 @@ namespace MicroflowSDK
             }
         }
 
-        public static void AddSubSteps(this Step step, params int[] subSteps)
+        public static void AddSubSteps(this Step step, params Step[] subSteps)
         {
             foreach (var subStep in subSteps)
             {
-                step.SubSteps.Add(subStep);
+                step.SubSteps.Add(subStep.StepNumber);
             }
         }
 
@@ -28,21 +28,15 @@ namespace MicroflowSDK
             step.SubSteps.AddRange(from s in li select s.StepNumber);
         }
 
-        public static void SetRetryForStep(this Step step, int delaySeconds = 5, int maxDelaySeconds = 60, int maxRetries = 5, int timeOutSeconds = 60, int backoffCoefficient = 1)
+        public static void SetRetryForSteps(params Step[] steps)
         {
-            var retryOptions = new MicroflowRetryOptions()
+            foreach (var step in steps)
             {
-                DelaySeconds = delaySeconds,
-                MaxDelaySeconds = maxDelaySeconds,
-                MaxRetries = maxRetries,
-                TimeOutSeconds = timeOutSeconds,
-                BackoffCoefficient = backoffCoefficient
-            };
-
-            step.RetryOptions = retryOptions;
+                step.RetryOptions = new MicroflowRetryOptions();
+            }
         }
 
-        public static void SetRetryForSteps(int delaySeconds = 5, int maxDelaySeconds = 60, int maxRetries = 5, int timeOutSeconds = 30, int backoffCoefficient = 1, params Step[] steps)
+        public static void SetRetryForSteps(int delaySeconds, int maxDelaySeconds, int maxRetries, int timeOutSeconds, int backoffCoefficient, params Step[] steps)
         {
             var retryOptions = new MicroflowRetryOptions()
             {

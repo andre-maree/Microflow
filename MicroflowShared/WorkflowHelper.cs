@@ -29,8 +29,7 @@ namespace MicroflowShared
             //    // create a workflow run
             MicroflowRun workflowRun = new MicroflowRun()
             {
-                WorkflowName = workflow.WorkflowName,
-                Loop = workflow.Loop
+                WorkflowName = workflow.WorkflowName
             };
 
             EntityId projStateId = new EntityId(MicroflowStateKeys.WorkflowState, workflowRun.WorkflowName);

@@ -12,7 +12,6 @@
         string RunId { get; set; }
         string StepId { get; set; }
         bool StopOnActionFailed { get; set; }
-        string BaseUrl { get; set; }
         string ScaleGroupId { get; set; }
     }
 }

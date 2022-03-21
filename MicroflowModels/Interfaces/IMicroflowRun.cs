@@ -7,7 +7,6 @@
         string OrchestratorInstanceId { get; set; }
         int PausedStepId { get; set; }
         string WorkflowName { get; set; }
-        string BaseUrl { get; set; }
         RunObject RunObject { get; set; }
     }
 }

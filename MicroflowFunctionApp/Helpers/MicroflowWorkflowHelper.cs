@@ -10,13 +10,7 @@ namespace Microflow.Helpers
     {
         public static MicroflowRun CreateMicroflowRun(HttpRequestMessage req, ref string instanceId, string workflowName)
         {
-            MicroflowRun workflowRun = MicroflowStartupHelper.CreateStartupRun(req.RequestUri.ParseQueryString(), ref instanceId, workflowName);
-            string baseUrl = $"{Environment.GetEnvironmentVariable("BaseUrl")}";
-            workflowRun.BaseUrl = baseUrl.EndsWith('/')
-                ? baseUrl.Remove(baseUrl.Length - 1)
-                : baseUrl;
-
-            return workflowRun;
+            return MicroflowStartupHelper.CreateStartupRun(req.RequestUri.ParseQueryString(), ref instanceId, workflowName);
         }
 
         public static RetryOptions GetRetryOptions(this IHttpCallWithRetries httpCallWithRetries)
@@ -39,7 +33,7 @@ namespace Microflow.Helpers
         public static void CalculateGlobalKey(this HttpCall httpCall)
         {
             // check if it is call to Microflow
-            if (httpCall.CalloutUrl.StartsWith($"{httpCall.BaseUrl}/start/"))
+            if (httpCall.CalloutUrl.StartsWith($"{Environment.GetEnvironmentVariable("BaseUrl")}/start/"))
             {
                 // parse query string
                 NameValueCollection data = new Uri(httpCall.CalloutUrl).ParseQueryString();

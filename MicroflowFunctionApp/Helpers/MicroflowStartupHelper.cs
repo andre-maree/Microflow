@@ -29,7 +29,7 @@ namespace Microflow.Helpers
             };
 
             // create a new run object
-            RunObject runObj = new RunObject() { StepNumber = "-1" };
+            RunObject runObj = new RunObject();
             workflowRun.RunObject = runObj;
 
             // instanceId is set/singleton

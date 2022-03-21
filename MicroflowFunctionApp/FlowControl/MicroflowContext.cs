@@ -227,7 +227,6 @@ namespace Microflow.FlowControl
             HttpCallWithRetries.RunId = MicroflowRun.RunObject.RunId;
             HttpCallWithRetries.MainOrchestrationId = MicroflowRun.OrchestratorInstanceId;
             HttpCallWithRetries.GlobalKey = MicroflowRun.RunObject.GlobalKey;
-            HttpCallWithRetries.BaseUrl = MicroflowRun.BaseUrl;
         }
 
         /// <summary>
