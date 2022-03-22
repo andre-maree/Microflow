@@ -35,15 +35,15 @@ namespace MicroflowConsole
             //var terminate = await client.PostAsync("http://localhost:7071/runtime/webhooks/durabletask/instances/39806875-9c81-4736-81c0-9be562dae71e/terminate?reason=dfgd", null);
             try
             {
-                //var workflow = Tests.CreateTestWorkflow_SimpleSteps();
-                var workflow = Tests.CreateTestWorkflow_10StepsParallel();
+                var workflow = Tests.CreateTestWorkflow_SimpleSteps();
+                //var workflow = Tests.CreateTestWorkflow_10StepsParallel();
                 //var workflow = Tests.CreateTestWorkflow_Complex1();
                 //var workflow = Tests.CreateTestWorkflow_110Steps();
                 //var workflow2 = Tests.CreateTestWorkflow_110Steps();
 
                 Microflow microFlow = new Microflow()
                 {
-                    WorkflowName = "MyProject_ClientX",
+                    WorkflowName = "MyProject_Client2",
                     Steps = workflow,
                     MergeFields = CreateMergeFields(),
                     DefaultRetryOptions = new MicroflowRetryOptions()
@@ -51,24 +51,25 @@ namespace MicroflowConsole
 
                 //// callback by step number
                 //microFlow.Step(2).CallbackAction = "warra";
-                //workflow[5].CallbackAction = "warra2";
-
+                //microFlow.Step(5).CallbackAction = "mycallbackXYZ";
+                //microFlow.Step(5).CallbackTimeoutSeconds = 15;
+                //microFlow.Step(5).StopOnActionFailed = false;
                 //// scale groups:
-                string scalegroup = "myscalegroup";
-                foreach (Step step in microFlow.Steps)
-                {
-                    step.ScaleGroupId = scalegroup;
-                }
+                //string scalegroup = "myscalegroup";
+                //foreach (Step step in microFlow.Steps)
+                //{
+                //    step.ScaleGroupId = scalegroup;
+                //}
 
                 //// set max count
-                var scaleres = await SetMaxInstanceCountForScaleGroup(scalegroup, 5);
+                //var scaleres = await SetMaxInstanceCountForScaleGroup(scalegroup, 5);
                 //// get max count for group
                 //var getScaleGroup = await GetScaleGroupsWithMaxInstanceCounts(scalegroup);
                 //// get max counts for all groups
                 //var getScaleGroup2 = await GetScaleGroupsWithMaxInstanceCounts(null);
 
                 //// set retry policy for step
-                StepsManager.SetRetryForSteps(new Step[] { microFlow.Step(1) });
+                //StepsManager.SetRetryForSteps(5, 5, 3, 120, 5, new Step[] { microFlow.Step(5) });
 
                 //// call microflow from microflow
                 //var project2 = new MicroflowProject()
@@ -78,13 +79,16 @@ namespace MicroflowConsole
                 //    Loop = 1,
                 //    MergeFields = CreateMergeFields()
                 //};
-                //project.Steps[2].CalloutUrl = baseUrl + $"/start/{project2.ProjectName}";
+                
+                //// call other workflow
+                //microFlow.Step(4).CalloutUrl = baseUrl + $"/MicroflowStart/{"MyProject_Client1"}?globalkey={globalKey}";
+                //microFlow.Step(4).AsynchronousPollingEnabled = false;
 
-                var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", microFlow, new JsonSerializerOptions(JsonSerializerDefaults.General));
+                //var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", microFlow, new JsonSerializerOptions(JsonSerializerDefaults.General));
 
                 for (int i = 0; i < 1; i++)
                 {
-                    await Task.Delay(500);
+                    await Task.Delay(200);
 
                     tasks.Add(HttpClient.GetAsync(baseUrl + $"/MicroflowStart/{microFlow.WorkflowName}?globalkey={globalKey}&loop={loop}"));
                     //tasks.Add(HttpClient.GetAsync(baseUrl + $"/MicroflowStart/{project.ProjectName}/33306875-9c81-4736-81c0-9be562dae777"));

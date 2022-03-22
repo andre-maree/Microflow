@@ -6,7 +6,7 @@ using System.Net.Http;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using MicroflowShared;
 
-namespace Microflow.Optional
+namespace MicroflowApi
 {
     public class WorkflowSplitCode
     {

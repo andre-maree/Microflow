@@ -227,9 +227,6 @@ namespace MicroflowShared
 
             batchTasks.Add(stepsTable.SubmitTransactionAsync(batch));
 
-            TableEntity mergeFieldsEnt = new TableEntity($"{workflowRun.WorkflowName}_MicroflowMergeFields", "");
-            await stepsTable.UpsertEntityAsync(mergeFieldsEnt);
-
             await Task.WhenAll(batchTasks);
         }
 

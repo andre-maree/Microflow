@@ -78,10 +78,10 @@ namespace MicroflowModels
     public class MicroflowRetryOptions
     {
         public int DelaySeconds { get; set; } = 5;
-        public int MaxDelaySeconds { get; set; } = 300;
+        public int MaxDelaySeconds { get; set; } = 120;
         public int MaxRetries { get; set; } = 15;
         public double BackoffCoefficient { get; set; } = 5;
-        public int TimeOutSeconds { get; set; } = 30;
+        public int TimeOutSeconds { get; set; } = 300;
     }
 
     #endregion

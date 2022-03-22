@@ -11,9 +11,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using static MicroflowModels.Constants.Constants;
 
-namespace Microflow.Optional
+namespace MicroflowApi
 {
-    public class ScaleGroups
+    public class ScaleGroupsApi
     {
 
         /// <summary>
