@@ -50,7 +50,7 @@ namespace Microflow.HttpOrchestrators
 
                 // TODO: always use https
 
-                log.LogCritical($"Waiting for callback: {Environment.GetEnvironmentVariable("BaseUrl")}{CallNames.CallbackBase}/{httpCall.CallbackAction}/{context.InstanceId}/{httpCall.RowKey}");
+                log.LogCritical($"Waiting for callback: {CallNames.CallbackBase}/{httpCall.CallbackAction}/{context.InstanceId}/{httpCall.RowKey}");
                 // wait for the external event, set the timeout
                 HttpResponseMessage actionResult = await context.WaitForExternalEvent<HttpResponseMessage>(httpCall.CallbackAction,
                                                                                                            TimeSpan.FromSeconds(httpCall.CallbackTimeoutSeconds));

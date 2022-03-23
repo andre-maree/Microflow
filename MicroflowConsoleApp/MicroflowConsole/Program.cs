@@ -43,14 +43,14 @@ namespace MicroflowConsole
 
                 Microflow microFlow = new Microflow()
                 {
-                    WorkflowName = "MyProject_Client2",
+                    WorkflowName = "MyProject_ClientX2",
                     Steps = workflow,
                     MergeFields = CreateMergeFields(),
                     DefaultRetryOptions = new MicroflowRetryOptions()
                 };
 
                 //// callback by step number
-                //microFlow.Step(2).CallbackAction = "warra";
+                microFlow.Step(2).CallbackAction = "warra";
                 //microFlow.Step(5).CallbackAction = "mycallbackXYZ";
                 //microFlow.Step(5).CallbackTimeoutSeconds = 15;
                 //microFlow.Step(5).StopOnActionFailed = false;
@@ -81,10 +81,10 @@ namespace MicroflowConsole
                 //};
                 
                 //// call other workflow
-                //microFlow.Step(4).CalloutUrl = baseUrl + $"/MicroflowStart/{"MyProject_Client1"}?globalkey={globalKey}";
+                //microFlow.Step(4).CalloutUrl = baseUrl + $"/MicroflowStart/{"MyProject_ClientX"}?globalkey={globalKey}";
                 //microFlow.Step(4).AsynchronousPollingEnabled = false;
 
-                //var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", microFlow, new JsonSerializerOptions(JsonSerializerDefaults.General));
+                var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", microFlow, new JsonSerializerOptions(JsonSerializerDefaults.General));
 
                 for (int i = 0; i < 1; i++)
                 {

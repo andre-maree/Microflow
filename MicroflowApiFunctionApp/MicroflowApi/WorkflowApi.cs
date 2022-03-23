@@ -1,4 +1,6 @@
 #if !DEBUG_NOUPSERT && !DEBUG_NOUPSERT_NOFLOWCONTROL && !DEBUG_NOUPSERT_NOFLOWCONTROL && !DEBUG_NOUPSERT_NOFLOWCONTROL_NOSCALEGROUPS
+using System;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using MicroflowShared;
@@ -10,6 +12,32 @@ namespace MicroflowApi
 {
     public static class WorkflowApi
     {
+        /// <summary>
+        /// Delete orchestration history
+        /// </summary>
+        /// <param name="workflowName"></param>
+        [FunctionName("PurgeInstanceHistory")]
+        public static async Task<HttpResponseMessage> PurgeInstanceHistory([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "PurgeInstanceHistory/{workflowName?}")]
+                                                                HttpRequestMessage req,
+                                                                [DurableClient] IDurableOrchestrationClient client,
+                                                                string workflowName)
+        {
+            try
+            {
+                await client.PurgeInstanceHistoryAsync(workflowName);
+
+                return new HttpResponseMessage(HttpStatusCode.OK);
+            }
+            catch (Exception e)
+            {
+                HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.InternalServerError)
+                {
+                    Content = new StringContent(e.Message)
+                };
+
+                return resp;
+            }
+        }
 
         /// <summary>
         /// This must be called at least once before a workflow runs,

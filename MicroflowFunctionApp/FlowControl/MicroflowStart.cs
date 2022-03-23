@@ -10,6 +10,7 @@ using System.Net;
 using MicroflowModels;
 using Azure;
 using static MicroflowModels.Constants.Constants;
+using System.Threading;
 
 namespace Microflow.FlowControl
 {
@@ -20,12 +21,36 @@ namespace Microflow.FlowControl
     /// </summary>
     public static class MicroflowStartFunctions
     {
+
+        [FunctionName("GetStepsCountInProgress")]
+        public static async Task<int> GetStepsCountInProgress([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "GetStepsCountInProgress/{workflowNameStepNumber}")] HttpRequestMessage req,
+                                                             [DurableClient] IDurableEntityClient client,
+                                                             string workflowNameStepNumber)
+        {
+            EntityId countId = new EntityId("StepCount", workflowNameStepNumber);
+            EntityQueryResult res = null;
+
+            using (CancellationTokenSource cts = new CancellationTokenSource())
+            {
+                res = await client.ListEntitiesAsync(new EntityQuery()
+                {
+                    PageSize = 99999999,
+                    //EntityName = ScaleGroupCalls.ScaleGroupMaxConcurrentInstanceCount,
+                    FetchState = true
+                }, cts.Token);
+            }
+            var res2 = await client.CleanEntityStorageAsync(true, true, new System.Threading.CancellationToken());
+            EntityStateResponse<int> result = await client.ReadEntityStateAsync<int>(countId);
+
+            return result.EntityState;
+        }
+
         /// <summary>
         /// This is the entry point, workflow payload is in the http body
         /// </summary>
         /// <param name="instanceId">If an instanceId is passed in, it will run as a singleton, else it will run concurrently with each with a new instanceId</param>
-        [FunctionName("Microflow_HttpStart")]
-        public static async Task<HttpResponseMessage> HttpStart([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "MicroflowStart/{workflowName}/{instanceId?}")]
+        [FunctionName("MicroflowStart")]
+        public static async Task<HttpResponseMessage> MicroflowStart([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "MicroflowStart/{workflowName}/{instanceId?}")]
                                                                 HttpRequestMessage req,
                                                                 [DurableClient] IDurableOrchestrationClient client,
                                                                 string instanceId, string workflowName)
@@ -33,9 +58,9 @@ namespace Microflow.FlowControl
             try
             {
                 MicroflowRun workflowRun = MicroflowWorkflowHelper.CreateMicroflowRun(req, ref instanceId, workflowName);
-
+                
                 // start
-                await client.StartNewAsync("MicroflowStart", instanceId, workflowRun);
+                await client.StartNewAsync("MicroflowStartOrchestration", instanceId, workflowRun);
 
                 return await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromSeconds(1));
 
@@ -65,8 +90,8 @@ namespace Microflow.FlowControl
         /// </summary>
         /// <returns></returns>
         [Deterministic]
-        [FunctionName("MicroflowStart")]
-        public static async Task MicroflowStart([OrchestrationTrigger] IDurableOrchestrationContext context,
+        [FunctionName("MicroflowStartOrchestration")]
+        public static async Task MicroflowStartOrchestration([OrchestrationTrigger] IDurableOrchestrationContext context,
                                        ILogger inLog)
         {
             ILogger log = context.CreateReplaySafeLogger(inLog);

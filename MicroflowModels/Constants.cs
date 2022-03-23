@@ -16,7 +16,8 @@ namespace MicroflowModels.Constants
 
         public static class CallNames
         {
-            public static readonly string CallbackBase = $"{Environment.GetEnvironmentVariable("CallbackBase")}";
+            public static readonly string BaseUrl = $"{Environment.GetEnvironmentVariable("BasePrefix")}{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}/";
+            public static readonly string CallbackBase = $"{BaseUrl}{Environment.GetEnvironmentVariable("CallbackBase")}";
             public const string CanExecuteNow = "CanExecuteNow";
             public const string ExecuteStep = "ExecuteStep";
             public const string GetStep = "GetStep";

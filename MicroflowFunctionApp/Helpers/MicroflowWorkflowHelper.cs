@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.Net.Http;
 using MicroflowModels;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using static MicroflowModels.Constants.Constants;
 
 namespace Microflow.Helpers
 {
@@ -33,7 +34,7 @@ namespace Microflow.Helpers
         public static void CalculateGlobalKey(this HttpCall httpCall)
         {
             // check if it is call to Microflow
-            if (httpCall.CalloutUrl.StartsWith($"{Environment.GetEnvironmentVariable("BaseUrl")}/start/"))
+            if (httpCall.CalloutUrl.StartsWith($"{CallNames.BaseUrl}MicroflowStart/"))
             {
                 // parse query string
                 NameValueCollection data = new Uri(httpCall.CalloutUrl).ParseQueryString();

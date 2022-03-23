@@ -13,6 +13,7 @@ namespace Microflow.Helpers
     {
 #if !DEBUG_NOUPSERT_NOFLOWCONTROL && !DEBUG_NOUPSERT_NOFLOWCONTROL && !DEBUG_NOUPSERT_NOFLOWCONTROL_NOSCALEGROUPS
         /// <summary>
+        /// Get workflow state
         /// Pause, run, or stop the workflow, cmd can be "run", "pause", or "stop"
         /// </summary>
         [FunctionName("WorkflowControl")]

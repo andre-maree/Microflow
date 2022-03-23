@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MicroflowApiFunctionApp", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MicroflowShared", "MicroflowShared\MicroflowShared.csproj", "{C83CCA23-46D9-4819-8C45-ED01154A4121}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MicroserviceEmulator", "MicroserviceEmulator\MicroserviceEmulator.csproj", "{B7848E81-D80E-42BB-B949-E2B01BAD59A4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MicroserviceEmulator", "MicroserviceEmulator\MicroserviceEmulator.csproj", "{B7848E81-D80E-42BB-B949-E2B01BAD59A4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
