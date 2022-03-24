@@ -136,8 +136,8 @@ namespace Microflow.FlowControl
                 // if workflow and global key state is ready, then continue to run step
                 if (projState == MicroflowStates.Ready && globalState == MicroflowStates.Ready)
                 {
-                    // call out to micro-services orchestration
-                    await RunMicroflowStep();
+                    // recurse refresh
+                    await RunMicroflow();
                 }
 
                 // Stopped flow will exit here without calling RunMicroflowStep()
