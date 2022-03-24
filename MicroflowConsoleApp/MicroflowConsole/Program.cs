@@ -15,8 +15,13 @@ namespace MicroflowConsole
         private static string baseUrl = "http://localhost:7071";
         //private static string baseUrl = "https://microflowapp5675763456345345.azurewebsites.net";
 
+
         static async Task Main(string[] args)
         {
+            var allConfigString = CompilerDirectiveMaker.MakeCompilerDirectiveString("UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT");
+
+            var exclusionString = CompilerDirectiveMaker.GetCSharpDirectiveForOptionToExclude(true, "UPSERT", allConfigString);
+
             HttpClient.Timeout = TimeSpan.FromMinutes(30);
 
             await TestWorkflow();
@@ -25,7 +30,7 @@ namespace MicroflowConsole
         /// <summary>
         /// Play area for Microflow, take it for a spin
         /// </summary>
-        private static async Task TestWorkflow()
+            private static async Task TestWorkflow()
         {
             var tasks = new List<Task<HttpResponseMessage>>();
 
@@ -79,7 +84,7 @@ namespace MicroflowConsole
                 //    Loop = 1,
                 //    MergeFields = CreateMergeFields()
                 //};
-                
+
                 //// call other workflow
                 //microFlow.Step(4).CalloutUrl = baseUrl + $"/MicroflowStart/{"MyProject_ClientX"}?globalkey={globalKey}";
                 //microFlow.Step(4).AsynchronousPollingEnabled = false;

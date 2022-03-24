@@ -4,7 +4,19 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Configurations>Debug;Release;DEBUG_NOUPSERT_NOFLOWCONTROL;Debug_NoUpsert_NoFlowControl_NoScaleGroups;DEBUG_NOUPSERT_NOSCALEGROUPS;DEBUG_NOUPSERT;DEBUG_UPSERTINAPI</Configurations>
+    <Configurations>Debug;Release;DEBUG_NOUPSERT_NOFLOWCONTROL;DEBUG_NOUPSERT_NOSCALEGROUPS;DEBUG_NOUPSERT;DEBUG_NOUPSERT_NOFLOWCONTROL_NOSCALEGROUPS;warra;rwarra</Configurations>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DEBUG_NOUPSERT_NOSCALEGROUPS|AnyCPU'">
+    <Optimize>False</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='warra|AnyCPU'">
+    <Optimize>True</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='rwarra|AnyCPU'">
+    <Optimize>True</Optimize>
   </PropertyGroup>
 
   <ItemGroup>

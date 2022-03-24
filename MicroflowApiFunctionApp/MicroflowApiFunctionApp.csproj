@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
-    <Configurations>Debug;Release;DEBUG_NOUPSERT;DEBUG_NOUPSERT_NOFLOWCONTROL;Debug_NoUpsert_NoFlowControl_NoScaleGroups;DEBUG_NOUPSERT_NOSCALEGROUPS</Configurations>
+    <Configurations>Debug;Release;DEBUG_NOUPSERT;DEBUG_NOUPSERT_NOFLOWCONTROL;DEBUG_NOUPSERT_NOSCALEGROUPS;DEBUG_NOUPSERT_NOFLOWCONTROL_NOSCALEGROUPS</Configurations>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.6.1" />

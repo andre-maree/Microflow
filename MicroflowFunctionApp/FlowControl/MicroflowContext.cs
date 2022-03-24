@@ -48,6 +48,7 @@ namespace Microflow.FlowControl
             // get the step data from table storage (from PrepareWorkflow)
             await GetHttpCall();
 
+            #region Region optional: no scale groups
 #if !DEBUG_NOUPSERT_NOFLOWCONTROL_NOSCALEGROUPS && !DEBUG_NOUPSERT_NOSCALEGROUPS
             if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.ScaleGroupId))
             {
@@ -63,6 +64,7 @@ namespace Microflow.FlowControl
                 await MicroflowDurableContext.CallSubOrchestratorAsync(ScaleGroupCalls.CanExecuteNowInScaleGroup, canExeNow);
             }
 #endif
+            #endregion
 
 #if !DEBUG_NOUPSERT_NOFLOWCONTROL_NOSCALEGROUPS && !DEBUG_NOUPSERT_NOFLOWCONTROL
             EntityId projStateId = new EntityId(MicroflowStateKeys.WorkflowState, MicroflowRun.WorkflowName);
@@ -164,7 +166,7 @@ namespace Microflow.FlowControl
                 if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.ScaleGroupId))
                 {
                     EntityId countId = new EntityId(ScaleGroupCalls.CanExecuteNowInScaleGroupCount, HttpCallWithRetries.ScaleGroupId);
-                    
+
                     await MicroflowDurableContext.CallEntityAsync(countId, MicroflowCounterKeys.Subtract);
                 }
 #endif
@@ -316,7 +318,7 @@ namespace Microflow.FlowControl
                         GlobalKey = MicroflowRun.RunObject.GlobalKey
                     };
 
-                        MicroflowTasks.Add(MicroflowDurableContext.CallSubOrchestratorAsync(CallNames.ExecuteStep, MicroflowRun));
+                    MicroflowTasks.Add(MicroflowDurableContext.CallSubOrchestratorAsync(CallNames.ExecuteStep, MicroflowRun));
                 }
 
                 canExecuteTasks.Remove(canExecuteTask);
