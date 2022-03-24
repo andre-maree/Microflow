@@ -12,13 +12,13 @@ namespace Microflow.FlowControl
     public static class MicroflowStep
     {
         /// <summary>
-        /// Called from Microflow.ExecuteStep to get the current step table config
+        /// Get the current step table config
         /// </summary>
         [FunctionName(CallNames.GetStep)]
         public static async Task<IHttpCallWithRetries> GetStep([ActivityTrigger] MicroflowRun workflowRun) => await workflowRun.GetStep();
 
         /// <summary>
-        /// Recursive step execution and sub-step can execute now calculations
+        /// Recursive step and sub-step execution
         /// </summary>
         [Deterministic]
         [FunctionName(CallNames.ExecuteStep)]

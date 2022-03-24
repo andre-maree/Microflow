@@ -78,6 +78,10 @@ namespace Microflow.FlowControl
                 // call out to micro-services orchestration
                 await RunMicroflowStep();
             }
+            else if (projState == MicroflowStates.Stopped || globalState == MicroflowStates.Stopped)
+            {
+                // do nothing and exit
+            }
             // if workflow or global key state is paused, then pause this step, and wait and poll states by timer
             else if (projState == MicroflowStates.Paused || globalState == MicroflowStates.Paused)
             {
@@ -111,9 +115,17 @@ namespace Microflow.FlowControl
                             }
                         }
                     }
-                    catch (TaskCanceledException)
+                    catch (TaskCanceledException toex)
                     {
-                        Logger.LogCritical("========================TaskCanceledException==========================");
+                        MicroflowHttpResponse.Message = toex.Message;
+                        MicroflowHttpResponse.HttpResponseStatusCode = -408;
+                        LogStepFail();
+                    }
+                    catch (Exception ex)
+                    {
+                        MicroflowHttpResponse.Message = ex.Message;
+                        MicroflowHttpResponse.HttpResponseStatusCode = -500;
+                        LogStepFail();
                     }
                     finally
                     {
@@ -127,6 +139,8 @@ namespace Microflow.FlowControl
                     // call out to micro-services orchestration
                     await RunMicroflowStep();
                 }
+
+                // Stopped flow will exit here without calling RunMicroflowStep()
             }
 #else
             await RunMicroflowStep();

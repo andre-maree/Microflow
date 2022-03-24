@@ -35,10 +35,10 @@ namespace MicroflowConsole
             //var terminate = await client.PostAsync("http://localhost:7071/runtime/webhooks/durabletask/instances/39806875-9c81-4736-81c0-9be562dae71e/terminate?reason=dfgd", null);
             try
             {
-                var workflow = Tests.CreateTestWorkflow_SimpleSteps();
+                //var workflow = Tests.CreateTestWorkflow_SimpleSteps();
                 //var workflow = Tests.CreateTestWorkflow_10StepsParallel();
                 //var workflow = Tests.CreateTestWorkflow_Complex1();
-                //var workflow = Tests.CreateTestWorkflow_110Steps();
+                var workflow = Tests.CreateTestWorkflow_110Steps();
                 //var workflow2 = Tests.CreateTestWorkflow_110Steps();
 
                 Microflow microFlow = new Microflow()
@@ -50,7 +50,7 @@ namespace MicroflowConsole
                 };
 
                 //// callback by step number
-                microFlow.Step(2).CallbackAction = "warra";
+                //microFlow.Step(2).CallbackAction = "warra";
                 //microFlow.Step(5).CallbackAction = "mycallbackXYZ";
                 //microFlow.Step(5).CallbackTimeoutSeconds = 15;
                 //microFlow.Step(5).StopOnActionFailed = false;

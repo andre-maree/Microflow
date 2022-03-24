@@ -63,13 +63,13 @@ namespace MicroflowConsole
 
             steps[1].AddSubSteps(steps[2], steps[3], steps[4]);
 
-            steps[4].AddSubSteps(steps[5], steps[6]);
+            steps[2].AddSubSteps(steps[5], steps[6]);
 
             steps[3].AddSubSteps(steps[6], steps[7]);
 
-            steps[4].AddSubSteps(steps[7], steps[8]);
+            steps[4].AddSubSteps(steps[6], steps[8]);
 
-            steps[5].AddSubSteps(steps[6], steps[3]);
+            steps[5].AddSubSteps(steps[3], steps[6]);
 
             steps[6].AddSubSteps(steps[8]);
 
@@ -86,7 +86,7 @@ namespace MicroflowConsole
         {
             List<Step> steps = ProjectManager.CreateSteps(110, 1, "{default_post_url}");
 
-            steps[0].AddSubStepRange(steps, 2, 11);
+            steps[1].AddSubStepRange(steps, 3, 11);
             steps[11].AddSubStepRange(steps, 13, 22);
 
             steps[22].AddSubStepRange(steps, 24, 33);
@@ -103,6 +103,7 @@ namespace MicroflowConsole
             //}
 
             //steps[0].CallbackAction = "approve";
+            steps.Remove(steps[0]);
 
             return steps;
         }
