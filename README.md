@@ -53,7 +53,7 @@ Future enhancements:
 - gRPC communication?
 
 ## Test Examples
-The code for these can be found in the console app\Tests.cs. There is also a SimpleSteps test that consists of 1 parent with 2 children and the 2 children have a common child step (See JSON Workflow Example below). This is the diagram for the 2 more complex test workflows:
+The code for these can be found in the console app\Tests.cs. There is also a SimpleSteps test that consists of 1 parent with 2 children and the 2 children have a common child step. This is the diagram for the 2 more complex test workflows:
 
 ![2 Test cases](https://github.com/andre-maree/Microflow/blob/master/Images/Tests.png)
 
