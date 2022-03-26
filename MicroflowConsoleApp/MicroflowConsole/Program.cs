@@ -55,7 +55,7 @@ namespace MicroflowConsole
                 };
 
                 //// callback by step number
-                //microFlow.Step(2).CallbackAction = "warra";
+                //microFlow.Step(1).CallbackAction = "warra";
                 //microFlow.Step(5).CallbackAction = "mycallbackXYZ";
                 //microFlow.Step(5).CallbackTimeoutSeconds = 15;
                 //microFlow.Step(5).StopOnActionFailed = false;
@@ -91,7 +91,7 @@ namespace MicroflowConsole
 
                 var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", microFlow, new JsonSerializerOptions(JsonSerializerDefaults.General));
 
-                for (int i = 0; i < 100; i++)
+                for (int i = 0; i < 1; i++)
                 {
                     //await Task.Delay(200);
 
