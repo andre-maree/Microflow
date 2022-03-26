@@ -50,6 +50,7 @@ namespace Microflow.FlowControl
 
             #region Region optional: no scale groups
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS && !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_SCALEGROUPS && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_SCALEGROUPS && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT
+            ////////////////////////////////////////
             if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.ScaleGroupId))
             {
                 EntityId scaleId = new EntityId(ScaleGroupCalls.ScaleGroupMaxConcurrentInstanceCount, HttpCallWithRetries.ScaleGroupId);
@@ -63,10 +64,10 @@ namespace Microflow.FlowControl
 
                 await MicroflowDurableContext.CallSubOrchestratorAsync(ScaleGroupCalls.CanExecuteNowInScaleGroup, canExeNow);
             }
+            ////////////////////////////////////////
 #endif
             #endregion
 
-#if !DEBUG_NOUPSERT_NOFLOWCONTROL_NOSCALEGROUPS && !DEBUG_NOUPSERT_NOFLOWCONTROL
             EntityId projStateId = new EntityId(MicroflowStateKeys.WorkflowState, MicroflowRun.WorkflowName);
             EntityId globalStateId = new EntityId(MicroflowStateKeys.GlobalState, MicroflowRun.RunObject.GlobalKey);
             Task<int> projStateTask = MicroflowDurableContext.CallEntityAsync<int>(projStateId, MicroflowControlKeys.Read);
@@ -144,9 +145,6 @@ namespace Microflow.FlowControl
 
                 // Stopped flow will exit here without calling RunMicroflowStep()
             }
-#else
-            await RunMicroflowStep();
-#endif
         }
 
         /// <summary>
