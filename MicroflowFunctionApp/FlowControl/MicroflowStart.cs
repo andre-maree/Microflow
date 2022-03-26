@@ -21,30 +21,6 @@ namespace Microflow.FlowControl
     /// </summary>
     public static class MicroflowStartFunctions
     {
-
-        [FunctionName("GetStepsCountInProgress")]
-        public static async Task<int> GetStepsCountInProgress([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "GetStepsCountInProgress/{workflowNameStepNumber}")] HttpRequestMessage req,
-                                                             [DurableClient] IDurableEntityClient client,
-                                                             string workflowNameStepNumber)
-        {
-            EntityId countId = new EntityId("StepCount", workflowNameStepNumber);
-            EntityQueryResult res = null;
-
-            using (CancellationTokenSource cts = new CancellationTokenSource())
-            {
-                res = await client.ListEntitiesAsync(new EntityQuery()
-                {
-                    PageSize = 99999999,
-                    //EntityName = ScaleGroupCalls.ScaleGroupMaxConcurrentInstanceCount,
-                    FetchState = true
-                }, cts.Token);
-            }
-            var res2 = await client.CleanEntityStorageAsync(true, true, new System.Threading.CancellationToken());
-            EntityStateResponse<int> result = await client.ReadEntityStateAsync<int>(countId);
-
-            return result.EntityState;
-        }
-
         /// <summary>
         /// This is the entry point, workflow payload is in the http body
         /// </summary>

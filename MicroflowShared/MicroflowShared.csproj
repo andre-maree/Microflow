@@ -1,19 +1,126 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <Configurations>Debug;Release;DEBUG_NOUPSERT_NOFLOWCONTROL;Debug_NoUpsert_NoFlowControl_NoScaleGroups;DEBUG_NOUPSERT_NOSCALEGROUPS;DEBUG_NOUPSERT;DEBUG_UPSERTINAPI</Configurations>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Azure.Data.Tables" Version="12.5.0" />
-    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.6.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\MicroflowModels\MicroflowModels.csproj" />
-  </ItemGroup>
-
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<Configurations>DEBUG;DEBUG_NO_FLOWCONTROL;DEBUG_NO_FLOWCONTROL_SCALEGROUPS;DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT;DEBUG_NO_FLOWCONTROL_STEPCOUNT;DEBUG_NO_SCALEGROUPS;DEBUG_NO_SCALEGROUPS_STEPCOUNT;DEBUG_NO_STEPCOUNT;DEBUG_NO_UPSERT;DEBUG_NO_UPSERT_FLOWCONTROL;DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS;DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT;DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT;DEBUG_NO_UPSERT_SCALEGROUPS;DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT;DEBUG_NO_UPSERT_STEPCOUNT;RELEASE;RELEASE_NO_FLOWCONTROL;RELEASE_NO_FLOWCONTROL_SCALEGROUPS;RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT;RELEASE_NO_FLOWCONTROL_STEPCOUNT;RELEASE_NO_SCALEGROUPS;RELEASE_NO_SCALEGROUPS_STEPCOUNT;RELEASE_NO_STEPCOUNT;RELEASE_NO_UPSERT;RELEASE_NO_UPSERT_FLOWCONTROL;RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS;RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT;RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT;RELEASE_NO_UPSERT_SCALEGROUPS;RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT;RELEASE_NO_UPSERT_STEPCOUNT</Configurations>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DEBUG_NO_FLOWCONTROL|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DEBUG_NO_FLOWCONTROL_SCALEGROUPS|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DEBUG_NO_FLOWCONTROL_STEPCOUNT|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DEBUG_NO_SCALEGROUPS|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DEBUG_NO_SCALEGROUPS_STEPCOUNT|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DEBUG_NO_STEPCOUNT|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DEBUG_NO_UPSERT|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DEBUG_NO_UPSERT_FLOWCONTROL|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DEBUG_NO_UPSERT_SCALEGROUPS|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DEBUG_NO_UPSERT_STEPCOUNT|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RELEASE|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RELEASE_NO_FLOWCONTROL|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+		<Optimize>True</Optimize>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RELEASE_NO_FLOWCONTROL_SCALEGROUPS|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+		<Optimize>True</Optimize>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+		<Optimize>True</Optimize>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RELEASE_NO_FLOWCONTROL_STEPCOUNT|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+		<Optimize>True</Optimize>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RELEASE_NO_SCALEGROUPS|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+		<Optimize>True</Optimize>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RELEASE_NO_SCALEGROUPS_STEPCOUNT|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+		<Optimize>True</Optimize>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RELEASE_NO_STEPCOUNT|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+		<Optimize>True</Optimize>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RELEASE_NO_UPSERT|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+		<Optimize>True</Optimize>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RELEASE_NO_UPSERT_FLOWCONTROL|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+		<Optimize>True</Optimize>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+		<Optimize>True</Optimize>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+		<Optimize>True</Optimize>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+		<Optimize>True</Optimize>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RELEASE_NO_UPSERT_SCALEGROUPS|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+		<Optimize>True</Optimize>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+		<Optimize>True</Optimize>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RELEASE_NO_UPSERT_STEPCOUNT|AnyCPU'">
+		<DefineConstants>$(DefineConstants)TRACE</DefineConstants>
+		<Optimize>True</Optimize>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Azure.Data.Tables" Version="12.5.0" />
+		<PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.6.1" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\MicroflowModels\MicroflowModels.csproj" />
+	</ItemGroup>
 </Project>
