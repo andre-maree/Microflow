@@ -3,6 +3,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microflow.Models;
+using MicroflowModels;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using static MicroflowModels.Constants.Constants;
@@ -65,20 +66,27 @@ namespace Microflow.FlowControl
                                 return;
                             }
                         }
-
-                        //if (count % 5 == 0)
-                        //{
-                        //    scaleGroupMaxCount = await context.CallEntityAsync<int>(scaleGroupCountId, MicroflowControlKeys.Read);
-                        //}
                     }
                 }
                 catch (TaskCanceledException tex)
                 {
-                    throw tex;
+                    // log to table error
+                    LogErrorEntity errorEntity = new LogErrorEntity(canExecuteNowObject.WorkflowName,
+                                                                    Convert.ToInt32(canExecuteNowObject.StepNumber),
+                                                                    tex.Message,
+                                                                    canExecuteNowObject.RunId);
+
+                    await context.CallActivityAsync(CallNames.LogError, errorEntity);
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    throw;
+                    // log to table error
+                    LogErrorEntity errorEntity = new LogErrorEntity(canExecuteNowObject.WorkflowName,
+                                                                    Convert.ToInt32(canExecuteNowObject.StepNumber),
+                                                                    e.Message,
+                                                                    canExecuteNowObject.RunId);
+
+                    await context.CallActivityAsync(CallNames.LogError, errorEntity);
                 }
                 finally
                 {
