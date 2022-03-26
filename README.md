@@ -41,9 +41,9 @@ Microflow use cases:
 - avoid hard coded workflows, focus your coding on the micro-service actions and less on orchestration code
 - easily harness Durable Function functionality that might require a learning curve for developers
 - Microflow adds new functionality over Durable Functions, like:
-      * key based scale groups for concurrent instance count limiting
-      * real-time in-progress step counts
-      * workflow start, pause and stop
+      - key based scale groups for concurrent instance count limiting
+      - real-time in-progress step counts
+      - workflow start, pause and stop
 - Microflow can be used as a state-of-the-art back end for your workflow designer, the workflow is just a simple json definition
 - use the Microflow SDK to build code-based workflows outside of Microflow, and then save, start, and modify workflows with Api calls
 - Microflow is open-source so feel free to modify Microflow to your needs
