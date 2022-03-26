@@ -61,7 +61,7 @@ namespace MicroflowSDK
             return combinations;
         }
 
-        public static string GetCSharpDirectiveForOptionToExclude(bool IsDebug, string key, string config)
+        public static string GetCompilerDirectiveForOptionToExclude(bool IsDebug, string key, string config)
         {
             var li = config.Split(';').ToList();
             

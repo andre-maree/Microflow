@@ -20,7 +20,7 @@ namespace MicroflowConsole
         {
             var allConfigString = CompilerDirectiveMaker.MakeCompilerDirectiveString("UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT");
 
-            var exclusionString = CompilerDirectiveMaker.GetCSharpDirectiveForOptionToExclude(true, "UPSERT", allConfigString);
+            var exclusionString = CompilerDirectiveMaker.GetCompilerDirectiveForOptionToExclude(true, "SCALEGROUPS", allConfigString);
 
             HttpClient.Timeout = TimeSpan.FromMinutes(30);
 
