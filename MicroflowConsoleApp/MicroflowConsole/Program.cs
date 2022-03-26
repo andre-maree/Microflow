@@ -55,6 +55,12 @@ namespace MicroflowConsole
                 };
 
                 //// callback by step number
+                //microFlow.Step(2).CallbackAction = "warra";
+                //microFlow.Step(3).CallbackAction = "warra";
+                //microFlow.Step(4).CallbackAction = "warra";
+                //microFlow.Step(5).CallbackAction = "warra";
+                //microFlow.Step(6).CallbackAction = "warra";
+                //microFlow.Step(7).CallbackAction = "warra";
                 //microFlow.Step(1).CallbackAction = "warra";
                 //microFlow.Step(5).CallbackAction = "mycallbackXYZ";
                 //microFlow.Step(5).CallbackTimeoutSeconds = 15;

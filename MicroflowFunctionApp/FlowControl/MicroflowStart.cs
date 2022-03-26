@@ -77,7 +77,7 @@ namespace Microflow.FlowControl
 
             try
             {
-                var resp = context.CheckAndWaitForReadyToRun(workflowRun.WorkflowName, log);
+                var resp = context.MicroflowCheckAndWaitForReadyToRun(workflowRun.WorkflowName);
 
                 if (!await resp)
                 {

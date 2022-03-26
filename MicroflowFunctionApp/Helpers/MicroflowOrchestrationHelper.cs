@@ -1,4 +1,5 @@
 ﻿using Microflow.MicroflowTableModels;
+using Microflow.Models;
 using MicroflowModels;
 using MicroflowModels.Helpers;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
@@ -94,9 +95,8 @@ namespace Microflow.Helpers
         /// Check if workflow ready is true, else wait with a timer (this is a durable monitor), called from start
         /// </summary>
         [Deterministic]
-        public static async Task<bool> CheckAndWaitForReadyToRun(this IDurableOrchestrationContext context,
+        public static async Task<bool> MicroflowCheckAndWaitForReadyToRun(this IDurableOrchestrationContext context,
                                                                  string workflowName,
-                                                                 ILogger log,
                                                                  string globalKey = null)
         {
             EntityId projStateId = new EntityId(MicroflowStateKeys.WorkflowState, workflowName);
@@ -160,9 +160,21 @@ namespace Microflow.Helpers
                             }
                         }
                     }
-                    catch (TaskCanceledException)
+                    catch (TimeoutException)
                     {
-                        log.LogCritical("========================TaskCanceledException==========================");
+                        LogErrorEntity errorEntity = new LogErrorEntity(workflowName, -1,
+                                                                "MicroflowCheckAndWaitForReadyToRun timed out before it could find s ready state",
+                                                                globalKey);
+
+                        await context.CallActivityAsync(CallNames.LogError, errorEntity);
+                    }
+                    catch (Exception e)
+                    {
+                        LogErrorEntity errorEntity = new LogErrorEntity(workflowName, -1,
+                                                                "MicroflowCheckAndWaitForReadyToRun error: " + e.Message,
+                                                                globalKey);
+
+                        await context.CallActivityAsync(CallNames.LogError, errorEntity);
                     }
                     finally
                     {
