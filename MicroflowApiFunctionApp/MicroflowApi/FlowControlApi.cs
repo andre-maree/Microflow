@@ -17,7 +17,7 @@ namespace MicroflowApi
         /// </summary>
         [FunctionName("WorkflowControl")]
         public static async Task<HttpResponseMessage> WorkflowControl([HttpTrigger(AuthorizationLevel.Anonymous, "get",
-                                                                  Route = "microflowApi/" + MicroflowVersion + "/WorkflowControl/{cmd}/{workflowName}")] HttpRequestMessage req,
+                                                                  Route = MicroflowVersion + "/WorkflowControl/{cmd}/{workflowName}")] HttpRequestMessage req,
                                                                   [DurableClient] IDurableEntityClient client, string workflowName, string cmd)
         {
             if (cmd.Equals(MicroflowControlKeys.Read, StringComparison.OrdinalIgnoreCase))
@@ -41,7 +41,7 @@ namespace MicroflowApi
         /// </summary>
         [FunctionName("GlobalControl")]
         public static async Task<HttpResponseMessage> GlobalControl([HttpTrigger(AuthorizationLevel.Anonymous, "get",
-                                                                  Route = "microflowApi/" + MicroflowVersion + "/GlobalControl/{cmd}/{globalKey}")] HttpRequestMessage req,
+                                                                  Route = MicroflowVersion + "/GlobalControl/{cmd}/{globalKey}")] HttpRequestMessage req,
                                                                   [DurableClient] IDurableEntityClient client, string globalKey, string cmd)
         {
             if (cmd.Equals(MicroflowControlKeys.Read, StringComparison.OrdinalIgnoreCase))

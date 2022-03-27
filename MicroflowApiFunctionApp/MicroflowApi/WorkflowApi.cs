@@ -17,7 +17,7 @@ namespace MicroflowApi
         /// </summary>
         /// <param name="workflowName"></param>
         [FunctionName("PurgeInstanceHistory")]
-        public static async Task<HttpResponseMessage> PurgeInstanceHistory([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "microflowApi/" + MicroflowModels.Constants.MicroflowVersion + "//PurgeInstanceHistory/{workflowName?}")]
+        public static async Task<HttpResponseMessage> PurgeInstanceHistory([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = MicroflowModels.Constants.MicroflowVersion + "/PurgeInstanceHistory/{workflowName?}")]
                                                                 HttpRequestMessage req,
                                                                 [DurableClient] IDurableOrchestrationClient client,
                                                                 string workflowName)
@@ -46,7 +46,7 @@ namespace MicroflowApi
         /// </summary>
         [FunctionName("UpsertWorkflow")]
         public static async Task<HttpResponseMessage> UpsertWorkflow([HttpTrigger(AuthorizationLevel.Anonymous, "post",
-                                                                  Route = "microflowApi/" + MicroflowModels.Constants.MicroflowVersion + "/UpsertWorkflow/{globalKey?}")] HttpRequestMessage req,
+                                                                  Route = MicroflowModels.Constants.MicroflowVersion + "/UpsertWorkflow/{globalKey?}")] HttpRequestMessage req,
                                                                   [DurableClient] IDurableEntityClient client, string globalKey)
         {
             return await client.UpsertWorkflow(await req.Content.ReadAsStringAsync(), globalKey);
@@ -57,7 +57,7 @@ namespace MicroflowApi
         /// Returns the workflow Json that was saved with UpsertWorkflow
         /// </summary>
         [FunctionName("GetWorkflow")]
-        public static async Task<string> GetWorkflowJson([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "microflowApi/" + MicroflowModels.Constants.MicroflowVersion + "/GetWorkflow/{workflowName}")] HttpRequestMessage req,
+        public static async Task<string> GetWorkflowJson([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = MicroflowModels.Constants.MicroflowVersion + "/GetWorkflow/{workflowName}")] HttpRequestMessage req,
                                                            string workflowName)
         {
             return await WorkflowHelper.GetWorkflowJson(workflowName);
