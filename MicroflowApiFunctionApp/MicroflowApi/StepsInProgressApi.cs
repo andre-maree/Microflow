@@ -14,7 +14,7 @@ namespace MicroflowApi
         //[OpenApiParameter(name: "name", In = ParameterLocation.Query, Required = true, Type = typeof(string), Description = "The **Name** parameter")]
         //[OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/plain", bodyType: typeof(string), Description = "The OK response")]
         [FunctionName("GetStepsCountInProgress")]
-        public static async Task<int> GetStepsCountInProgress([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = MicroflowModels.Constants.MicroflowVersion + "/GetStepsCountInProgress/{workflowNameStepNumber}")] HttpRequestMessage req,
+        public static async Task<int> GetStepsCountInProgress([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "GetStepsCountInProgress/{workflowNameStepNumber}")] HttpRequestMessage req,
                                                              [DurableClient] IDurableEntityClient client,
                                                              string workflowNameStepNumber)
         {

@@ -14,13 +14,13 @@ namespace MicroflowModels
         }
 #endif
 
-        public const string MicroflowVersion = "v1";
+        public const string MicroflowBase = "microflow/v1";
 
         public static class CallNames
         {
-            public static readonly string MicroflowVersion = $"{Environment.GetEnvironmentVariable("MicroflowVersion")}";
-            public static readonly string BaseUrl = $"{Environment.GetEnvironmentVariable("BasePrefix")}{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}{Environment.GetEnvironmentVariable("MicroflowVersion")}";
-            public static readonly string CallbackUrl = $"{BaseUrl}callback";
+            //public static readonly string MicroflowVersion = $"{Environment.GetEnvironmentVariable("MicroflowVersion")}";
+            public static readonly string BaseUrl = $"{Environment.GetEnvironmentVariable("BasePrefix")}{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}/{MicroflowBase}";
+            public static readonly string CallbackUrl = $"{BaseUrl}/callback";
             public const string CanExecuteNow = "CanExecuteNow";
             public const string ExecuteStep = "ExecuteStep";
             public const string GetStep = "GetStep";

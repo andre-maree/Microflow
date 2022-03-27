@@ -5,7 +5,7 @@
       "logReplayEvents": "false"
     },
     "http": {
-      "routePrefix": "microflowApi"
+      "routePrefix": "microflow/v1"
     }
   },
   "logging": {

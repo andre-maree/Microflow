@@ -4,7 +4,6 @@
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "MicroflowStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet",
-    "BasePrefix": "http://",
-    "MicroflowVersion": "/microflow/v1/"
+    "BasePrefix": "http://"
   }
 }

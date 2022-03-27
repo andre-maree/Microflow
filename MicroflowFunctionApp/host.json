@@ -10,13 +10,13 @@
   },
   "logging": {
     "logLevel": {
-      "DurableTask.AzureStorage": "Error",
-      "DurableTask.Core": "Error"
+      "DurableTask.AzureStorage": "None",
+      "DurableTask.Core": "None"
     },
     "applicationInsights": {
       "samplingExcludedTypes": "Request",
       "samplingSettings": {
-        "isEnabled": true
+        "isEnabled": false
       }
     }
   }
