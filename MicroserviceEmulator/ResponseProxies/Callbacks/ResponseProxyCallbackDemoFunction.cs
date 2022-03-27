@@ -4,7 +4,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using System.Net.Http;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using static MicroflowModels.Constants.Constants;
+using static MicroflowModels.Constants;
 
 namespace Microflow.ResponseProxies
 {

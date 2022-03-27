@@ -6,7 +6,7 @@ using System;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
-using static MicroflowModels.Constants.Constants;
+using static MicroflowModels.Constants;
 
 namespace Microflow.Helpers
 {
@@ -41,7 +41,7 @@ namespace Microflow.Helpers
 
             string callback = string.IsNullOrWhiteSpace(httpCall.CallbackAction)
                     ? ""
-                    : $"{CallNames.CallbackBase}/{httpCall.CallbackAction}/{instanceId}/{httpCall.RowKey}";
+                    : $"{CallNames.CallbackUrl}/{httpCall.CallbackAction}/{instanceId}/{httpCall.RowKey}";
 
             httpCall.CalculateGlobalKey();
 

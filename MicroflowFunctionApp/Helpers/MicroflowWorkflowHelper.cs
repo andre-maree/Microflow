@@ -3,7 +3,7 @@ using System.Collections.Specialized;
 using System.Net.Http;
 using MicroflowModels;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using static MicroflowModels.Constants.Constants;
+using static MicroflowModels.Constants;
 
 namespace Microflow.Helpers
 {

@@ -8,7 +8,7 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using static MicroflowModels.Constants.Constants;
+using static MicroflowModels.Constants;
 
 namespace MicroflowShared
 {
@@ -29,7 +29,7 @@ namespace MicroflowShared
             //    // create a workflow run
             MicroflowRun workflowRun = new MicroflowRun()
             {
-                WorkflowName = workflow.WorkflowName
+                WorkflowName = $"{workflow.WorkflowName}@{workflow.WorkflowVersion}"
             };
 
             EntityId projStateId = new EntityId(MicroflowStateKeys.WorkflowState, workflowRun.WorkflowName);

@@ -9,7 +9,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using static MicroflowModels.Constants.Constants;
+using static MicroflowModels.Constants;
 
 namespace MicroflowApi
 {
@@ -19,8 +19,8 @@ namespace MicroflowApi
         /// Get/set max instance count for scale group
         /// </summary>
         [FunctionName("ScaleGroup")]
-        public static async Task<HttpResponseMessage> SetScaleGroup([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-                                                                  Route = "ScaleGroup/{scaleGroupId?}/{maxInstanceCount?}")] HttpRequestMessage req,
+        public static async Task<HttpResponseMessage> ScaleGroup([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
+                                                                  Route = "microflowApi/" + MicroflowVersion + "/ScaleGroup/{scaleGroupId?}/{maxInstanceCount?}")] HttpRequestMessage req,
                                                                   [DurableClient] IDurableEntityClient client, string scaleGroupId, int? maxInstanceCount)
         {
             if (req.Method.Equals(HttpMethod.Get))
