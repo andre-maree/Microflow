@@ -16,7 +16,7 @@ namespace Microflow.Callback
         /// </summary>
         [FunctionName("Callback")]
         public static async Task<HttpResponseMessage> RaiseEvent(
-        [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = "microflow/" + MicroflowModels.Constants.MicroflowVersion + "/{callback}/{action}/{orchestratorId}/{stepId:int?}")] HttpRequestMessage req,
+        [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = "microflow/" + MicroflowModels.Constants.MicroflowVersion + "/callback/{action}/{orchestratorId}/{stepId:int?}")] HttpRequestMessage req,
         [DurableClient] IDurableOrchestrationClient client, int stepId, string action, string orchestratorId)
         {
             HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);

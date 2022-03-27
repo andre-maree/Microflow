@@ -137,13 +137,14 @@ namespace Microflow.FlowControl
                 }
 
                 // if workflow and global key state is ready, then continue to run step
-                if (projState == MicroflowStates.Ready && globalState == MicroflowStates.Ready)
+                if (projState == MicroflowStates.Stopped || globalState == MicroflowStates.Stopped)
                 {
-                    // recurse refresh
-                    await RunMicroflow();
+                    // Stopped flow will exit here without calling RunMicroflowStep()
+                    return;
                 }
-
-                // Stopped flow will exit here without calling RunMicroflowStep()
+                
+                // recurse refresh
+                await RunMicroflow();
             }
         }
 
