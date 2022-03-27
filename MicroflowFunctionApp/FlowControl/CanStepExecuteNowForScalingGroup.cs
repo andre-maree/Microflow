@@ -38,12 +38,11 @@ namespace Microflow.FlowControl
                 }
             }
 
-            // 7 days in paused state till exit
-            DateTime endDate = context.CurrentUtcDateTime.AddDays(7);
+            DateTime endDate = context.CurrentUtcDateTime.AddHours(PollingConfig.PollingMaxHours);
             // start interval seconds
-            int count = 5; // seconds
+            int count = PollingConfig.PollingIntervalSeconds;
             // max interval seconds
-            const int max = 15; // seconds
+            int max = PollingConfig.PollingIntervalMaxSeconds;
 
             using (CancellationTokenSource cts = new CancellationTokenSource())
             {

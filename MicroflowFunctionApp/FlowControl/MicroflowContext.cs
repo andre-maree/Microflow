@@ -88,12 +88,12 @@ namespace Microflow.FlowControl
             // if workflow or global key state is paused, then pause this step, and wait and poll states by timer
             else if (projState == MicroflowStates.Paused || globalState == MicroflowStates.Paused)
             {
-                // 7 days in paused state till exit
-                DateTime endDate = MicroflowDurableContext.CurrentUtcDateTime.AddDays(7);
+
+                DateTime endDate = MicroflowDurableContext.CurrentUtcDateTime.AddHours(PollingConfig.PollingMaxHours);
                 // start interval seconds
-                int count = 15;
+                int count = PollingConfig.PollingIntervalSeconds;
                 // max interval seconds
-                const int max = 300; // 5 mins
+                int max = PollingConfig.PollingIntervalMaxSeconds;
 
                 using (CancellationTokenSource cts = new CancellationTokenSource())
                 {

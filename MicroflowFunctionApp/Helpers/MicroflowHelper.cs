@@ -18,12 +18,14 @@ namespace Microflow.Helpers
         /// </summary>
         [FunctionName("WorkflowControl")]
         public static async Task<HttpResponseMessage> WorkflowControl([HttpTrigger(AuthorizationLevel.Anonymous, "get",
-                                                                  Route = MicroflowBase + "/WorkflowControl/{cmd}/{workflowName}")] HttpRequestMessage req,
-                                                                  [DurableClient] IDurableEntityClient client, string workflowName, string cmd)
+                                                                  Route = MicroflowBase + "/WorkflowControl/{cmd}/{workflowName}/{workflowVersion}")] HttpRequestMessage req,
+                                                                  [DurableClient] IDurableEntityClient client, string workflowName, string cmd, string workflowVersion)
         {
+            string key = $"{workflowName}@{workflowVersion}";
+
             if (cmd.Equals(MicroflowControlKeys.Read, StringComparison.OrdinalIgnoreCase))
             {
-                EntityId projStateId = new EntityId(MicroflowStateKeys.WorkflowState, workflowName);
+                EntityId projStateId = new EntityId(MicroflowStateKeys.WorkflowState, key);
                 EntityStateResponse<string> stateRes = await client.ReadEntityStateAsync<string>(projStateId);
 
                 HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK)
@@ -34,7 +36,7 @@ namespace Microflow.Helpers
                 return resp;
             }
 
-            return await client.SetRunState(nameof(WorkflowState), workflowName, cmd);
+            return await client.SetRunState(nameof(WorkflowState), key, cmd);
         }
 
         /// <summary>

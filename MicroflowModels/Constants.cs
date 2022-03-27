@@ -13,12 +13,17 @@ namespace MicroflowModels
             public const string ScaleGroupMaxConcurrentInstanceCount = "ScaleGroupMaxConcurrentInstanceCount";
         }
 #endif
+        public static class PollingConfig
+        {
+            public static readonly long PollingMaxHours = Convert.ToInt64(Environment.GetEnvironmentVariable("PollingMaxHours"));
+            public static readonly int PollingIntervalMaxSeconds = Convert.ToInt32(Environment.GetEnvironmentVariable("PollingIntervalMaxSeconds"));
+            public static readonly int PollingIntervalSeconds = Convert.ToInt32(Environment.GetEnvironmentVariable("PollingIntervalSeconds"));
+        }
 
         public const string MicroflowBase = "microflow/v1";
 
         public static class CallNames
         {
-            //public static readonly string MicroflowVersion = $"{Environment.GetEnvironmentVariable("MicroflowVersion")}";
             public static readonly string BaseUrl = $"{Environment.GetEnvironmentVariable("BasePrefix")}{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}/{MicroflowBase}";
             public static readonly string CallbackUrl = $"{BaseUrl}/callback";
             public const string CanExecuteNow = "CanExecuteNow";
