@@ -5,7 +5,6 @@
     "MicroflowStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet",
     "BasePrefix": "http://",
-    "Callback": "callback",
     "MicroflowVersion": "/microflow/v1/"
   }
 }

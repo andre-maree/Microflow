@@ -56,7 +56,7 @@ namespace MicroflowConsole
                 };
 
                 //// callback by step number
-                //microFlow.Step(2).CallbackAction = "warra";
+                microFlow.Step(2).CallbackAction = "warra";
                 //microFlow.Step(3).CallbackAction = "warra";
                 //microFlow.Step(4).CallbackAction = "warra";
                 //microFlow.Step(5).CallbackAction = "warra";
