@@ -5,20 +5,20 @@ using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using static MicroflowModels.Constants.Constants;
+using static MicroflowModels.Constants;
 
 namespace Microflow.Helpers
 {
     public static class MicroflowHelper
     {
-#if !DEBUG_NOUPSERT_NOFLOWCONTROL && !DEBUG_NOUPSERT_NOFLOWCONTROL && !DEBUG_NOUPSERT_NOFLOWCONTROL_NOSCALEGROUPS
+#if DEBUG || RELEASE || !DEBUG_NO_UPSERT && !DEBUG_NO_UPSERT_FLOWCONTROL && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_STEPCOUNT && !RELEASE_NO_UPSERT && !RELEASE_NO_UPSERT_FLOWCONTROL && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_STEPCOUNT
         /// <summary>
         /// Get workflow state
         /// Pause, run, or stop the workflow, cmd can be "run", "pause", or "stop"
         /// </summary>
         [FunctionName("WorkflowControl")]
         public static async Task<HttpResponseMessage> WorkflowControl([HttpTrigger(AuthorizationLevel.Anonymous, "get",
-                                                                  Route = "WorkflowControl/{cmd}/{workflowName}")] HttpRequestMessage req,
+                                                                  Route = "microflow/" + MicroflowVersion + "/WorkflowControl/{cmd}/{workflowName}")] HttpRequestMessage req,
                                                                   [DurableClient] IDurableEntityClient client, string workflowName, string cmd)
         {
             if (cmd.Equals(MicroflowControlKeys.Read, StringComparison.OrdinalIgnoreCase))
@@ -42,7 +42,7 @@ namespace Microflow.Helpers
         /// </summary>
         [FunctionName("GlobalControl")]
         public static async Task<HttpResponseMessage> GlobalControl([HttpTrigger(AuthorizationLevel.Anonymous, "get",
-                                                                  Route = "GlobalControl/{cmd}/{globalKey}")] HttpRequestMessage req,
+                                                                  Route = "microflow/" + MicroflowVersion + "/GlobalControl/{cmd}/{globalKey}")] HttpRequestMessage req,
                                                                   [DurableClient] IDurableEntityClient client, string globalKey, string cmd)
         {
             if (cmd.Equals(MicroflowControlKeys.Read, StringComparison.OrdinalIgnoreCase))

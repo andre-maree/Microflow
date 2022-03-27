@@ -1,10 +1,11 @@
 {
     "IsEncrypted": false,
-    "Values": {
+  "Values": {
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "MicroflowStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet",
     "BasePrefix": "http://",
-    "CallbackBase": "Callback"
+    "Callback": "callback",
+    "MicroflowVersion": "/microflow/v1/"
   }
 }

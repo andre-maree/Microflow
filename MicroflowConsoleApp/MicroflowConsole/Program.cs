@@ -12,7 +12,7 @@ namespace MicroflowConsole
     class Program
     {
         public static readonly HttpClient HttpClient = new HttpClient();
-        private static string baseUrl = "http://localhost:7071";
+        private static string baseUrl = "http://localhost:7071/microflow/v1";
         //private static string baseUrl = "https://microflowapp5675763456345345.azurewebsites.net";
 
 
@@ -49,13 +49,14 @@ namespace MicroflowConsole
                 Microflow microFlow = new Microflow()
                 {
                     WorkflowName = "Myflow_ClientX2",
+                    WorkflowVersion = "v2.1",
                     Steps = workflow,
                     MergeFields = CreateMergeFields(),
                     DefaultRetryOptions = new MicroflowRetryOptions()
                 };
 
                 //// callback by step number
-                //microFlow.Step(2).CallbackAction = "warra";
+                microFlow.Step(2).CallbackAction = "warra";
                 //microFlow.Step(3).CallbackAction = "warra";
                 //microFlow.Step(4).CallbackAction = "warra";
                 //microFlow.Step(5).CallbackAction = "warra";
@@ -95,13 +96,13 @@ namespace MicroflowConsole
                 //microFlow.Step(4).CalloutUrl = baseUrl + $"/MicroflowStart/{"MyProject_ClientX"}?globalkey={globalKey}";
                 //microFlow.Step(4).AsynchronousPollingEnabled = false;
 
-                var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", microFlow, new JsonSerializerOptions(JsonSerializerDefaults.General));
+                //var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", microFlow, new JsonSerializerOptions(JsonSerializerDefaults.General));
 
                 for (int i = 0; i < 1; i++)
                 {
                     //await Task.Delay(200);
 
-                    tasks.Add(HttpClient.GetAsync(baseUrl + $"/MicroflowStart/{microFlow.WorkflowName}?globalkey={globalKey}&loop={loop}"));
+                    tasks.Add(HttpClient.GetAsync(baseUrl + $"/Start/{microFlow.WorkflowName}@{microFlow.WorkflowVersion}?globalkey={globalKey}&loop={loop}"));
                     //tasks.Add(HttpClient.GetAsync(baseUrl + $"/MicroflowStart/{project.ProjectName}/33306875-9c81-4736-81c0-9be562dae777"));
                 }
 

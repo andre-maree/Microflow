@@ -1,11 +1,11 @@
 ﻿using System;
 
-namespace MicroflowModels.Constants
+namespace MicroflowModels
 {
     public static class Constants
     {
 
-#if !DEBUG_NOUPSERT_NOFLOWCONTROL_NOSCALEGROUPS && !DEBUG_NOUPSERT_NOSCALEGROUPS
+#if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS && !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_SCALEGROUPS && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_SCALEGROUPS && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT
         public static class ScaleGroupCalls
         {
             public const string CanExecuteNowInScaleGroup = "CanExecuteNowInScaleGroup";
@@ -14,10 +14,13 @@ namespace MicroflowModels.Constants
         }
 #endif
 
+        public const string MicroflowVersion = "v1";
+
         public static class CallNames
         {
-            public static readonly string BaseUrl = $"{Environment.GetEnvironmentVariable("BasePrefix")}{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}/";
-            public static readonly string CallbackBase = $"{BaseUrl}{Environment.GetEnvironmentVariable("CallbackBase")}";
+            public static readonly string MicroflowVersion = $"{Environment.GetEnvironmentVariable("MicroflowVersion")}";
+            public static readonly string BaseUrl = $"{Environment.GetEnvironmentVariable("BasePrefix")}{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}{Environment.GetEnvironmentVariable("MicroflowVersion")}";
+            public static readonly string CallbackUrl = $"{BaseUrl}{Environment.GetEnvironmentVariable("Callback")}";
             public const string CanExecuteNow = "CanExecuteNow";
             public const string ExecuteStep = "ExecuteStep";
             public const string GetStep = "GetStep";

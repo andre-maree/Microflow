@@ -9,15 +9,14 @@ using Microflow.Helpers;
 using System.Net;
 using MicroflowModels;
 using Azure;
-using static MicroflowModels.Constants.Constants;
-using System.Threading;
+using static MicroflowModels.Constants;
 
 namespace Microflow.FlowControl
 {
     /// <summary>
-    /// "Microflow_InsertOrUpdateworkflow" must be called to save workflow step meta data to table storage
-    /// after this, "Microflow_HttpStart" can be called multiple times,
-    /// if a change is made to the workflow, call "Microflow_InsertOrUpdateworkflow" again to apply the changes
+    /// UpsertWorkflow must be called to save workflow step meta data to table storage
+    /// after this, Start can be called multiple times,
+    /// if a change is made to the workflow, call UpsertWorkflow again to apply the changes
     /// </summary>
     public static class MicroflowStartFunctions
     {
@@ -26,7 +25,7 @@ namespace Microflow.FlowControl
         /// </summary>
         /// <param name="instanceId">If an instanceId is passed in, it will run as a singleton, else it will run concurrently with each with a new instanceId</param>
         [FunctionName("MicroflowStart")]
-        public static async Task<HttpResponseMessage> MicroflowStart([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "MicroflowStart/{workflowName}/{instanceId?}")]
+        public static async Task<HttpResponseMessage> MicroflowStart([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "microflow/" + MicroflowVersion + "/Start/{workflowName}/{instanceId?}")]
                                                                 HttpRequestMessage req,
                                                                 [DurableClient] IDurableOrchestrationClient client,
                                                                 string instanceId, string workflowName)
@@ -45,7 +44,7 @@ namespace Microflow.FlowControl
             {
                 HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.InternalServerError)
                 {
-                    Content = new StringContent(ex.Message + " - workflow in error state, call 'InsertOrUpdateworkflow' at least once before running a workflow.")
+                    Content = new StringContent(ex.Message + " - workflow in error state, call 'UpsertWorkflow' at least once before running a workflow.")
                 };
 
                 return resp;

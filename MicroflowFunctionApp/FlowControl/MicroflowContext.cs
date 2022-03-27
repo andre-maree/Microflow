@@ -10,7 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using static MicroflowModels.Constants.Constants;
+using static MicroflowModels.Constants;
 
 namespace Microflow.FlowControl
 {

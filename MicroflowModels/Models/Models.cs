@@ -31,6 +31,8 @@ namespace MicroflowModels
         public Dictionary<string, string> MergeFields { get; set; } = new Dictionary<string, string>();
 
         public MicroflowRetryOptions DefaultRetryOptions { get; set; }
+
+        public string WorkflowVersion { get;set; }
     }
 
     public class Step
