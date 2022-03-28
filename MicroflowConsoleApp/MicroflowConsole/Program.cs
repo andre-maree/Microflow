@@ -27,10 +27,34 @@ namespace MicroflowConsole
             await TestWorkflow();
         }
 
+        private static (string Name, Microflow Microflow) Create()
+        {
+            //var workflow = Tests.CreateTestWorkflow_SimpleSteps();
+            //var workflow = Tests.CreateTestWorkflow_10StepsParallel();
+            var workflow = Tests.CreateTestWorkflow_Complex1();
+            //var workflow = Tests.CreateTestWorkflow_110Steps();
+            //var workflow2 = Tests.CreateTestWorkflow_110Steps();
+
+            var microflow = new Microflow()
+            {
+                WorkflowName = "Myflow_ClientX2",
+                WorkflowVersion = "v2.1",
+                Steps = workflow,
+                MergeFields = CreateMergeFields(),
+                DefaultRetryOptions = new MicroflowRetryOptions()
+            };
+
+            string workflowName = string.IsNullOrWhiteSpace(microflow.WorkflowVersion)
+                                ? microflow.WorkflowName
+                                : $"{microflow.WorkflowName}@{microflow.WorkflowVersion}";
+
+            return (workflowName, microflow);
+        }
+
         /// <summary>
         /// Play area for Microflow, take it for a spin
         /// </summary>
-            private static async Task TestWorkflow()
+        private static async Task TestWorkflow()
         {
             var tasks = new List<Task<HttpResponseMessage>>();
 
@@ -40,23 +64,8 @@ namespace MicroflowConsole
             //var terminate = await client.PostAsync("http://localhost:7071/runtime/webhooks/durabletask/instances/39806875-9c81-4736-81c0-9be562dae71e/terminate?reason=dfgd", null);
             try
             {
-                //var workflow = Tests.CreateTestWorkflow_SimpleSteps();
-                //var workflow = Tests.CreateTestWorkflow_10StepsParallel();
-                var workflow = Tests.CreateTestWorkflow_Complex1();
-                //var workflow = Tests.CreateTestWorkflow_110Steps();
-                //var workflow2 = Tests.CreateTestWorkflow_110Steps();
+                var createResult = Create();
 
-                Microflow microFlow = new Microflow()
-                {
-                    WorkflowName = "Myflow_ClientX2",
-                    WorkflowVersion = "v2.1",
-                    Steps = workflow,
-                    MergeFields = CreateMergeFields(),
-                    DefaultRetryOptions = new MicroflowRetryOptions()
-                };
-                string workflowName = string.IsNullOrWhiteSpace(microFlow.WorkflowVersion)
-                                ? microFlow.WorkflowName
-                                : $"{microFlow.WorkflowName}@{microFlow.WorkflowVersion}";
                 //// callback by step number
                 //microFlow.Step(2).WebhookAction = "warra";
                 //microFlow.Step(3).WebhookAction = "warra";
@@ -98,13 +107,14 @@ namespace MicroflowConsole
                 //microFlow.Step(4).CalloutUrl = baseUrl + $"/MicroflowStart/{"MyProject_ClientX"}?globalkey={globalKey}";
                 //microFlow.Step(4).AsynchronousPollingEnabled = false;
 
-                var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", microFlow, new JsonSerializerOptions(JsonSerializerDefaults.General));
+                // Upsert
+                var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", createResult.Microflow, new JsonSerializerOptions(JsonSerializerDefaults.General));
 
                 for (int i = 0; i < 1; i++)
                 {
                     //await Task.Delay(200);
 
-                    tasks.Add(HttpClient.GetAsync(baseUrl + $"/Start/{workflowName}?globalkey={globalKey}&loop={loop}"));
+                    tasks.Add(HttpClient.GetAsync(baseUrl + $"/Start/{createResult.Name}?globalkey={globalKey}&loop={loop}"));
                     //tasks.Add(HttpClient.GetAsync(baseUrl + $"/MicroflowStart/{project.ProjectName}/33306875-9c81-4736-81c0-9be562dae777"));
                 }
 
