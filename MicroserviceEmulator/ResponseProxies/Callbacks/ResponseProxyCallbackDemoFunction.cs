@@ -4,7 +4,6 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using System.Net.Http;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using static MicroflowModels.Constants;
 
 namespace Microflow.ResponseProxies
 {
@@ -15,9 +14,9 @@ namespace Microflow.ResponseProxies
         /// this being custom code that might change more frequently than the workflow engine core,
         /// and will then also scale on its own.
         /// </summary>
-        [FunctionName("callback")]
+        [FunctionName("webhook")]
         public static async Task<HttpResponseMessage> RaiseEvent(
-        [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = "callback/{action}/{orchestratorId}/{stepId:int?}")] HttpRequestMessage req,
+        [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = "webhook/{action}/{orchestratorId}/{stepId:int?}")] HttpRequestMessage req,
         [DurableClient] IDurableOrchestrationClient client, int stepId, string action, string orchestratorId)
         {
             HttpResponseMessage resp = new(HttpStatusCode.OK);

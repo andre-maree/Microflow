@@ -39,9 +39,9 @@ namespace Microflow.Helpers
         {
             DurableHttpRequest newDurableHttpRequest;
 
-            string callback = string.IsNullOrWhiteSpace(httpCall.CallbackAction)
+            string webhook = string.IsNullOrWhiteSpace(httpCall.WebhookAction)
                     ? ""
-                    : $"{CallNames.CallbackUrl}/{httpCall.CallbackAction}/{instanceId}/{httpCall.RowKey}";
+                    : $"{CallNames.Webhook}/{httpCall.WebhookAction}/{instanceId}/{httpCall.RowKey}";
 
             httpCall.CalculateGlobalKey();
 
@@ -55,7 +55,7 @@ namespace Microflow.Helpers
                     StepId = httpCall.StepId,
                     StepNumber = Convert.ToInt32(httpCall.RowKey),
                     MainOrchestrationId = httpCall.MainOrchestrationId,
-                    CallbackUrl = callback,
+                    Webhook = webhook,
                     GlobalKey = httpCall.GlobalKey
                 };
 
@@ -63,7 +63,7 @@ namespace Microflow.Helpers
 
                 newDurableHttpRequest = new DurableHttpRequest(
                     method: HttpMethod.Post,
-                    uri: new Uri(httpCall.ParseUrlMicroflowData(instanceId, postData.CallbackUrl)),
+                    uri: new Uri(httpCall.ParseUrlMicroflowData(instanceId, postData.Webhook)),
                     timeout: TimeSpan.FromSeconds(httpCall.CalloutTimeoutSeconds),
                     content: body,
                     asynchronousPatternEnabled: httpCall.AsynchronousPollingEnabled
@@ -82,7 +82,7 @@ namespace Microflow.Helpers
             {
                 newDurableHttpRequest = new DurableHttpRequest(
                     method: HttpMethod.Get,
-                    uri: new Uri(httpCall.ParseUrlMicroflowData(instanceId, callback)),
+                    uri: new Uri(httpCall.ParseUrlMicroflowData(instanceId, webhook)),
                     timeout: TimeSpan.FromSeconds(httpCall.CalloutTimeoutSeconds),
                     asynchronousPatternEnabled: httpCall.AsynchronousPollingEnabled
                 //headers: durableHttpRequest.Headers,
@@ -100,14 +100,14 @@ namespace Microflow.Helpers
         }
 
         [Deterministic]
-        public static string ParseUrlMicroflowData(this HttpCall httpCall, string instanceId, string callbackUrl)
+        public static string ParseUrlMicroflowData(this HttpCall httpCall, string instanceId, string webhook)
         {
             StringBuilder sb = new(httpCall.CalloutUrl);
 
             sb.Replace("<workflowName>", httpCall.PartitionKey);
             sb.Replace("<MainOrchestrationId>", httpCall.MainOrchestrationId);
             sb.Replace("<SubOrchestrationId>", instanceId);
-            sb.Replace("<CallbackUrl>", callbackUrl);
+            sb.Replace("<Webhook>", webhook);
             sb.Replace("<RunId>", httpCall.RunId);
             sb.Replace("<StepId>", httpCall.StepId);
             sb.Replace("<StepNumber>", httpCall.RowKey);

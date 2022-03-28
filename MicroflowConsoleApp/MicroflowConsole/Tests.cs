@@ -12,7 +12,7 @@ namespace MicroflowConsole
             List<Step> steps = ProjectManager.CreateSteps(4, 1,"{default_post_url}");
             //steps[0].IsHttpGet = true;
             //steps[0].CallbackTimeoutSeconds = 30;
-            //steps[0].CallbackAction = "approve";
+            //steps[0].WebhookAction = "approve";
             //steps[0].CalloutUrl = "http://localhost:7071/SleepTestOrchestrator_HttpStart";
             //steps[0].SetRetryForStep(1, 2, 1);
             //steps[0].StopOnActionFailed = true;
@@ -21,10 +21,10 @@ namespace MicroflowConsole
             steps[1].AddSubSteps(steps[2], steps[3]);
             steps[4].AddParentSteps(steps[2], steps[3]);
 
-            //steps[0].CallbackAction = "approve"; 
-            //steps[1].CallbackAction = "approve"; 
-            //steps[2].CallbackAction = "approve"; 
-            //steps[3].CallbackAction = "approve";
+            //steps[0].WebhookAction = "approve"; 
+            //steps[1].WebhookAction = "approve"; 
+            //steps[2].WebhookAction = "approve"; 
+            //steps[3].WebhookAction = "approve";
             //steps[0].StopOnActionFailed = true;
             //steps[0].ActionTimeoutSeconds = 30;
 
@@ -50,8 +50,8 @@ namespace MicroflowConsole
             steps[14].AddParentSteps(steps[4], steps[5], steps[6], steps[7], steps[8], steps[9], steps[10], steps[11], steps[12], steps[13]);
 
             // step configs
-            //steps[0].CallbackAction = "approve_process_start";
-            //steps[13].CallbackAction = "approve_process_end";
+            //steps[0].WebhookAction = "approve_process_start";
+            //steps[13].WebhookAction = "approve_process_end";
             steps.Remove(steps[0]);
 
             return steps;
@@ -75,7 +75,7 @@ namespace MicroflowConsole
 
             steps[7].AddSubSteps(steps[8]);
 
-            //steps[7].CallbackAction = "approve";
+            //steps[7].WebhookAction = "approve";
             steps.Remove(steps[0]);
 
             return steps;
@@ -102,7 +102,7 @@ namespace MicroflowConsole
 
             //}
 
-            //steps[0].CallbackAction = "approve";
+            //steps[0].WebhookAction = "approve";
             steps.Remove(steps[0]);
 
             return steps;

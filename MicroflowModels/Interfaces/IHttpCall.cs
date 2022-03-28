@@ -2,9 +2,9 @@
 {
     public interface IHttpCall : IStepEntity
     {
-        int CallbackTimeoutSeconds { get; set; }
+        int WebhookTimeoutSeconds { get; set; }
         bool AsynchronousPollingEnabled { get; set; }
-        string CallbackAction { get; set; }
+        string WebhookAction { get; set; }
         string CalloutUrl { get; set; }
         string GlobalKey { get; set; }
         bool IsHttpGet { get; set; }

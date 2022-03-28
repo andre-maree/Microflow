@@ -46,7 +46,7 @@ namespace Microflow.API.External
             //    NameValueCollection data = req.RequestUri.ParseQueryString();
             //    MicroflowPostData postData = new MicroflowPostData()
             //    {
-            //        CallbackUrl = data["CallbackUrl"],
+            //        Webhook = data["Webhook"],
             //        MainOrchestrationId = data["MainOrchestrationId"],
             //        workflowName = data["workflowName"],
             //        RunId = data["RunId"],

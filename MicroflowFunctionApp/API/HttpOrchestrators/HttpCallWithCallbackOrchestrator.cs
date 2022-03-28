@@ -14,7 +14,7 @@ namespace Microflow.HttpOrchestrators
     public static class MicroflowHttpCallWithCallback
     {
         /// <summary>
-        /// Does the call out and then waits for the callback
+        /// Does the call out and then waits for the webhook
         /// </summary>
         [Deterministic]
         [FunctionName("HttpCallWithCallbackOrchestrator")]
@@ -64,10 +64,10 @@ namespace Microflow.HttpOrchestrators
 
                 // TODO: always use https
 
-                log.LogCritical($"Waiting for callback: {CallNames.CallbackUrl}/{httpCall.CallbackAction}/{context.InstanceId}/{httpCall.RowKey}");
+                log.LogCritical($"Waiting for webhook: {CallNames.Webhook}/{httpCall.WebhookAction}/{context.InstanceId}/{httpCall.RowKey}");
                 // wait for the external event, set the timeout
-                HttpResponseMessage actionResult = await context.WaitForExternalEvent<HttpResponseMessage>(httpCall.CallbackAction,
-                                                                                                           TimeSpan.FromSeconds(httpCall.CallbackTimeoutSeconds));
+                HttpResponseMessage actionResult = await context.WaitForExternalEvent<HttpResponseMessage>(httpCall.WebhookAction,
+                                                                                                           TimeSpan.FromSeconds(httpCall.WebhookTimeoutSeconds));
                 #region Optional: no stepcount
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_STEPCOUNT
                 ////////////////////////////////////////////////
@@ -81,7 +81,7 @@ namespace Microflow.HttpOrchestrators
                 // check for action failed
                 if (actionResult.IsSuccessStatusCode)
                 {
-                    log.LogWarning($"Step {httpCall.RowKey} callback action {httpCall.CallbackAction} successful at {context.CurrentUtcDateTime:HH:mm:ss}");
+                    log.LogWarning($"Step {httpCall.RowKey} webhook {httpCall.WebhookAction} successful at {context.CurrentUtcDateTime:HH:mm:ss}");
 
                     microflowHttpResponse.HttpResponseStatusCode = (int)actionResult.StatusCode;
 
@@ -95,7 +95,7 @@ namespace Microflow.HttpOrchestrators
                         {
                             Success = false,
                             HttpResponseStatusCode = (int)actionResult.StatusCode,
-                            Message = $"callback action {httpCall.CallbackAction} falied, StopOnActionFailed is {httpCall.StopOnActionFailed}"
+                            Message = $"webhook action {httpCall.WebhookAction} falied, StopOnActionFailed is {httpCall.StopOnActionFailed}"
                         };
                     }
                 }
@@ -109,8 +109,8 @@ namespace Microflow.HttpOrchestrators
                         Success = false,
                         HttpResponseStatusCode = -408,
                         Message = doneCallout
-                        ? $"callback action {httpCall.CallbackAction} timed out, StopOnActionFailed is {httpCall.StopOnActionFailed}"
-                        : $"callout to {httpCall.CalloutUrl} timed out before spawning a callback, StopOnActionFailed is {httpCall.StopOnActionFailed}"
+                        ? $"webhook action {httpCall.WebhookAction} timed out, StopOnActionFailed is {httpCall.StopOnActionFailed}"
+                        : $"callout to {httpCall.CalloutUrl} timed out before spawning a webhook, StopOnActionFailed is {httpCall.StopOnActionFailed}"
                     };
                 }
 
@@ -125,8 +125,8 @@ namespace Microflow.HttpOrchestrators
                         Success = false,
                         HttpResponseStatusCode = -500,
                         Message = doneCallout
-                        ? $"callback action {httpCall.CallbackAction} failed, StopOnActionFailed is {httpCall.StopOnActionFailed} - " + e.Message
-                        : $"callout to {httpCall.CalloutUrl} failed before spawning a callback, StopOnActionFailed is {httpCall.StopOnActionFailed}"
+                        ? $"webhook action {httpCall.WebhookAction} failed, StopOnActionFailed is {httpCall.StopOnActionFailed} - " + e.Message
+                        : $"callout to {httpCall.CalloutUrl} failed before spawning a webhook, StopOnActionFailed is {httpCall.StopOnActionFailed}"
                     };
                 }
 

@@ -5,9 +5,9 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using System.Net.Http;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 
-namespace Microflow.Callback
+namespace Microflow.Webhook
 {
-    public static class Callback
+    public static class Webhook
     {
         /// <summary>
         /// These client functions can be refactored into separate function apps, 

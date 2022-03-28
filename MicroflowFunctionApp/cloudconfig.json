@@ -16,7 +16,7 @@
   },
   {
     "name": "CallBack",
-    "value": "callback",
+    "value": "webhook",
     "slotSetting": false
   },
   {

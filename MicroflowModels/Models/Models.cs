@@ -11,7 +11,7 @@ namespace MicroflowModels
         public string WorkflowName { get; set; }
         public string MainOrchestrationId { get; set; }
         public string SubOrchestrationId { get; set; }
-        public string CallbackUrl { get; set; }
+        public string Webhook { get; set; }
         public string RunId { get; set; }
         public int StepNumber { get; set; }
         public string StepId { get; set; }
@@ -62,12 +62,12 @@ namespace MicroflowModels
         public string StepId { get; set; }
         public int StepNumber { get; set; }
         public string CalloutUrl { get; set; }
-        public string CallbackAction { get; set; }
+        public string WebhookAction { get; set; }
         public string ScaleGroupId { get; set; }
         public bool StopOnActionFailed { get; set; } = true;
         public bool IsHttpGet { get; set; }
         public int CalloutTimeoutSeconds { get; set; } = 1000;
-        public int CallbackTimeoutSeconds { get; set; } = 1000;
+        public int WebhookTimeoutSeconds { get; set; } = 1000;
         public bool AsynchronousPollingEnabled { get; set; } = true;
 
         [DataMember(Name = "SubSteps", EmitDefaultValue = false)]

@@ -170,10 +170,10 @@ namespace MicroflowShared
                 {
                     HttpCallWithRetries httpCallRetriesEntity = new(workflowRun.WorkflowName, step.StepNumber.ToString(), step.StepId, sb.ToString())
                     {
-                        CallbackAction = step.CallbackAction,
+                        WebhookAction = step.WebhookAction,
                         StopOnActionFailed = step.StopOnActionFailed,
                         CalloutUrl = step.CalloutUrl,
-                        CallbackTimeoutSeconds = step.CallbackTimeoutSeconds,
+                        WebhookTimeoutSeconds = step.WebhookTimeoutSeconds,
                         CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
                         IsHttpGet = step.IsHttpGet,
                         AsynchronousPollingEnabled = step.AsynchronousPollingEnabled,
@@ -193,10 +193,10 @@ namespace MicroflowShared
                 {
                     HttpCall httpCallEntity = new(workflowRun.WorkflowName, step.StepNumber.ToString(), step.StepId, sb.ToString())
                     {
-                        CallbackAction = step.CallbackAction,
+                        WebhookAction = step.WebhookAction,
                         StopOnActionFailed = step.StopOnActionFailed,
                         CalloutUrl = step.CalloutUrl,
-                        CallbackTimeoutSeconds = step.CallbackTimeoutSeconds,
+                        WebhookTimeoutSeconds = step.WebhookTimeoutSeconds,
                         CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
                         IsHttpGet = step.IsHttpGet,
                         AsynchronousPollingEnabled = step.AsynchronousPollingEnabled,
@@ -266,10 +266,10 @@ namespace MicroflowShared
                     Step newstep = new()
                     {
                         StepId = step.RowKey,
-                        CallbackTimeoutSeconds = step.CallbackTimeoutSeconds,
+                        WebhookTimeoutSeconds = step.WebhookTimeoutSeconds,
                         CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
                         StopOnActionFailed = step.StopOnActionFailed,
-                        CallbackAction = step.CallbackAction,
+                        WebhookAction = step.WebhookAction,
                         IsHttpGet = step.IsHttpGet,
                         CalloutUrl = step.CalloutUrl,
                         AsynchronousPollingEnabled = step.AsynchronousPollingEnabled,

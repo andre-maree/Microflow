@@ -55,10 +55,10 @@ namespace Microflow.API.Internal
                     cts.Dispose();
                 }
             }
-            // test if the callback is done, do the call back if there is 1
-            if (!string.IsNullOrWhiteSpace(postData.CallbackUrl))
+            // test if the webhook is done, do the call back if there is 1
+            if (!string.IsNullOrWhiteSpace(postData.Webhook))
             {
-                DurableHttpRequest req = new(HttpMethod.Get, new Uri(postData.CallbackUrl));
+                DurableHttpRequest req = new(HttpMethod.Get, new Uri(postData.Webhook));
 
                 await context.CallHttpAsync(req);
             }
@@ -86,7 +86,7 @@ namespace Microflow.API.Internal
                 NameValueCollection data = req.RequestUri.ParseQueryString();
                 MicroflowPostData postData = new()
                 {
-                    CallbackUrl = data["CallbackUrl"],
+                    Webhook = data["Webhook"],
                     MainOrchestrationId = data["MainOrchestrationId"],
                     WorkflowName = data["WorkflowName"],
                     RunId = data["RunId"],

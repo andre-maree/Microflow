@@ -204,8 +204,8 @@ namespace Microflow.FlowControl
         private async Task HttpCallout(string id)
         {
             // call out to micro-service
-            // wait for external event flow / callback
-            if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.CallbackAction))
+            // wait for external event flow / webhook
+            if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.WebhookAction))
             {
                 const string name = "HttpCallWithCallbackOrchestrator";
 
@@ -467,9 +467,9 @@ namespace Microflow.FlowControl
                                       MicroflowRun.RunObject.GlobalKey,
                                       false,
                                       -408,
-                                      string.IsNullOrWhiteSpace(HttpCallWithRetries.CallbackAction)
+                                      string.IsNullOrWhiteSpace(HttpCallWithRetries.WebhookAction)
                                         ? "callout timeout"
-                                        : $"action {HttpCallWithRetries.CallbackAction} timed out, StopOnActionFailed is {HttpCallWithRetries.StopOnActionFailed}")
+                                        : $"action {HttpCallWithRetries.WebhookAction} timed out, StopOnActionFailed is {HttpCallWithRetries.StopOnActionFailed}")
                 ));
             }
             else
