@@ -20,7 +20,7 @@ namespace Microflow.ResponseProxies
         [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = "callback/{action}/{orchestratorId}/{stepId:int?}")] HttpRequestMessage req,
         [DurableClient] IDurableOrchestrationClient client, int stepId, string action, string orchestratorId)
         {
-            HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);
+            HttpResponseMessage resp = new(HttpStatusCode.OK);
             
             await client.RaiseEventAsync(orchestratorId, action, resp);
 

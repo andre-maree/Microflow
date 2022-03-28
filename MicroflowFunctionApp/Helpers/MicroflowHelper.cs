@@ -25,10 +25,10 @@ namespace Microflow.Helpers
 
             if (cmd.Equals(MicroflowControlKeys.Read, StringComparison.OrdinalIgnoreCase))
             {
-                EntityId projStateId = new EntityId(MicroflowStateKeys.WorkflowState, key);
+                EntityId projStateId = new(MicroflowStateKeys.WorkflowState, key);
                 EntityStateResponse<string> stateRes = await client.ReadEntityStateAsync<string>(projStateId);
 
-                HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK)
+                HttpResponseMessage resp = new(HttpStatusCode.OK)
                 {
                     Content = new StringContent(stateRes.EntityState)
                 };
@@ -49,10 +49,10 @@ namespace Microflow.Helpers
         {
             if (cmd.Equals(MicroflowControlKeys.Read, StringComparison.OrdinalIgnoreCase))
             {
-                EntityId globStateId = new EntityId(MicroflowStateKeys.GlobalState, globalKey);
+                EntityId globStateId = new(MicroflowStateKeys.GlobalState, globalKey);
                 EntityStateResponse<string> stateRes = await client.ReadEntityStateAsync<string>(globStateId);
 
-                HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK)
+                HttpResponseMessage resp = new(HttpStatusCode.OK)
                 {
                     Content = new StringContent(stateRes.EntityState)
                 };
@@ -112,7 +112,7 @@ namespace Microflow.Helpers
                                                                    string key,
                                                                    string cmd)
         {
-            EntityId runStateId = new EntityId(stateEntityId, key);
+            EntityId runStateId = new(stateEntityId, key);
 
             switch (cmd)
             {

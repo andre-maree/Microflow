@@ -43,7 +43,7 @@ namespace Microflow.FlowControl
                         : microflowContext.HttpCallWithRetries.RowKey;
 
                     // log to table workflow completed
-                    LogErrorEntity errorEntity = new LogErrorEntity(workflowRun?.WorkflowName,
+                    LogErrorEntity errorEntity = new(workflowRun?.WorkflowName,
                                                                     Convert.ToInt32(stepNumber),
                                                                     e.Message,
                                                                     workflowRun?.RunObject?.RunId);

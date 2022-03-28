@@ -18,7 +18,7 @@ namespace MicroflowApi
                                                              [DurableClient] IDurableEntityClient client,
                                                              string workflowNameStepNumber)
         {
-            EntityId countId = new EntityId("StepCount", workflowNameStepNumber);
+            EntityId countId = new("StepCount", workflowNameStepNumber);
 
             EntityStateResponse<int> result = await client.ReadEntityStateAsync<int>(countId);
 

@@ -14,12 +14,12 @@ namespace Microflow.Callback
         /// this being custom code that might change more frequently than the workflow engine core,
         /// and will then also scale on its own.
         /// </summary>
-        [FunctionName("Callback")]
+        [FunctionName("Webhook")]
         public static async Task<HttpResponseMessage> RaiseEvent(
-        [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = "/" + MicroflowModels.Constants.MicroflowBase + "/Callback/{action}/{orchestratorId}/{stepId:int?}")] HttpRequestMessage req,
+        [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = "/" + MicroflowModels.Constants.MicroflowBase + "/Webhook/{action}/{orchestratorId}/{stepId:int?}")] HttpRequestMessage req,
         [DurableClient] IDurableOrchestrationClient client, int stepId, string action, string orchestratorId)
         {
-            HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);
+            HttpResponseMessage resp = new(HttpStatusCode.OK);
 
             await client.RaiseEventAsync(orchestratorId, action, resp);
 

@@ -30,7 +30,7 @@ namespace MicroflowApi
             }
             catch (Exception e)
             {
-                HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.InternalServerError)
+                HttpResponseMessage resp = new(HttpStatusCode.InternalServerError)
                 {
                     Content = new StringContent(e.Message)
                 };

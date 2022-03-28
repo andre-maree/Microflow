@@ -21,7 +21,7 @@ namespace Microflow.FlowControl
             CanExecuteNowObject canExecuteNowObject = context.GetInput<CanExecuteNowObject>();
             try
             {
-                EntityId countId = new EntityId(MicroflowEntities.CanExecuteNowCount,
+                EntityId countId = new(MicroflowEntities.CanExecuteNowCount,
                                                 canExecuteNowObject.RunId + canExecuteNowObject.StepNumber);
 
                 CanExecuteResult canExecuteResult = null;
@@ -63,7 +63,7 @@ namespace Microflow.FlowControl
             catch (Exception e)
             {
                 // log to table error
-                LogErrorEntity errorEntity = new LogErrorEntity(canExecuteNowObject.WorkflowName,
+                LogErrorEntity errorEntity = new(canExecuteNowObject.WorkflowName,
                                                                 Convert.ToInt32(canExecuteNowObject.StepNumber),
                                                                 e.Message,
                                                                 canExecuteNowObject.RunId);

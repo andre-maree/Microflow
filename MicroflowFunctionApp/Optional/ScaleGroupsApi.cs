@@ -26,10 +26,10 @@ namespace MicroflowApi
         {
             if (req.Method.Equals(HttpMethod.Get))
             {
-                Dictionary<string, int> result = new Dictionary<string, int>();
+                Dictionary<string, int> result = new();
                 EntityQueryResult res = null;
 
-                using (CancellationTokenSource cts = new CancellationTokenSource())
+                using (CancellationTokenSource cts = new())
                 {
                     res = await client.ListEntitiesAsync(new EntityQuery()
                     {
@@ -62,11 +62,11 @@ namespace MicroflowApi
                 };
             }
 
-            EntityId scaleGroupCountId = new EntityId(ScaleGroupCalls.ScaleGroupMaxConcurrentInstanceCount, scaleGroupId);
+            EntityId scaleGroupCountId = new(ScaleGroupCalls.ScaleGroupMaxConcurrentInstanceCount, scaleGroupId);
 
             await client.SignalEntityAsync(scaleGroupCountId, MicroflowCounterKeys.Set, maxInstanceCount);
 
-            HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);
+            HttpResponseMessage resp = new(HttpStatusCode.OK);
 
             return resp;
         }

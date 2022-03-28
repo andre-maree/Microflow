@@ -27,11 +27,11 @@ namespace Microflow.Helpers
 
             // if 201 created try get the location header to save it in the steps log
             if (statusCode != 201)
-                return new MicroflowHttpResponse() {Success = false, HttpResponseStatusCode = statusCode};
+                return new MicroflowHttpResponse() { Success = false, HttpResponseStatusCode = statusCode };
 
             return durableHttpResponse.Headers.TryGetValue("location", out StringValues values)
-                ? new MicroflowHttpResponse() {Success = true, HttpResponseStatusCode = statusCode, Message = values[0]}
-                : new MicroflowHttpResponse() {Success = true, HttpResponseStatusCode = statusCode};
+                ? new MicroflowHttpResponse() { Success = true, HttpResponseStatusCode = statusCode, Message = values[0] }
+                : new MicroflowHttpResponse() { Success = true, HttpResponseStatusCode = statusCode };
         }
 
         [Deterministic]
@@ -47,7 +47,7 @@ namespace Microflow.Helpers
 
             if (!httpCall.IsHttpGet)
             {
-                MicroflowPostData postData = new MicroflowPostData()
+                MicroflowPostData postData = new()
                 {
                     WorkflowName = httpCall.PartitionKey,
                     SubOrchestrationId = instanceId,
@@ -102,7 +102,7 @@ namespace Microflow.Helpers
         [Deterministic]
         public static string ParseUrlMicroflowData(this HttpCall httpCall, string instanceId, string callbackUrl)
         {
-            StringBuilder sb = new StringBuilder(httpCall.CalloutUrl);
+            StringBuilder sb = new(httpCall.CalloutUrl);
 
             sb.Replace("<workflowName>", httpCall.PartitionKey);
             sb.Replace("<MainOrchestrationId>", httpCall.MainOrchestrationId);

@@ -60,7 +60,7 @@ namespace Microflow.API.External
             //}
 
 
-            HttpResponseMessage resp = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+            HttpResponseMessage resp = new(System.Net.HttpStatusCode.OK);
             //    resp.Headers.Location = new Uri("http://localhost:7071/api/testpost");
             //resp.Content = new StringContent("wappa");
             return resp;

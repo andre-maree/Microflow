@@ -16,9 +16,9 @@ namespace Microflow.FlowControl
         public static async Task CheckMaxScaleCountForGroup([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
             CanExecuteNowObject canExecuteNowObject = context.GetInput<CanExecuteNowObject>();
-            EntityId countId = new EntityId(ScaleGroupCalls.CanExecuteNowInScaleGroupCount, canExecuteNowObject.ScaleGroupId);
+            EntityId countId = new(ScaleGroupCalls.CanExecuteNowInScaleGroupCount, canExecuteNowObject.ScaleGroupId);
 
-            EntityId scaleGroupCountId = new EntityId(ScaleGroupCalls.ScaleGroupMaxConcurrentInstanceCount, canExecuteNowObject.ScaleGroupId);
+            EntityId scaleGroupCountId = new(ScaleGroupCalls.ScaleGroupMaxConcurrentInstanceCount, canExecuteNowObject.ScaleGroupId);
             int scaleGroupMaxCount = await context.CallEntityAsync<int>(scaleGroupCountId, MicroflowControlKeys.Read);
 
             if (scaleGroupMaxCount == 0)
@@ -44,7 +44,7 @@ namespace Microflow.FlowControl
             // max interval seconds
             int max = PollingConfig.PollingIntervalMaxSeconds;
 
-            using (CancellationTokenSource cts = new CancellationTokenSource())
+            using (CancellationTokenSource cts = new())
             {
                 try
                 {
@@ -70,7 +70,7 @@ namespace Microflow.FlowControl
                 catch (TaskCanceledException tex)
                 {
                     // log to table error
-                    LogErrorEntity errorEntity = new LogErrorEntity(canExecuteNowObject.WorkflowName,
+                    LogErrorEntity errorEntity = new(canExecuteNowObject.WorkflowName,
                                                                     Convert.ToInt32(canExecuteNowObject.StepNumber),
                                                                     tex.Message,
                                                                     canExecuteNowObject.RunId);
@@ -80,7 +80,7 @@ namespace Microflow.FlowControl
                 catch (Exception e)
                 {
                     // log to table error
-                    LogErrorEntity errorEntity = new LogErrorEntity(canExecuteNowObject.WorkflowName,
+                    LogErrorEntity errorEntity = new(canExecuteNowObject.WorkflowName,
                                                                     Convert.ToInt32(canExecuteNowObject.StepNumber),
                                                                     e.Message,
                                                                     canExecuteNowObject.RunId);

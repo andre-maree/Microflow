@@ -27,12 +27,12 @@ namespace MicroflowShared
             Microflow workflow = JsonSerializer.Deserialize<Microflow>(content);
 
             //    // create a workflow run
-            MicroflowRun workflowRun = new MicroflowRun()
+            MicroflowRun workflowRun = new()
             {
                 WorkflowName = $"{workflow.WorkflowName}@{workflow.WorkflowVersion}"
             };
 
-            EntityId projStateId = new EntityId(MicroflowStateKeys.WorkflowState, workflowRun.WorkflowName);
+            EntityId projStateId = new(MicroflowStateKeys.WorkflowState, workflowRun.WorkflowName);
 
             try
             {
@@ -40,7 +40,7 @@ namespace MicroflowShared
 
                 if (!string.IsNullOrWhiteSpace(globalKey))
                 {
-                    EntityId globalStateId = new EntityId(MicroflowStateKeys.GlobalState, globalKey);
+                    EntityId globalStateId = new(MicroflowStateKeys.GlobalState, globalKey);
                     globStateTask = client.ReadEntityStateAsync<int>(globalStateId);
                 }
                 // do not do anything, wait for the stopped workflow to be ready
@@ -87,7 +87,7 @@ namespace MicroflowShared
             }
             catch (Azure.RequestFailedException e)
             {
-                HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.BadRequest)
+                HttpResponseMessage resp = new(HttpStatusCode.BadRequest)
                 {
                     Content = new StringContent(e.Message)
                 };
@@ -96,7 +96,7 @@ namespace MicroflowShared
             }
             catch (Exception e)
             {
-                HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.BadRequest)
+                HttpResponseMessage resp = new(HttpStatusCode.BadRequest)
                 {
                     Content = new StringContent(e.Message)
                 };
@@ -134,13 +134,13 @@ namespace MicroflowShared
         /// </summary>
         public static async Task PrepareWorkflow(this MicroflowRun workflowRun, MicroflowModels.Microflow workflow)
         {
-            List<TableTransactionAction> batch = new List<TableTransactionAction>();
-            List<Task> batchTasks = new List<Task>();
+            List<TableTransactionAction> batch = new();
+            List<Task> batchTasks = new();
             TableClient stepsTable = TableHelper.GetStepsTable();
-            Step stepContainer = new Step(-1, null);
-            StringBuilder sb = new StringBuilder();
+            Step stepContainer = new(-1, null);
+            StringBuilder sb = new();
             List<Step> steps = workflow.Steps;
-            List<(int StepNumber, int ParentCount)> liParentCounts = new List<(int, int)>();
+            List<(int StepNumber, int ParentCount)> liParentCounts = new();
 
             foreach (Step step in steps)
             {
@@ -168,7 +168,7 @@ namespace MicroflowShared
 
                 if (step.RetryOptions != null)
                 {
-                    HttpCallWithRetries httpCallRetriesEntity = new HttpCallWithRetries(workflowRun.WorkflowName, step.StepNumber.ToString(), step.StepId, sb.ToString())
+                    HttpCallWithRetries httpCallRetriesEntity = new(workflowRun.WorkflowName, step.StepNumber.ToString(), step.StepId, sb.ToString())
                     {
                         CallbackAction = step.CallbackAction,
                         StopOnActionFailed = step.StopOnActionFailed,
@@ -191,7 +191,7 @@ namespace MicroflowShared
                 }
                 else
                 {
-                    HttpCall httpCallEntity = new HttpCall(workflowRun.WorkflowName, step.StepNumber.ToString(), step.StepId, sb.ToString())
+                    HttpCall httpCallEntity = new(workflowRun.WorkflowName, step.StepNumber.ToString(), step.StepId, sb.ToString())
                     {
                         CallbackAction = step.CallbackAction,
                         StopOnActionFailed = step.StopOnActionFailed,
@@ -221,7 +221,7 @@ namespace MicroflowShared
                 sb.Append(subId).Append(",1;");
             }
 
-            HttpCall containerEntity = new HttpCall(workflowRun.WorkflowName, "-1", null, sb.ToString());
+            HttpCall containerEntity = new(workflowRun.WorkflowName, "-1", null, sb.ToString());
 
             batch.Add(new TableTransactionAction(TableTransactionActionType.UpsertReplace, containerEntity));
 
@@ -235,7 +235,7 @@ namespace MicroflowShared
         /// </summary>
         public static void ParseMergeFields(this string strWorkflow, ref MicroflowModels.Microflow workflow)
         {
-            StringBuilder sb = new StringBuilder(strWorkflow);
+            StringBuilder sb = new(strWorkflow);
 
             foreach (KeyValuePair<string, string> field in workflow.MergeFields)
             {
@@ -252,7 +252,7 @@ namespace MicroflowShared
         {
             AsyncPageable<HttpCallWithRetries> steps = GetStepsHttpCallWithRetries(workflowName);
 
-            List<Step> outSteps = new List<Step>();
+            List<Step> outSteps = new();
             bool skip1st = true;
 
             await foreach (HttpCallWithRetries step in steps)
@@ -263,7 +263,7 @@ namespace MicroflowShared
                 }
                 else
                 {
-                    Step newstep = new Step()
+                    Step newstep = new()
                     {
                         StepId = step.RowKey,
                         CallbackTimeoutSeconds = step.CallbackTimeoutSeconds,
@@ -285,7 +285,7 @@ namespace MicroflowShared
                         }
                     };
 
-                    List<int> subStepsList = new List<int>();
+                    List<int> subStepsList = new();
                     ;
                     string[] stepsAndCounts = step.SubSteps.Split(new char[2] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -332,8 +332,8 @@ namespace MicroflowShared
             TableClient tableClient = TableHelper.GetStepsTable();
 
             var steps = GetStepEntities(workflowRun.WorkflowName);
-            List<TableTransactionAction> batch = new List<TableTransactionAction>();
-            List<Task> batchTasks = new List<Task>();
+            List<TableTransactionAction> batch = new();
+            List<Task> batchTasks = new();
 
             await foreach (TableEntity entity in steps)
             {
@@ -361,7 +361,7 @@ namespace MicroflowShared
         {
             TableClient projTable = GetWorkflowConfigsTable();
 
-            MicroflowConfigEntity proj = new MicroflowConfigEntity(workflowName, workflowConfigJson);
+            MicroflowConfigEntity proj = new(workflowName, workflowConfigJson);
 
             await projTable.UpsertEntityAsync(proj);
         }

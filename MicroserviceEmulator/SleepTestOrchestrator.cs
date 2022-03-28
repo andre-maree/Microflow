@@ -35,11 +35,11 @@ namespace Microflow.API.Internal
             string data = context.GetInput<string>();
             MicroflowPostData postData = JsonSerializer.Deserialize<MicroflowPostData>(data);
 
-            Random random = new Random();
+            Random random = new();
             TimeSpan ts = TimeSpan.FromSeconds(random.Next(10, 15));
             DateTime deadline = context.CurrentUtcDateTime.Add(ts);
 
-            using (CancellationTokenSource cts = new CancellationTokenSource())
+            using (CancellationTokenSource cts = new())
             {
                 try
                 {
@@ -58,7 +58,7 @@ namespace Microflow.API.Internal
             // test if the callback is done, do the call back if there is 1
             if (!string.IsNullOrWhiteSpace(postData.CallbackUrl))
             {
-                DurableHttpRequest req = new DurableHttpRequest(HttpMethod.Get, new Uri(postData.CallbackUrl));
+                DurableHttpRequest req = new(HttpMethod.Get, new Uri(postData.CallbackUrl));
 
                 await context.CallHttpAsync(req);
             }
@@ -84,7 +84,7 @@ namespace Microflow.API.Internal
             else
             {
                 NameValueCollection data = req.RequestUri.ParseQueryString();
-                MicroflowPostData postData = new MicroflowPostData()
+                MicroflowPostData postData = new()
                 {
                     CallbackUrl = data["CallbackUrl"],
                     MainOrchestrationId = data["MainOrchestrationId"],
@@ -116,7 +116,7 @@ namespace Microflow.API.Internal
             
             await MicroflowHttpClient.HttpClient.PostAsJsonAsync($"{Environment.GetEnvironmentVariable("BaseUrl")}SleepTestOrchestrator_HttpStart/", data);
 
-            HttpResponseMessage resp = new HttpResponseMessage();
+            HttpResponseMessage resp = new();
 
             // test the returned status codes here and also the effect if Microflows step setting StopOnActionFailed
             //resp.StatusCode = System.Net.HttpStatusCode.NotFound;

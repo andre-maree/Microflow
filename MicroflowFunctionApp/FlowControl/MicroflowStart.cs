@@ -42,7 +42,7 @@ namespace Microflow.FlowControl
             }
             catch (RequestFailedException ex)
             {
-                HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.InternalServerError)
+                HttpResponseMessage resp = new(HttpStatusCode.InternalServerError)
                 {
                     Content = new StringContent(ex.Message + " - workflow in error state, call 'UpsertWorkflow' at least once before running a workflow.")
                 };
@@ -51,7 +51,7 @@ namespace Microflow.FlowControl
             }
             catch (Exception e)
             {
-                HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.InternalServerError)
+                HttpResponseMessage resp = new(HttpStatusCode.InternalServerError)
                 {
                     Content = new StringContent(e.Message)
                 };
@@ -88,7 +88,7 @@ namespace Microflow.FlowControl
             catch (RequestFailedException e)
             {
                 // log to table workflow completed
-                LogErrorEntity errorEntity = new LogErrorEntity(workflowRun.WorkflowName,
+                LogErrorEntity errorEntity = new(workflowRun.WorkflowName,
                                                                 Convert.ToInt32(workflowRun.RunObject.StepNumber),
                                                                 e.Message,
                                                                 workflowRun.RunObject.RunId);
@@ -98,7 +98,7 @@ namespace Microflow.FlowControl
             catch (Exception e)
             {
                 // log to table workflow completed
-                LogErrorEntity errorEntity = new LogErrorEntity(workflowRun.WorkflowName,
+                LogErrorEntity errorEntity = new(workflowRun.WorkflowName,
                                                                 Convert.ToInt32(workflowRun.RunObject.StepNumber),
                                                                 e.Message,
                                                                 workflowRun.RunObject.RunId);

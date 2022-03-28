@@ -20,7 +20,7 @@ namespace Microflow.Helpers
             };
 
             // create a workflow run
-            MicroflowRun workflowRun = new MicroflowRun()
+            MicroflowRun workflowRun = new()
             {
                 WorkflowName = workflowName,
                 Loop = input.Loop != 0
@@ -29,7 +29,7 @@ namespace Microflow.Helpers
             };
 
             // create a new run object
-            RunObject runObj = new RunObject();
+            RunObject runObj = new();
             workflowRun.RunObject = runObj;
 
             // instanceId is set/singleton

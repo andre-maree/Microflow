@@ -67,7 +67,7 @@ namespace Microflow.Helpers
                 // pass in the current loop count so it can be used downstream/passed to the micro-services
                 workflowRun.CurrentLoop = i;
 
-                List<Task> subTasks = new List<Task>();
+                List<Task> subTasks = new();
 
                 HttpCallWithRetries httpCallWithRetries = await httpTask;
 
@@ -99,7 +99,7 @@ namespace Microflow.Helpers
                                                                  string workflowName,
                                                                  string globalKey = null)
         {
-            EntityId projStateId = new EntityId(MicroflowStateKeys.WorkflowState, workflowName);
+            EntityId projStateId = new(MicroflowStateKeys.WorkflowState, workflowName);
             Task<int> projStateTask = context.CallEntityAsync<int>(projStateId, MicroflowControlKeys.Read);
 
             bool doGlobal = !string.IsNullOrWhiteSpace(globalKey);
@@ -133,7 +133,7 @@ namespace Microflow.Helpers
                 // max interval seconds
                 int max = PollingConfig.PollingIntervalMaxSeconds;
 
-                using (CancellationTokenSource cts = new CancellationTokenSource())
+                using (CancellationTokenSource cts = new())
                 {
                     try
                     {
@@ -161,7 +161,7 @@ namespace Microflow.Helpers
                     }
                     catch (TimeoutException)
                     {
-                        LogErrorEntity errorEntity = new LogErrorEntity(workflowName, -1,
+                        LogErrorEntity errorEntity = new(workflowName, -1,
                                                                 "MicroflowCheckAndWaitForReadyToRun timed out before it could find s ready state",
                                                                 globalKey);
 
@@ -169,7 +169,7 @@ namespace Microflow.Helpers
                     }
                     catch (Exception e)
                     {
-                        LogErrorEntity errorEntity = new LogErrorEntity(workflowName, -1,
+                        LogErrorEntity errorEntity = new(workflowName, -1,
                                                                 "MicroflowCheckAndWaitForReadyToRun error: " + e.Message,
                                                                 globalKey);
 
@@ -194,7 +194,7 @@ namespace Microflow.Helpers
         [Deterministic]
         public static void SetMicroflowStateReady(this IDurableOrchestrationContext context, MicroflowRun workflowRun)
         {
-            EntityId projStateId = new EntityId(MicroflowStateKeys.WorkflowState, workflowRun.WorkflowName);
+            EntityId projStateId = new(MicroflowStateKeys.WorkflowState, workflowRun.WorkflowName);
 
             context.SignalEntity(projStateId, MicroflowControlKeys.Ready);
         }
@@ -221,7 +221,7 @@ namespace Microflow.Helpers
                                                             MicroflowRun workflowRun,
                                                             string logRowKey)
         {
-            LogOrchestrationEntity logEntity = new LogOrchestrationEntity(true,
+            LogOrchestrationEntity logEntity = new(true,
                                                                           workflowRun.WorkflowName,
                                                                           logRowKey,
                                                                           $"{workflowRun.WorkflowName} started...",

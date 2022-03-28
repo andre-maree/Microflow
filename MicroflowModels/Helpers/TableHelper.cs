@@ -33,7 +33,7 @@ namespace MicroflowModels.Helpers
         {
             await new LogErrorEntity(workflowName, -999, e.Message, globalKey, runId).LogError();
 
-            HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.InternalServerError)
+            HttpResponseMessage resp = new(HttpStatusCode.InternalServerError)
             {
                 Content = new StringContent(e.Message)
             };

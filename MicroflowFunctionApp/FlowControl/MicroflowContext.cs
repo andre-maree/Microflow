@@ -53,9 +53,9 @@ namespace Microflow.FlowControl
             ////////////////////////////////////////
             if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.ScaleGroupId))
             {
-                EntityId scaleId = new EntityId(ScaleGroupCalls.ScaleGroupMaxConcurrentInstanceCount, HttpCallWithRetries.ScaleGroupId);
+                EntityId scaleId = new(ScaleGroupCalls.ScaleGroupMaxConcurrentInstanceCount, HttpCallWithRetries.ScaleGroupId);
 
-                CanExecuteNowObject canExeNow = new CanExecuteNowObject()
+                CanExecuteNowObject canExeNow = new()
                 {
                     ScaleGroupId = HttpCallWithRetries.ScaleGroupId,
                     RunId = MicroflowRun.RunObject.RunId,
@@ -68,8 +68,8 @@ namespace Microflow.FlowControl
 #endif
             #endregion
 
-            EntityId projStateId = new EntityId(MicroflowStateKeys.WorkflowState, MicroflowRun.WorkflowName);
-            EntityId globalStateId = new EntityId(MicroflowStateKeys.GlobalState, MicroflowRun.RunObject.GlobalKey);
+            EntityId projStateId = new(MicroflowStateKeys.WorkflowState, MicroflowRun.WorkflowName);
+            EntityId globalStateId = new(MicroflowStateKeys.GlobalState, MicroflowRun.RunObject.GlobalKey);
             Task<int> projStateTask = MicroflowDurableContext.CallEntityAsync<int>(projStateId, MicroflowControlKeys.Read);
             Task<int> globalSateTask = MicroflowDurableContext.CallEntityAsync<int>(globalStateId, MicroflowControlKeys.Read);
             int projState = await projStateTask;
@@ -95,7 +95,7 @@ namespace Microflow.FlowControl
                 // max interval seconds
                 int max = PollingConfig.PollingIntervalMaxSeconds;
 
-                using (CancellationTokenSource cts = new CancellationTokenSource())
+                using (CancellationTokenSource cts = new())
                 {
                     try
                     {
@@ -142,7 +142,7 @@ namespace Microflow.FlowControl
                     // Stopped flow will exit here without calling RunMicroflowStep()
                     return;
                 }
-                
+
                 // recurse refresh
                 await RunMicroflow();
             }
@@ -177,12 +177,14 @@ namespace Microflow.FlowControl
 
                 #region Region optional: no scale groups
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS && !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_SCALEGROUPS && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_SCALEGROUPS && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT
+                //////////////////////////////////////////////
                 if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.ScaleGroupId))
                 {
-                    EntityId countId = new EntityId(ScaleGroupCalls.CanExecuteNowInScaleGroupCount, HttpCallWithRetries.ScaleGroupId);
+                    EntityId countId = new(ScaleGroupCalls.CanExecuteNowInScaleGroupCount, HttpCallWithRetries.ScaleGroupId);
 
                     await MicroflowDurableContext.CallEntityAsync(countId, MicroflowCounterKeys.Subtract);
                 }
+                //////////////////////////////////////////////
 #endif
                 #endregion
 
@@ -213,6 +215,8 @@ namespace Microflow.FlowControl
                                                                                                                                    HttpCallWithRetries.GetRetryOptions(),
                                                                                                                                    id,
                                                                                                                                    HttpCallWithRetries);
+
+                    return;
                 }
 
                 MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(name, id, HttpCallWithRetries);
@@ -228,6 +232,8 @@ namespace Microflow.FlowControl
                                                                                                                                    HttpCallWithRetries.GetRetryOptions(),
                                                                                                                                    id,
                                                                                                                                    HttpCallWithRetries);
+
+                    return;
                 }
 
                 MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(name, id, HttpCallWithRetries);
@@ -275,7 +281,7 @@ namespace Microflow.FlowControl
         {
             string[] stepsAndCounts = HttpCallWithRetries.SubSteps.Split(Splitter, StringSplitOptions.RemoveEmptyEntries);
 
-            List<Task<CanExecuteResult>> canExecuteTasks = new List<Task<CanExecuteResult>>();
+            List<Task<CanExecuteResult>> canExecuteTasks = new();
 
             for (int i = 0; i < stepsAndCounts.Length; i += 2)
             {
