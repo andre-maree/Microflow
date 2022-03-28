@@ -23,20 +23,63 @@ namespace MicroflowShared
         {
             bool doneReadyFalse = false;
 
-            // deserialize the workflow json
-            Microflow workflow = JsonSerializer.Deserialize<Microflow>(content);
+            Microflow microflow;
+
+            try
+            {
+                // deserialize the workflow json
+                microflow = JsonSerializer.Deserialize<Microflow>(content);
+            }
+            catch (Exception ex)
+            {
+                HttpResponseMessage resp = new(HttpStatusCode.BadRequest)
+                {
+                    Content = new StringContent(ex.Message)
+                };
+
+                try
+                {
+                    _ = await TableHelper.LogError("workflow deserialization error",
+                                                       globalKey,
+                                                       null,
+                                                       ex);
+                }
+                catch
+                {
+                    resp.StatusCode = HttpStatusCode.InternalServerError;
+                }
+
+                return resp;
+            }
+
+            if (string.IsNullOrWhiteSpace(microflow?.WorkflowName))
+            {
+                return new(HttpStatusCode.BadRequest)
+                {
+                    Content = new StringContent("No workflow name")
+                };
+            }
+            else if (microflow.Steps?.Count == 0)
+            {
+                return new(HttpStatusCode.BadRequest)
+                {
+                    Content = new StringContent("No workflow steps")
+                };
+            }
 
             //    // create a workflow run
             MicroflowRun workflowRun = new()
             {
-                WorkflowName = $"{workflow.WorkflowName}@{workflow.WorkflowVersion}"
+                WorkflowName = string.IsNullOrWhiteSpace(microflow.WorkflowVersion)
+                                ? microflow.WorkflowName
+                                : $"{microflow.WorkflowName}@{microflow.WorkflowVersion}"
             };
 
             EntityId projStateId = new(MicroflowStateKeys.WorkflowState, workflowRun.WorkflowName);
 
             try
             {
-                Task<EntityStateResponse<int>> globStateTask = null;
+                Task<EntityStateResponse<int>>? globStateTask = null;
 
                 if (!string.IsNullOrWhiteSpace(globalKey))
                 {
@@ -44,7 +87,7 @@ namespace MicroflowShared
                     globStateTask = client.ReadEntityStateAsync<int>(globalStateId);
                 }
                 // do not do anything, wait for the stopped workflow to be ready
-                var projStateTask = client.ReadEntityStateAsync<int>(projStateId);
+                Task<EntityStateResponse<int>>? projStateTask = client.ReadEntityStateAsync<int>(projStateId);
                 int globState = MicroflowStates.Ready;
                 if (globStateTask != null)
                 {
@@ -69,16 +112,16 @@ namespace MicroflowShared
                 Task delTask = workflowRun.DeleteSteps();
 
                 //    // parse the mergefields
-                content.ParseMergeFields(ref workflow);
+                content.ParseMergeFields(ref microflow);
 
                 await delTask;
 
                 // prepare the workflow by persisting parent info to table storage
-                await workflowRun.PrepareWorkflow(workflow);
+                await workflowRun.PrepareWorkflow(microflow);
 
-                workflow.Steps = null;
-                workflow.WorkflowName = null;
-                string workflowConfigJson = JsonSerializer.Serialize(workflow);
+                microflow.Steps = null;
+                microflow.WorkflowName = null;
+                string workflowConfigJson = JsonSerializer.Serialize(microflow);
 
                 // create the storage tables for the workflow
                 await UpsertWorkflowConfigString(workflowRun.WorkflowName, workflowConfigJson);
@@ -103,7 +146,7 @@ namespace MicroflowShared
 
                 try
                 {
-                    _ = await TableHelper.LogError(workflow.WorkflowName
+                    _ = await TableHelper.LogError(microflow.WorkflowName
                                                        ?? "no workflow",
                                                        workflowRun.RunObject.GlobalKey,
                                                        workflowRun.RunObject.RunId,
@@ -132,7 +175,7 @@ namespace MicroflowShared
         /// only call this to create a new workflow or to update an existing 1
         /// Saves step meta data to table storage and read during execution
         /// </summary>
-        public static async Task PrepareWorkflow(this MicroflowRun workflowRun, MicroflowModels.Microflow workflow)
+        public static async Task PrepareWorkflow(this MicroflowRun workflowRun, Microflow workflow)
         {
             List<TableTransactionAction> batch = new();
             List<Task> batchTasks = new();

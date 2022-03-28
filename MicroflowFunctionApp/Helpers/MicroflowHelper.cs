@@ -21,7 +21,9 @@ namespace Microflow.Helpers
                                                                   Route = MicroflowBase + "/WorkflowControl/{cmd}/{workflowName}/{workflowVersion}")] HttpRequestMessage req,
                                                                   [DurableClient] IDurableEntityClient client, string workflowName, string cmd, string workflowVersion)
         {
-            string key = $"{workflowName}@{workflowVersion}";
+            string key = string.IsNullOrWhiteSpace(workflowVersion)
+                                ? workflowName
+                                : $"{workflowName}@{workflowVersion}";
 
             if (cmd.Equals(MicroflowControlKeys.Read, StringComparison.OrdinalIgnoreCase))
             {

@@ -54,7 +54,9 @@ namespace MicroflowConsole
                     MergeFields = CreateMergeFields(),
                     DefaultRetryOptions = new MicroflowRetryOptions()
                 };
-
+                string workflowName = string.IsNullOrWhiteSpace(microFlow.WorkflowVersion)
+                                ? microFlow.WorkflowName
+                                : $"{microFlow.WorkflowName}@{microFlow.WorkflowVersion}";
                 //// callback by step number
                 //microFlow.Step(2).WebhookAction = "warra";
                 //microFlow.Step(3).WebhookAction = "warra";
@@ -102,7 +104,7 @@ namespace MicroflowConsole
                 {
                     //await Task.Delay(200);
 
-                    tasks.Add(HttpClient.GetAsync(baseUrl + $"/Start/{microFlow.WorkflowName}@{microFlow.WorkflowVersion}?globalkey={globalKey}&loop={loop}"));
+                    tasks.Add(HttpClient.GetAsync(baseUrl + $"/Start/{workflowName}?globalkey={globalKey}&loop={loop}"));
                     //tasks.Add(HttpClient.GetAsync(baseUrl + $"/MicroflowStart/{project.ProjectName}/33306875-9c81-4736-81c0-9be562dae777"));
                 }
 
