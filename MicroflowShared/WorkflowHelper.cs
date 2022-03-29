@@ -126,7 +126,7 @@ namespace MicroflowShared
                 // create the storage tables for the workflow
                 await UpsertWorkflowConfigString(workflowRun.WorkflowName, workflowConfigJson);
 
-                return new HttpResponseMessage(HttpStatusCode.Accepted);
+                return new HttpResponseMessage(HttpStatusCode.OK);
             }
             catch (Azure.RequestFailedException e)
             {

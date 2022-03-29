@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace MicroflowConsole
 {
-    class Program
+    public class Program
     {
         public static readonly HttpClient HttpClient = new HttpClient();
         private static string baseUrl = "http://localhost:7071/microflow/v1";
