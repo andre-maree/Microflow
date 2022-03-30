@@ -24,7 +24,7 @@ namespace Microflow.FlowControl
         /// This is the entry point, workflow payload is in the http body
         /// </summary>
         /// <param name="instanceId">If an instanceId is passed in, it will run as a singleton, else it will run concurrently with each with a new instanceId</param>
-        [FunctionName("MicroflowStart")]
+        [FunctionName(CallNames.MicroflowStart)]
         public static async Task<HttpResponseMessage> MicroflowStart([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = MicroflowBase + "/Start/{workflowName}/{instanceId?}")]
                                                                 HttpRequestMessage req,
                                                                 [DurableClient] IDurableOrchestrationClient client,
@@ -65,7 +65,7 @@ namespace Microflow.FlowControl
         /// </summary>
         /// <returns></returns>
         [Deterministic]
-        [FunctionName("MicroflowStartOrchestration")]
+        [FunctionName(CallNames.MicroflowStartOrchestration)]
         public static async Task MicroflowStartOrchestration([OrchestrationTrigger] IDurableOrchestrationContext context,
                                        ILogger inLog)
         {

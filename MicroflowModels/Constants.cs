@@ -11,6 +11,7 @@ namespace MicroflowModels
             public const string CanExecuteNowInScaleGroup = "CanExecuteNowInScaleGroup";
             public const string CanExecuteNowInScaleGroupCount = "CanExecuteNowInScaleGroupCount";
             public const string ScaleGroupMaxConcurrentInstanceCount = "ScaleGroupMaxConcurrentInstanceCount";
+            public const string ScaleGroup = "ScaleGroup";
         }
 #endif
         public static class PollingConfig
@@ -32,6 +33,10 @@ namespace MicroflowModels
             public const string LogError = "LogError";
             public const string LogStep = "LogStep";
             public const string LogOrchestration = "LogOrchestration";
+            public const string HttpCallOrchestrator = "HttpCallOrchestrator";
+            public const string HttpCallWithCallbackOrchestrator = "HttpCallWithCallbackOrchestrator";
+            public const string MicroflowStart = "MicroflowStart";
+            public const string MicroflowStartOrchestration = "MicroflowStartOrchestration";
         }
 
         public static class MicroflowStates

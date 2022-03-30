@@ -207,11 +207,9 @@ namespace Microflow.FlowControl
             // wait for external event flow / webhook
             if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.WebhookAction))
             {
-                const string name = "HttpCallWithCallbackOrchestrator";
-
                 if (HttpCallWithRetries.RetryDelaySeconds > 0)
                 {
-                    MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(name,
+                    MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(CallNames.HttpCallWithCallbackOrchestrator,
                                                                                                                                    HttpCallWithRetries.GetRetryOptions(),
                                                                                                                                    id,
                                                                                                                                    HttpCallWithRetries);
@@ -219,16 +217,14 @@ namespace Microflow.FlowControl
                     return;
                 }
 
-                MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(name, id, HttpCallWithRetries);
+                MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallWithCallbackOrchestrator, id, HttpCallWithRetries);
             }
             // send and receive inline flow
             else
             {
-                const string name = "HttpCallOrchestrator";
-
                 if (HttpCallWithRetries.RetryDelaySeconds > 0)
                 {
-                    MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(name,
+                    MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(CallNames.HttpCallOrchestrator,
                                                                                                                                    HttpCallWithRetries.GetRetryOptions(),
                                                                                                                                    id,
                                                                                                                                    HttpCallWithRetries);
@@ -236,7 +232,7 @@ namespace Microflow.FlowControl
                     return;
                 }
 
-                MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(name, id, HttpCallWithRetries);
+                MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallOrchestrator, id, HttpCallWithRetries);
             }
         }
 

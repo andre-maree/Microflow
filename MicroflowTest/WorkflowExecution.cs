@@ -1,4 +1,5 @@
 using MicroflowModels;
+using MicroflowSDK;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -35,9 +36,11 @@ namespace MicroflowTest
                                 : $"{microflow.WorkflowName}@{microflow.WorkflowVersion}";
 
             var tasks = new List<Task<HttpResponseMessage>>();
-
+            
             int loop = 1;
             string globalKey = Guid.NewGuid().ToString();
+
+            microflow.Step(2).WebhookAction = "warra";
 
             // Upsert
             var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", microflow, new JsonSerializerOptions(JsonSerializerDefaults.General));

@@ -17,7 +17,7 @@ namespace Microflow.HttpOrchestrators
         /// Does the call out and then waits for the webhook
         /// </summary>
         [Deterministic]
-        [FunctionName("HttpCallWithCallbackOrchestrator")]
+        [FunctionName(CallNames.HttpCallWithCallbackOrchestrator)]
         public static async Task<MicroflowHttpResponse> HttpCallWithCallback([OrchestrationTrigger] IDurableOrchestrationContext context,
                                                                              ILogger inLog)
         {
