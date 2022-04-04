@@ -69,7 +69,7 @@ namespace MicroflowConsole
 
                 //// callback by step number
                 //microFlow.Step(1).ForwardPostData = false;
-                //microFlow.Step(2).ForwardPostData = true;
+                microFlow.Step(2).ForwardPostData = true; microFlow.Step(2).WebhookAction = "act";
                 //microFlow.Step(3).WebhookAction = "warra";
                 //microFlow.Step(4).WebhookAction = "warra";
                 //microFlow.Step(5).WebhookAction = "warra";
@@ -110,7 +110,7 @@ namespace MicroflowConsole
                 //microFlow.Step(4).AsynchronousPollingEnabled = false;
 
                 // Upsert
-                var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", microFlow, new JsonSerializerOptions(JsonSerializerDefaults.General));
+                //var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", microFlow, new JsonSerializerOptions(JsonSerializerDefaults.General));
 
                 for (int i = 0; i < 1; i++)
                 {

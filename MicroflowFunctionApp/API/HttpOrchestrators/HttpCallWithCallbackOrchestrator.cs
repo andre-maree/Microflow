@@ -25,7 +25,7 @@ namespace Microflow.HttpOrchestrators
 
             (HttpCall httpCall, string content) input = context.GetInput<(HttpCall, string)>();
 
-            DurableHttpRequest durableHttpRequest = input.httpCall.CreateMicroflowDurableHttpRequest(context.InstanceId, input.Item2);
+            DurableHttpRequest durableHttpRequest = input.httpCall.CreateMicroflowDurableHttpRequest(context.InstanceId, input.content);
 
             bool doneCallout = false;
 
@@ -52,11 +52,11 @@ namespace Microflow.HttpOrchestrators
 #endif
                 #endregion
 
-                DurableHttpResponse durableHttpResponse1 = await context.CallHttpAsync(durableHttpRequest);
-                DurableHttpResponse durableHttpResponse = durableHttpResponse1;
+                DurableHttpResponse durableHttpResponse = await context.CallHttpAsync(durableHttpRequest);
+                
                 doneCallout = true;
 
-                MicroflowHttpResponse microflowHttpResponse = durableHttpResponse.GetMicroflowResponse(input.httpCall.ForwardPostData);
+                MicroflowHttpResponse microflowHttpResponse = durableHttpResponse.GetMicroflowResponse(false);
 
                 // if failed http status return
                 if (!microflowHttpResponse.Success)
@@ -66,8 +66,9 @@ namespace Microflow.HttpOrchestrators
 
                 log.LogCritical($"Waiting for webhook: {CallNames.Webhook}/{input.httpCall.WebhookAction}/{context.InstanceId}/{input.httpCall.RowKey}");
                 // wait for the external event, set the timeout
-                HttpResponseMessage actionResult = await context.WaitForExternalEvent<HttpResponseMessage>(input.httpCall.WebhookAction,
+                WebhookResult actionResult = await context.WaitForExternalEvent<WebhookResult>(input.httpCall.WebhookAction,
                                                                                                            TimeSpan.FromSeconds(input.httpCall.WebhookTimeoutSeconds));
+
                 #region Optional: no stepcount
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_STEPCOUNT
                 ////////////////////////////////////////////////
@@ -79,25 +80,30 @@ namespace Microflow.HttpOrchestrators
                 #endregion
 
                 // check for action failed
-                if (actionResult.IsSuccessStatusCode)
+                if (actionResult.StatusCode == 200)
                 {
                     log.LogWarning($"Step {input.httpCall.RowKey} webhook {input.httpCall.WebhookAction} successful at {context.CurrentUtcDateTime:HH:mm:ss}");
 
                     microflowHttpResponse.HttpResponseStatusCode = (int)actionResult.StatusCode;
 
+                    if (input.httpCall.ForwardPostData)
+                    {
+                        microflowHttpResponse.Message = actionResult.Content;
+                    }
+
                     return microflowHttpResponse;
                 }
                 else
                 {
-                    if (!input.httpCall.StopOnActionFailed)
-                    {
+                    //if (!input.httpCall.StopOnActionFailed)
+                    //{
                         return new MicroflowHttpResponse()
                         {
                             Success = false,
                             HttpResponseStatusCode = (int)actionResult.StatusCode,
                             Message = $"webhook action {input.httpCall.WebhookAction} falied, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
                         };
-                    }
+                    //}
                 }
             }
             catch (TimeoutException)
