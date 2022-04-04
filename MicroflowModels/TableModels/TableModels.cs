@@ -74,6 +74,7 @@ namespace MicroflowModels
         public bool IsHttpGet { get; set; }
         public string StepId { get; set; }
         public string ScaleGroupId { get; set; }
+        public bool ForwardPostData { get; set; }
 
 
         [IgnoreDataMember]

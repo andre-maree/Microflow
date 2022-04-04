@@ -59,7 +59,7 @@ namespace Microflow.HttpOrchestrators
 #endif
                 #endregion
 
-                return durableHttpResponse.GetMicroflowResponse();
+                return durableHttpResponse.GetMicroflowResponse(input.httpCall.ForwardPostData);
             }
             catch (TimeoutException)
             {

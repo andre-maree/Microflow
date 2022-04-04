@@ -16,13 +16,13 @@ namespace Microflow.Helpers
         /// Used to handle callout responses
         /// </summary>
         [Deterministic]
-        public static MicroflowHttpResponse GetMicroflowResponse(this DurableHttpResponse durableHttpResponse)
+        public static MicroflowHttpResponse GetMicroflowResponse(this DurableHttpResponse durableHttpResponse, bool forwardPostData)
         {
             int statusCode = (int)durableHttpResponse.StatusCode;
 
             if (statusCode <= 200 || ((statusCode > 201) && (statusCode < 300)))
             {
-                return new MicroflowHttpResponse() { Success = true, HttpResponseStatusCode = statusCode, Message = durableHttpResponse.Content };
+                return new MicroflowHttpResponse() { Success = true, HttpResponseStatusCode = statusCode, Message = forwardPostData ? durableHttpResponse.Content : string.Empty };
             }
 
             // if 201 created try get the location header to save it in the steps log

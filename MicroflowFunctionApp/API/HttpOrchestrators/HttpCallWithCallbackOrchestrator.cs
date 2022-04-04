@@ -56,7 +56,7 @@ namespace Microflow.HttpOrchestrators
                 DurableHttpResponse durableHttpResponse = durableHttpResponse1;
                 doneCallout = true;
 
-                MicroflowHttpResponse microflowHttpResponse = durableHttpResponse.GetMicroflowResponse();
+                MicroflowHttpResponse microflowHttpResponse = durableHttpResponse.GetMicroflowResponse(input.httpCall.ForwardPostData);
 
                 // if failed http status return
                 if (!microflowHttpResponse.Success)
