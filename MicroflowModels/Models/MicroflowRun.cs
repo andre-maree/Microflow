@@ -21,5 +21,6 @@
         public string RunId { get; set; }
         public string StepNumber { get; set; }
         public string GlobalKey { get; set; }
+        public string PostData { get; set; }
     }
 }

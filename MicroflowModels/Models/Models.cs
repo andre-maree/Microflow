@@ -16,6 +16,7 @@ namespace MicroflowModels
         public int StepNumber { get; set; }
         public string StepId { get; set; }
         public string GlobalKey { get; set; }
+        public string PostData { get; set; }
     }
 
     public class MicroflowProjectBase

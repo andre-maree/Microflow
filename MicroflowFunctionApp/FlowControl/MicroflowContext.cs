@@ -212,12 +212,12 @@ namespace Microflow.FlowControl
                     MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(CallNames.HttpCallWithCallbackOrchestrator,
                                                                                                                                    HttpCallWithRetries.GetRetryOptions(),
                                                                                                                                    id,
-                                                                                                                                   HttpCallWithRetries);
+                                                                                                                                   (HttpCallWithRetries, MicroflowRun.RunObject.PostData));
 
                     return;
                 }
 
-                MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallWithCallbackOrchestrator, id, HttpCallWithRetries);
+                MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallWithCallbackOrchestrator, id, (HttpCallWithRetries, MicroflowRun.RunObject.PostData));
             }
             // send and receive inline flow
             else
@@ -227,12 +227,12 @@ namespace Microflow.FlowControl
                     MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(CallNames.HttpCallOrchestrator,
                                                                                                                                    HttpCallWithRetries.GetRetryOptions(),
                                                                                                                                    id,
-                                                                                                                                   HttpCallWithRetries);
+                                                                                                                                   (HttpCallWithRetries, MicroflowRun.RunObject.PostData));
 
                     return;
                 }
 
-                MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallOrchestrator, id, HttpCallWithRetries);
+                MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallOrchestrator, id, (HttpCallWithRetries, MicroflowRun.RunObject.PostData));
             }
         }
 
@@ -292,7 +292,8 @@ namespace Microflow.FlowControl
                     {
                         RunId = MicroflowRun.RunObject.RunId,
                         StepNumber = stepsAndCounts[i],
-                        GlobalKey = MicroflowRun.RunObject.GlobalKey
+                        GlobalKey = MicroflowRun.RunObject.GlobalKey,
+                        PostData = MicroflowHttpResponse.Message
                     };
 
                     MicroflowTasks.Add(MicroflowDurableContext.CallSubOrchestratorAsync(CallNames.ExecuteStep, MicroflowRun));
@@ -332,7 +333,8 @@ namespace Microflow.FlowControl
                     {
                         RunId = MicroflowRun.RunObject.RunId,
                         StepNumber = result.StepNumber,
-                        GlobalKey = MicroflowRun.RunObject.GlobalKey
+                        GlobalKey = MicroflowRun.RunObject.GlobalKey,
+                        PostData = MicroflowHttpResponse.Message
                     };
 
                     MicroflowTasks.Add(MicroflowDurableContext.CallSubOrchestratorAsync(CallNames.ExecuteStep, MicroflowRun));
