@@ -2,6 +2,12 @@
 {
     #region POCOs
 
+    public class WebhookResult
+    {
+        public int StatusCode { get; set; }
+        public string Content { get; set; }
+    }
+
     /// <summary>
     /// Used to hold Microflow specific http status code results
     /// </summary>

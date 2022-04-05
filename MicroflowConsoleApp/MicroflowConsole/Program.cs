@@ -29,9 +29,9 @@ namespace MicroflowConsole
 
         private static (string Name, Microflow Microflow) Create()
         {
-            //var workflow = Tests.CreateTestWorkflow_SimpleSteps();
+            var workflow = Tests.CreateTestWorkflow_SimpleSteps();
             //var workflow = Tests.CreateTestWorkflow_10StepsParallel();
-            var workflow = Tests.CreateTestWorkflow_Complex1();
+            //var workflow = Tests.CreateTestWorkflow_Complex1();
             //var workflow = Tests.CreateTestWorkflow_110Steps();
             //var workflow2 = Tests.CreateTestWorkflow_110Steps();
 
@@ -68,7 +68,8 @@ namespace MicroflowConsole
                 var microFlow = createResult.Microflow;
 
                 //// callback by step number
-                microFlow.Step(2).WebhookAction = "warra";
+                //microFlow.Step(1).ForwardPostData = false;
+                microFlow.Step(2).ForwardPostData = true; microFlow.Step(2).WebhookAction = "act";
                 //microFlow.Step(3).WebhookAction = "warra";
                 //microFlow.Step(4).WebhookAction = "warra";
                 //microFlow.Step(5).WebhookAction = "warra";

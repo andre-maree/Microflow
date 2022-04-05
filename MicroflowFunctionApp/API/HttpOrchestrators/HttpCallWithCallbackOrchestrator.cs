@@ -23,9 +23,9 @@ namespace Microflow.HttpOrchestrators
         {
             ILogger log = context.CreateReplaySafeLogger(inLog);
 
-            HttpCall httpCall = context.GetInput<HttpCall>();
+            (HttpCall httpCall, string content) input = context.GetInput<(HttpCall, string)>();
 
-            DurableHttpRequest durableHttpRequest = httpCall.CreateMicroflowDurableHttpRequest(context.InstanceId);
+            DurableHttpRequest durableHttpRequest = input.httpCall.CreateMicroflowDurableHttpRequest(context.InstanceId, input.content);
 
             bool doneCallout = false;
 
@@ -34,7 +34,7 @@ namespace Microflow.HttpOrchestrators
             //////////////////////////////////////
             bool doneAdd = false;
             bool doneSubtract = false;
-            EntityId countId = new(MicroflowEntities.StepCount, httpCall.PartitionKey + httpCall.RowKey);
+            EntityId countId = new(MicroflowEntities.StepCount, input.httpCall.PartitionKey + input.httpCall.RowKey);
             //////////////////////////////////////
 #endif
             #endregion
@@ -52,11 +52,11 @@ namespace Microflow.HttpOrchestrators
 #endif
                 #endregion
 
-                DurableHttpResponse durableHttpResponse1 = await context.CallHttpAsync(durableHttpRequest);
-                DurableHttpResponse durableHttpResponse = durableHttpResponse1;
+                DurableHttpResponse durableHttpResponse = await context.CallHttpAsync(durableHttpRequest);
+                
                 doneCallout = true;
 
-                MicroflowHttpResponse microflowHttpResponse = durableHttpResponse.GetMicroflowResponse();
+                MicroflowHttpResponse microflowHttpResponse = durableHttpResponse.GetMicroflowResponse(false);
 
                 // if failed http status return
                 if (!microflowHttpResponse.Success)
@@ -64,10 +64,11 @@ namespace Microflow.HttpOrchestrators
 
                 // TODO: always use https
 
-                log.LogCritical($"Waiting for webhook: {CallNames.Webhook}/{httpCall.WebhookAction}/{context.InstanceId}/{httpCall.RowKey}");
+                log.LogCritical($"Waiting for webhook: {CallNames.Webhook}/{input.httpCall.WebhookAction}/{context.InstanceId}/{input.httpCall.RowKey}");
                 // wait for the external event, set the timeout
-                HttpResponseMessage actionResult = await context.WaitForExternalEvent<HttpResponseMessage>(httpCall.WebhookAction,
-                                                                                                           TimeSpan.FromSeconds(httpCall.WebhookTimeoutSeconds));
+                WebhookResult actionResult = await context.WaitForExternalEvent<WebhookResult>(input.httpCall.WebhookAction,
+                                                                                                           TimeSpan.FromSeconds(input.httpCall.WebhookTimeoutSeconds));
+
                 #region Optional: no stepcount
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_STEPCOUNT
                 ////////////////////////////////////////////////
@@ -79,38 +80,43 @@ namespace Microflow.HttpOrchestrators
                 #endregion
 
                 // check for action failed
-                if (actionResult.IsSuccessStatusCode)
+                if (actionResult.StatusCode == 200)
                 {
-                    log.LogWarning($"Step {httpCall.RowKey} webhook {httpCall.WebhookAction} successful at {context.CurrentUtcDateTime:HH:mm:ss}");
+                    log.LogWarning($"Step {input.httpCall.RowKey} webhook {input.httpCall.WebhookAction} successful at {context.CurrentUtcDateTime:HH:mm:ss}");
 
                     microflowHttpResponse.HttpResponseStatusCode = (int)actionResult.StatusCode;
+
+                    if (input.httpCall.ForwardPostData)
+                    {
+                        microflowHttpResponse.Message = actionResult.Content;
+                    }
 
                     return microflowHttpResponse;
                 }
                 else
                 {
-                    if (!httpCall.StopOnActionFailed)
-                    {
+                    //if (!input.httpCall.StopOnActionFailed)
+                    //{
                         return new MicroflowHttpResponse()
                         {
                             Success = false,
                             HttpResponseStatusCode = (int)actionResult.StatusCode,
-                            Message = $"webhook action {httpCall.WebhookAction} falied, StopOnActionFailed is {httpCall.StopOnActionFailed}"
+                            Message = $"webhook action {input.httpCall.WebhookAction} falied, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
                         };
-                    }
+                    //}
                 }
             }
             catch (TimeoutException)
             {
-                if (!httpCall.StopOnActionFailed)
+                if (!input.httpCall.StopOnActionFailed)
                 {
                     return new MicroflowHttpResponse()
                     {
                         Success = false,
                         HttpResponseStatusCode = -408,
                         Message = doneCallout
-                        ? $"webhook action {httpCall.WebhookAction} timed out, StopOnActionFailed is {httpCall.StopOnActionFailed}"
-                        : $"callout to {httpCall.CalloutUrl} timed out before spawning a webhook, StopOnActionFailed is {httpCall.StopOnActionFailed}"
+                        ? $"webhook action {input.httpCall.WebhookAction} timed out, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
+                        : $"callout to {input.httpCall.CalloutUrl} timed out before spawning a webhook, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
                     };
                 }
 
@@ -118,15 +124,15 @@ namespace Microflow.HttpOrchestrators
             }
             catch (Exception e)
             {
-                if (!httpCall.StopOnActionFailed)
+                if (!input.httpCall.StopOnActionFailed)
                 {
                     return new MicroflowHttpResponse()
                     {
                         Success = false,
                         HttpResponseStatusCode = -500,
                         Message = doneCallout
-                        ? $"webhook action {httpCall.WebhookAction} failed, StopOnActionFailed is {httpCall.StopOnActionFailed} - " + e.Message
-                        : $"callout to {httpCall.CalloutUrl} failed before spawning a webhook, StopOnActionFailed is {httpCall.StopOnActionFailed}"
+                        ? $"webhook action {input.httpCall.WebhookAction} failed, StopOnActionFailed is {input.httpCall.StopOnActionFailed} - " + e.Message
+                        : $"callout to {input.httpCall.CalloutUrl} failed before spawning a webhook, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
                     };
                 }
 

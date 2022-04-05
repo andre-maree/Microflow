@@ -16,13 +16,13 @@ namespace Microflow.Helpers
         /// Used to handle callout responses
         /// </summary>
         [Deterministic]
-        public static MicroflowHttpResponse GetMicroflowResponse(this DurableHttpResponse durableHttpResponse)
+        public static MicroflowHttpResponse GetMicroflowResponse(this DurableHttpResponse durableHttpResponse, bool forwardPostData)
         {
             int statusCode = (int)durableHttpResponse.StatusCode;
 
             if (statusCode <= 200 || ((statusCode > 201) && (statusCode < 300)))
             {
-                return new MicroflowHttpResponse() { Success = true, HttpResponseStatusCode = statusCode };
+                return new MicroflowHttpResponse() { Success = true, HttpResponseStatusCode = statusCode, Message = forwardPostData ? durableHttpResponse.Content : string.Empty };
             }
 
             // if 201 created try get the location header to save it in the steps log
@@ -35,7 +35,7 @@ namespace Microflow.Helpers
         }
 
         [Deterministic]
-        public static DurableHttpRequest CreateMicroflowDurableHttpRequest(this HttpCall httpCall, string instanceId)
+        public static DurableHttpRequest CreateMicroflowDurableHttpRequest(this HttpCall httpCall, string instanceId, string content)
         {
             DurableHttpRequest newDurableHttpRequest;
 
@@ -56,7 +56,8 @@ namespace Microflow.Helpers
                     StepNumber = Convert.ToInt32(httpCall.RowKey),
                     MainOrchestrationId = httpCall.MainOrchestrationId,
                     Webhook = webhook,
-                    GlobalKey = httpCall.GlobalKey
+                    GlobalKey = httpCall.GlobalKey,
+                    PostData = content
                 };
 
                 string body = JsonSerializer.Serialize(postData);

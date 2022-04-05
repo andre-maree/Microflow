@@ -220,7 +220,8 @@ namespace MicroflowShared
                         CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
                         IsHttpGet = step.IsHttpGet,
                         AsynchronousPollingEnabled = step.AsynchronousPollingEnabled,
-                        ScaleGroupId = step.ScaleGroupId
+                        ScaleGroupId = step.ScaleGroupId,
+                        ForwardPostData = step.ForwardPostData
                     };
 
                     httpCallRetriesEntity.RetryDelaySeconds = step.RetryOptions.DelaySeconds;
@@ -243,7 +244,8 @@ namespace MicroflowShared
                         CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
                         IsHttpGet = step.IsHttpGet,
                         AsynchronousPollingEnabled = step.AsynchronousPollingEnabled,
-                        ScaleGroupId = step.ScaleGroupId
+                        ScaleGroupId = step.ScaleGroupId,
+                        ForwardPostData = step.ForwardPostData
                     };
 
                     // batchop
@@ -317,6 +319,7 @@ namespace MicroflowShared
                         CalloutUrl = step.CalloutUrl,
                         AsynchronousPollingEnabled = step.AsynchronousPollingEnabled,
                         ScaleGroupId = step.ScaleGroupId,
+                        ForwardPostData = step.ForwardPostData,
                         StepNumber = Convert.ToInt32(step.RowKey),
                         RetryOptions = step.RetryDelaySeconds == 0 ? null : new MicroflowRetryOptions()
                         {

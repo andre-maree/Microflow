@@ -16,6 +16,7 @@ namespace MicroflowModels
         public int StepNumber { get; set; }
         public string StepId { get; set; }
         public string GlobalKey { get; set; }
+        public string PostData { get; set; }
     }
 
     public class MicroflowProjectBase
@@ -69,6 +70,7 @@ namespace MicroflowModels
         public int CalloutTimeoutSeconds { get; set; } = 1000;
         public int WebhookTimeoutSeconds { get; set; } = 1000;
         public bool AsynchronousPollingEnabled { get; set; } = true;
+        public bool ForwardPostData { get; set; }
 
         [DataMember(Name = "SubSteps", EmitDefaultValue = false)]
         public List<int> SubSteps { get; set; } = new List<int>();
