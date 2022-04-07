@@ -11,13 +11,13 @@ Microflow functionality:
 - for custom logic like response interpretations, this can be included in Microflow, but best practice is to separate these response proxies as functions outside of Microflow, and then these will call back to Microflow
 - easily manage step configs with merge fields
 - do batch processing by looping the workflow execution with Microflow`s "Loop" setting, set up variation sets, 1 variation set per loop/batch
-- set outgoing http calls to be inline (wait for response at the point of out call), or wait asynchronously by setting CallbackAction (wait for external action/callback)
+- set outgoing http calls to be inline (wait for response at the point of out call), or wait asynchronously by setting WebhookAction (wait for external action call to the webhook)
 - set AsynchronousPollingEnabled (per step) to true and the step will poll for completion before moving on, embed other Microflow workflows and wait for them; or set it to false for fire and forget, call another Microflow workflow and continue immediately with the next step, no waiting for completion
 - there is a global id called "GlobalKey" in the logs (orchestrations, steps, errors) that can be used to tie up cross Microflow workflow calls, this key is passed along for logging purposes when a Microflow workflow calls/embeds other Microflow workflows
 - workflows, as well as based on a GlobalKey, can be controlled via api calls for: stop, pause, and run
-- timeouts can be set per step for inline and callback
+- timeouts can be set per step for inline and webhook
 - retry policies can be set for each step and there can also be a default retry policy for the entire workflow
-- StopOnActionFailed can be set per step to indicate for when there is a failure (not a success callback), which will make Microflow stop the workflow execution or to log the failure and continue with the workflow
+- StopOnActionFailed can be set per step to indicate for when there is a failure (not a success call to webhook), which will make Microflow stop the workflow execution or to log the failure and continue with the workflow
 - scale group can be set per step, this will throttle the maximum concurrent step instances
 - save and retrieve Microflow workflow json
 - view in-step progress counts, this is more useful when running multiple concurrent instances
