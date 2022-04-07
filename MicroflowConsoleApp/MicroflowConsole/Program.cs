@@ -29,7 +29,7 @@ namespace MicroflowConsole
 
         private static (string Name, Microflow Microflow) Create()
         {
-            var workflow = Tests.CreateTestWorkflow_SimpleSteps();
+            var workflow = TestWorkflows.CreateTestWorkflow_SimpleSteps();
             //var workflow = Tests.CreateTestWorkflow_10StepsParallel();
             //var workflow = Tests.CreateTestWorkflow_Complex1();
             //var workflow = Tests.CreateTestWorkflow_110Steps();
@@ -110,7 +110,7 @@ namespace MicroflowConsole
                 //microFlow.Step(4).AsynchronousPollingEnabled = false;
 
                 // Upsert
-                //var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", microFlow, new JsonSerializerOptions(JsonSerializerDefaults.General));
+                var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", microFlow, new JsonSerializerOptions(JsonSerializerDefaults.General));
 
                 for (int i = 0; i < 1; i++)
                 {
