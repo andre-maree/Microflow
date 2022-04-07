@@ -5,7 +5,7 @@ namespace MicroflowModels
     public static class Constants
     {
 
-#if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS && !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_SCALEGROUPS && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_SCALEGROUPS && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT
+#if DEBUG || RELEASE || !DEBUG_NO_SCALEGROUPS && !RELEASE_NO_SCALEGROUPS
         public static class ScaleGroupCalls
         {
             public const string CanExecuteNowInScaleGroup = "CanExecuteNowInScaleGroup";
@@ -14,6 +14,7 @@ namespace MicroflowModels
             public const string ScaleGroup = "ScaleGroup";
         }
 #endif
+
         public static class PollingConfig
         {
             public static readonly long PollingMaxHours = Convert.ToInt64(Environment.GetEnvironmentVariable("PollingMaxHours"));

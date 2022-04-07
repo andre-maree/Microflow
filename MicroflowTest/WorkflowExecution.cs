@@ -3,6 +3,7 @@ using MicroflowSDK;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -20,14 +21,24 @@ namespace MicroflowTest
         [TestMethod]
         public async Task CreateTestWorkflow_Complex1()
         {
-            var workflow = MicroflowConsole.Tests.CreateTestWorkflow_Complex1();
+            string path = Path.GetDirectoryName(System.AppDomain.CurrentDomain.BaseDirectory);
+            string pathf = Directory.GetParent(Directory.GetParent(Directory.GetParent(path).FullName).FullName).FullName + "\\config.json";
+
+            StreamReader r = new StreamReader(pathf);
+
+
+            string jsonString = r.ReadToEnd();
+
+            var ff = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string,string>>(jsonString);
+
+            var workflow = TestWorkflows.CreateTestWorkflow_Complex1();
 
             var microflow = new Microflow()
             {
                 WorkflowName = "Myflow_ClientX2",
                 WorkflowVersion = "v2.1",
                 Steps = workflow,
-                MergeFields = MicroflowConsole.Program.CreateMergeFields(),
+                MergeFields = TestWorkflows.CreateMergeFields(),
                 DefaultRetryOptions = new MicroflowRetryOptions()
             };
 
@@ -57,6 +68,8 @@ namespace MicroflowTest
             _ = await Task.WhenAll(tasks);
 
             Assert.IsFalse(tasks.Exists(e => e.Result.StatusCode != System.Net.HttpStatusCode.Accepted));
+
+            var log = await LogReader.GetOrchLog(workflowName);
         }
     }
 }
