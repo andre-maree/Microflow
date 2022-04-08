@@ -17,7 +17,7 @@ namespace Microflow.Webhook
         /// </summary>
         [FunctionName("Webhook")]
         public static async Task<HttpResponseMessage> RaiseEvent(
-        [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = "/" + MicroflowModels.Constants.MicroflowBase + "/Webhook/{action}/{orchestratorId}/{stepId}/{fail:bool?}")] HttpRequestMessage req,
+        [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = "/" + MicroflowModels.Constants.MicroflowPath + "/Webhook/{action}/{orchestratorId}/{stepId}/{fail:bool?}")] HttpRequestMessage req,
         [DurableClient] IDurableOrchestrationClient client, int stepId, string action, string orchestratorId, bool? fail)
         {
             string content = await req.Content.ReadAsStringAsync();

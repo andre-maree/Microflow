@@ -21,7 +21,7 @@ namespace MicroflowApi
         /// </summary>
         [FunctionName(ScaleGroupCalls.ScaleGroup)]
         public static async Task<HttpResponseMessage> ScaleGroup([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-                                                                  Route = MicroflowBase + "/ScaleGroup/{scaleGroupId?}/{maxInstanceCount?}")] HttpRequestMessage req,
+                                                                  Route = MicroflowPath + "/ScaleGroup/{scaleGroupId?}/{maxInstanceCount?}")] HttpRequestMessage req,
                                                                   [DurableClient] IDurableEntityClient client, string scaleGroupId, int? maxInstanceCount)
         {
             if (req.Method.Equals(HttpMethod.Get))

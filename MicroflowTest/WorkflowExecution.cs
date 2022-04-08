@@ -9,7 +9,6 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-
 namespace MicroflowTest
 {
     [TestClass]
@@ -32,6 +31,7 @@ namespace MicroflowTest
             var ff = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string,string>>(jsonString);
 
             var workflow = TestWorkflows.CreateTestWorkflow_Complex1();
+            //var workflow = TestWorkflows.CreateTestWorkflow_SimpleSteps();
 
             var microflow = new Microflow()
             {
@@ -51,12 +51,20 @@ namespace MicroflowTest
             int loop = 1;
             string globalKey = Guid.NewGuid().ToString();
 
-            microflow.Step(2).WebhookAction = "warra";
+            //microflow.Step(1).WaitForAllParents = false;
+
+            //microflow.Step(2).WaitForAllParents = false;
+            //microflow.Step(3).WaitForAllParents = false;
+            //microflow.Step(4).WaitForAllParents = false;
+            //microflow.Step(5).WaitForAllParents = false;
+            //microflow.Step(6).WaitForAllParents = false;
+            //microflow.Step(7).WaitForAllParents = false;
+            //microflow.Step(8).WaitForAllParents = false;
 
             // Upsert
             var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", microflow, new JsonSerializerOptions(JsonSerializerDefaults.General));
 
-            Assert.IsTrue(result.StatusCode == System.Net.HttpStatusCode.OK);
+            //Assert.IsTrue(result.StatusCode == System.Net.HttpStatusCode.OK);
 
             for (int i = 0; i < 1; i++)
             {

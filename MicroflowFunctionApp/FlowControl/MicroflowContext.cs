@@ -279,15 +279,16 @@ namespace Microflow.FlowControl
 
             List<Task<CanExecuteResult>> canExecuteTasks = new();
 
-            for (int i = 0; i < stepsAndCounts.Length; i += 2)
+            for (int i = 0; i < stepsAndCounts.Length; i += 3)
             {
                 // check parentCount
                 // execute immediately if parentCount is 1
                 int parentCount = Convert.ToInt32(stepsAndCounts[i + 1]);
+                int waitForAllParents = Convert.ToInt32(stepsAndCounts[i + 2]);
 
-                if (parentCount < 2)
+                if (parentCount < 2 || waitForAllParents == 0)
                 {
-                    // stepsAndCounts[i] is stepNumber, stepsAndCounts[i + 1] is parentCount
+                    // stepsAndCounts[i] is stepNumber, stepsAndCounts[i + 1] is parentCount, stepsAndCounts[i + 2] is waitForAllParents
                     MicroflowRun.RunObject = new RunObject()
                     {
                         RunId = MicroflowRun.RunObject.RunId,
