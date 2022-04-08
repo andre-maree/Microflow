@@ -13,12 +13,14 @@ Microflow functionality:
 - do batch processing by looping the workflow execution with Microflow`s "Loop" setting, set up variation sets, 1 variation set per loop/batch
 - set outgoing http calls to be inline (wait for response at the point of out call), or wait asynchronously by setting WebhookAction (wait for external action call to the webhook)
 - set AsynchronousPollingEnabled (per step) to true and the step will poll for completion before moving on, embed other Microflow workflows and wait for them; or set it to false for fire and forget, call another Microflow workflow and continue immediately with the next step, no waiting for completion
-- there is a global id called "GlobalKey" in the logs (orchestrations, steps, errors) that can be used to tie up cross Microflow workflow calls, this key is passed along for logging purposes when a Microflow workflow calls/embeds other Microflow workflows
+- there is a global id called "GlobalKey" in the logs (orchestrations, steps, errors) that can be used to tie up cross Microflow workflow calls, this key is passed along for logging purposes when a Microflow workflow calls/embed other Microflow workflows
 - workflows, as well as based on a GlobalKey, can be controlled via api calls for: stop, pause, and run
 - timeouts can be set per step for inline and webhook
 - retry policies can be set for each step and there can also be a default retry policy for the entire workflow
 - StopOnActionFailed can be set per step to indicate for when there is a failure (not a success call to webhook), which will make Microflow stop the workflow execution or to log the failure and continue with the workflow
 - scale group can be set per step, this will throttle the maximum concurrent step instances
+- http response data received from the callout url can be posted to the next step as input data by setting the data forwarding parent step's ForwardPostData property to true
+- by default a child step will wait for all parent steps to complete, and then it will execute once - this flow behaviour can be changed by setting the child step's WaitForAllParents property to false, now the child step will execute everytime a parent step completes
 - save and retrieve Microflow workflow json
 - view in-step progress counts, this is more useful when running multiple concurrent instances
 - stateful and durable! Microflow leverages Durable Functions, so even when the vm crashes, Microflow will continue from where it left off, before the crash, when a new vm becomes available (Azure will do this in the background)
@@ -70,7 +72,9 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
    "IsHttpGet":true,
    "CalloutTimeoutSeconds": 15,
    "WebhookTimeoutSeconds":30,
-   "ScaleGroupId": "myscalegroup",
+   "ScaleGroupId": "myscalegroupid",
+   "ForwardPostData": false,
+   "WaitForAllParents": true,
    "SubSteps":[2,3],
    "RetryOptions":{
       "DelaySeconds":5,
@@ -91,6 +95,8 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
    - **CalloutTimeoutSeconds**: This is for how long to wait for the http callout, no cloud costs are incurred during the wait
    - **WebhookTimeoutSeconds**: This is for how long a webhook will wait, it can be set for any time span and no cloud costs are incurred during the wait
    - **ScaleGroupId**: This is used to identify steps that are in a scale group, the maximum concurrent instances per scale group is looked up and used to throttle the concurrent step instance count in the scale group, call the Microwflow Api "api/ScaleGroup/{scaleGroupId}/{maxInstanceCount}" to set the maximum number of concurrent step instances for the scale group
+   - **ForwardPostData**: False by default, this will pass along http response data from the callout url and webhook callback to the next step as http post input data
+   - **WaitForAllParents**: True by default, when true a child step will wait for all parents to complete and the execute once, and if false the step will execute each time a parent completes
    - **SubSteps**: These are the sub steps that are dependent on this step
    - **RetryOptions**: Set this to do retries for the micro-service end-point call
    
@@ -114,8 +120,10 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
       "StopOnActionFailed": true,
       "IsHttpGet": true,
       "CalloutTimeoutSeconds": 10,
-      "WebhookTimeoutSeconds": 30,
-      "ScaleGroupId": "myscalegroup",
+      "WebhookTimeoutSeconds": 30,,
+      "ScaleGroupId": "myscalegroupid",
+      "ForwardPostData": false,
+      "WaitForAllParents": true,
       "AsynchronousPollingEnabled": true,
       "SubSteps": [
         2,
@@ -137,8 +145,10 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
       "StopOnActionFailed": true,
       "IsHttpGet": false,
       "CalloutTimeoutSeconds": 1000,
-      "WebhookTimeoutSeconds": 1000,
-      "ScaleGroupId": "myscalegroup",
+      "WebhookTimeoutSeconds": 1000,,
+      "ScaleGroupId": "myscalegroupid",
+      "ForwardPostData": false,
+      "WaitForAllParents": true,
       "AsynchronousPollingEnabled": true,
       "SubSteps": [
         4
@@ -153,8 +163,10 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
       "StopOnActionFailed": true,
       "IsHttpGet": false,
       "CalloutTimeoutSeconds": 1000,
-      "WebhookTimeoutSeconds": 1000,
-      "ScaleGroupId": "myscalegroup",
+      "WebhookTimeoutSeconds": 1000,,
+      "ScaleGroupId": "myscalegroupid",
+      "ForwardPostData": false,
+      "WaitForAllParents": true,
       "AsynchronousPollingEnabled": true,
       "SubSteps": [
         4
@@ -169,8 +181,10 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
       "StopOnActionFailed": true,
       "IsHttpGet": false,
       "CalloutTimeoutSeconds": 1000,
-      "WebhookTimeoutSeconds": 1000,
-      "ScaleGroupId": "myscalegroup",
+      "WebhookTimeoutSeconds": 1000,,
+      "ScaleGroupId": "myscalegroupid",
+      "ForwardPostData": false,
+      "WaitForAllParents": true,
       "AsynchronousPollingEnabled": true,
       "SubSteps": [],
       "RetryOptions": null
