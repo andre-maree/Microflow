@@ -73,7 +73,7 @@ namespace Microflow.Helpers
 
                 string[] stepsAndCounts = httpCallWithRetries.SubSteps.Split(Splitter, StringSplitOptions.RemoveEmptyEntries);
 
-                for (int j = 0; j < stepsAndCounts.Length; j += 2)
+                for (int j = 0; j < stepsAndCounts.Length; j += 3)
                 {
                     workflowRun.RunObject = new RunObject()
                     {

@@ -19,12 +19,12 @@ namespace MicroflowModels
         public string PostData { get; set; }
     }
 
-    public class MicroflowProjectBase
+    public class MicroflowBase
     {
         public string WorkflowName { get; set; }
     }
 
-    public class Microflow : MicroflowProjectBase
+    public class Microflow : MicroflowBase
     {
         public List<Step> Steps { get; set; }
 
@@ -71,6 +71,9 @@ namespace MicroflowModels
         public int WebhookTimeoutSeconds { get; set; } = 1000;
         public bool AsynchronousPollingEnabled { get; set; } = true;
         public bool ForwardPostData { get; set; }
+
+        [DataMember(Name = "WaitForAllParents", EmitDefaultValue = false)]
+        public bool WaitForAllParents { get; set; } = true;
 
         [DataMember(Name = "SubSteps", EmitDefaultValue = false)]
         public List<int> SubSteps { get; set; } = new List<int>();

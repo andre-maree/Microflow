@@ -183,30 +183,31 @@ namespace MicroflowShared
             Step stepContainer = new(-1, null);
             StringBuilder sb = new();
             List<Step> steps = workflow.Steps;
-            List<(int StepNumber, int ParentCount)> liParentCounts = new();
+            List<(int StepNumber, int ParentCount, int WaitForAllParents)> liParentCounts = new();
 
             foreach (Step step in steps)
             {
                 int count = steps.Count(c => c.SubSteps.Contains(step.StepNumber));
-                liParentCounts.Add((step.StepNumber, count));
+                liParentCounts.Add((step.StepNumber, count, step.WaitForAllParents ? 1 : 0));
             }
 
             for (int i = 0; i < steps.Count; i++)
             {
                 Step step = steps.ElementAt(i);
 
-                int parentCount = liParentCounts.FirstOrDefault(s => s.StepNumber == step.StepNumber).ParentCount;
+                (int StepNumber, int ParentCount, int WaitForAllParents) subInfo = liParentCounts.FirstOrDefault(s => s.StepNumber == step.StepNumber);
 
-                if (parentCount == 0)
+                if (subInfo.ParentCount == 0)
                 {
                     stepContainer.SubSteps.Add(step.StepNumber);
                 }
 
                 foreach (int subId in step.SubSteps)
                 {
-                    int subParentCount = liParentCounts.FirstOrDefault(s => s.StepNumber.Equals(subId)).ParentCount;
+                    (int StepNumber, int ParentCount, int WaitForAllParents) subInfo2 = liParentCounts.FirstOrDefault(s => s.StepNumber.Equals(subId));
+                    //int subParentCount = liParentCounts.FirstOrDefault(s => s.StepNumber.Equals(subId)).ParentCount;
 
-                    sb.Append(subId).Append(',').Append(subParentCount).Append(';');
+                    sb.Append(subId).Append(',').Append(subInfo2.ParentCount).Append(',').Append(subInfo2.WaitForAllParents).Append(';');
                 }
 
                 if (step.RetryOptions != null)
@@ -263,7 +264,7 @@ namespace MicroflowShared
 
             foreach (int subId in stepContainer.SubSteps)
             {
-                sb.Append(subId).Append(",1;");
+                sb.Append(subId).Append(",1,0;");
             }
 
             HttpCall containerEntity = new(workflowRun.WorkflowName, "-1", null, sb.ToString());

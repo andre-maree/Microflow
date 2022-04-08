@@ -17,7 +17,7 @@ namespace MicroflowApi
         /// </summary>
         [FunctionName("UpsertWorkflow")]
         public static async Task<HttpResponseMessage> UpsertWorkflow([HttpTrigger(AuthorizationLevel.Anonymous, "post",
-                                                                  Route = MicroflowModels.Constants.MicroflowBase + "/UpsertWorkflow/{globalKey?}")] HttpRequestMessage req,
+                                                                  Route = MicroflowModels.Constants.MicroflowPath + "/UpsertWorkflow/{globalKey?}")] HttpRequestMessage req,
                                                                   [DurableClient] IDurableEntityClient client, string globalKey)
         {
             return await client.UpsertWorkflow(await req.Content.ReadAsStringAsync(), globalKey);
@@ -28,7 +28,7 @@ namespace MicroflowApi
         /// Returns the workflow Json that was saved with UpsertWorkflow
         /// </summary>
         [FunctionName("GetWorkflow")]
-        public static async Task<string> GetWorkflowJson([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = MicroflowModels.Constants.MicroflowBase + "/GetWorkflow/{workflowName}")] HttpRequestMessage req,
+        public static async Task<string> GetWorkflowJson([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = MicroflowModels.Constants.MicroflowPath + "/GetWorkflow/{workflowName}")] HttpRequestMessage req,
                                                            string workflowName)
         {
             return await WorkflowHelper.GetWorkflowJson(workflowName);

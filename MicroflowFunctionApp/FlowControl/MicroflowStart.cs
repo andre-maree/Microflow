@@ -25,7 +25,7 @@ namespace Microflow.FlowControl
         /// </summary>
         /// <param name="instanceId">If an instanceId is passed in, it will run as a singleton, else it will run concurrently with each with a new instanceId</param>
         [FunctionName(CallNames.MicroflowStart)]
-        public static async Task<HttpResponseMessage> MicroflowStart([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = MicroflowBase + "/Start/{workflowName}/{instanceId?}")]
+        public static async Task<HttpResponseMessage> MicroflowStart([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = MicroflowPath + "/Start/{workflowName}/{instanceId?}")]
                                                                 HttpRequestMessage req,
                                                                 [DurableClient] IDurableOrchestrationClient client,
                                                                 string instanceId, string workflowName)
