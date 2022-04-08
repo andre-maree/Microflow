@@ -202,15 +202,15 @@ Http post:
 
 public class MicroflowPostData
 {
-   public int StepNumber { get; set; }
-   public string StepId { get; set; }
-   // passed along and logged when a workflow step calls another workflow`s start
-   public string GlobalKey { get; set; }
-   public string WorkflowName { get; set; }
-   public string MainOrchestrationId { get; set; }
-   public string SubOrchestrationId { get; set; }
-   public string Webhook { get; set; }
-   public string RunId { get; set; }
+        public string WorkflowName { get; set; }
+        public string MainOrchestrationId { get; set; }
+        public string SubOrchestrationId { get; set; }
+        public string Webhook { get; set; }
+        public string RunId { get; set; }
+        public int StepNumber { get; set; }
+        public string StepId { get; set; }
+        public string GlobalKey { get; set; }
+        public string PostData { get; set; }
 }
 
 ```
