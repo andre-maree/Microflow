@@ -64,12 +64,12 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
    "StepNumber":1,
    "StepId":"MyOwnStepReference_Id_1",
    "CalloutUrl":"https://reqbin.com/echo/post/json?mainorchestrationid=<mainorchestrationid>&stepid=<stepId>",
-   "CallbackAction":"approve",
+   "WebhookAction":"approve",
    "AsynchronousPollingEnabled":"true",
    "StopOnActionFailed":true,
    "IsHttpGet":true,
    "CalloutTimeoutSeconds": 15,
-   "CallbackTimeoutSeconds":30,
+   "WebhookTimeoutSeconds":30,
    "ScaleGroupId": "myscalegroup",
    "SubSteps":[2,3],
    "RetryOptions":{
@@ -84,19 +84,19 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
    - **StepNumber**: Used internally by Microflow, but is also settable, must be unique
    - **StepId**: String can be set and used as a key or part of a key in the worker micro-service that is being called, must be unique
    - **CalloutUrl**: Worker micro-service http end-point, or another Microflow workflow`s start endpoint, that is called by Microflow
-   - **CallbackAction**: When this is set Microflow will create a callback webhook and wait for this to be called, and when not set, Microflow will not create and wait for a callback, but will log the http response, and continue to the next step
+   - **WebhookAction**: When this is set Microflow will create a webhook and wait for this to be called, and when not set, Microflow will not create and wait for a webhook callback, but will log the http response, and continue to the next step
    - **AsynchronousPollingEnabled**: set this to true and the step will poll for completion before moving on/embed other Microflow workflows and wait for them; or set it to false for fire and forget/call another Microflow workflow and continue immediately with the next step, no waiting for completion
-   - **StopOnActionFailed**: If there is any type of failure for callouts or callbacks, including timeouts, and any non-success http responses, this will stop all execution if true, and log and continue to the next step if it is false
+   - **StopOnActionFailed**: If there is any type of failure for callouts or webhooks, including timeouts, and any non-success http responses, this will stop all execution if true, and log and continue to the next step if it is false
    - **IsHttpGet**: Http post to micro-service endpoint if false
    - **CalloutTimeoutSeconds**: This is for how long to wait for the http callout, no cloud costs are incurred during the wait
-   - **CallbackTimeoutSeconds**: This is for how long an action callback will wait, it can be set for any time span and no cloud costs are incurred during the wait
+   - **WebhookTimeoutSeconds**: This is for how long a webhook will wait, it can be set for any time span and no cloud costs are incurred during the wait
    - **ScaleGroupId**: This is used to identify steps that are in a scale group, the maximum concurrent instances per scale group is looked up and used to throttle the concurrent step instance count in the scale group, call the Microwflow Api "api/ScaleGroup/{scaleGroupId}/{maxInstanceCount}" to set the maximum number of concurrent step instances for the scale group
    - **SubSteps**: These are the sub steps that are dependent on this step
    - **RetryOptions**: Set this to do retries for the micro-service end-point call
    
    
 ## JSON Workflow Example:
-This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 2 and StepId 3), and each sub step has 1 common sub step (StepId 4). This is the same structure as the included test Tests.CreateTestWorkflow_SimpleSteps(). StepId 1 has a callback action set, and StepId 3 has a retry set. There is 1 merge field set and is used as a default callout URL.
+This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 2 and StepId 3), and each sub step has 1 common sub step (StepId 4). This is the same structure as the included test Tests.CreateTestWorkflow_SimpleSteps(). StepId 1 has a webhook action set, and StepId 3 has a retry set. There is 1 merge field set and is used as a default callout URL.
 ```
 {
   "WorkflowName": "MicroflowTest",
@@ -110,11 +110,11 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
       "StepId": "myStep 1",
       "StepNumber": 1,
       "CalloutUrl": "{default_post_url}",
-      "CallbackAction": "approve",
+      "WebhookAction": "approve",
       "StopOnActionFailed": true,
       "IsHttpGet": true,
       "CalloutTimeoutSeconds": 10,
-      "CallbackTimeoutSeconds": 30,
+      "WebhookTimeoutSeconds": 30,
       "ScaleGroupId": "myscalegroup",
       "AsynchronousPollingEnabled": true,
       "SubSteps": [
@@ -133,11 +133,11 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
       "StepId": "myStep 2",
       "StepNumber": 2,
       "CalloutUrl": "{default_post_url}",
-      "CallbackAction": null,
+      "WebhookAction": null,
       "StopOnActionFailed": true,
       "IsHttpGet": false,
       "CalloutTimeoutSeconds": 1000,
-      "CallbackTimeoutSeconds": 1000,
+      "WebhookTimeoutSeconds": 1000,
       "ScaleGroupId": "myscalegroup",
       "AsynchronousPollingEnabled": true,
       "SubSteps": [
@@ -149,11 +149,11 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
       "StepId": "myStep 3",
       "StepNumber": 3,
       "CalloutUrl": "{default_post_url}",
-      "CallbackAction": null,
+      "WebhookAction": null,
       "StopOnActionFailed": true,
       "IsHttpGet": false,
       "CalloutTimeoutSeconds": 1000,
-      "CallbackTimeoutSeconds": 1000,
+      "WebhookTimeoutSeconds": 1000,
       "ScaleGroupId": "myscalegroup",
       "AsynchronousPollingEnabled": true,
       "SubSteps": [
@@ -165,11 +165,11 @@ This simple workflow contains 1 parent step (StepId 1) with 2 sub steps (StepId 
       "StepId": "myStep 4",
       "StepNumber": 4,
       "CalloutUrl": "{default_post_url}",
-      "CallbackAction": null,
+      "WebhookAction": null,
       "StopOnActionFailed": true,
       "IsHttpGet": false,
       "CalloutTimeoutSeconds": 1000,
-      "CallbackTimeoutSeconds": 1000,
+      "WebhookTimeoutSeconds": 1000,
       "ScaleGroupId": "myscalegroup",
       "AsynchronousPollingEnabled": true,
       "SubSteps": [],
@@ -195,14 +195,14 @@ public class MicroflowPostData
    public string WorkflowName { get; set; }
    public string MainOrchestrationId { get; set; }
    public string SubOrchestrationId { get; set; }
-   public string CallbackUrl { get; set; }
+   public string Webhook { get; set; }
    public string RunId { get; set; }
 }
 
 ```
 Http querystring:
 ```html
-?WorkflowName=<WorkflowName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&CallbackUrl=<CallbackUrl>&RunId=<RunId>&StepNumber=<StepNumber>&StepId=<StepId>&GlobalKey=<GlobalKey>
+?WorkflowName=<WorkflowName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&WebhookUrl=<Webhook>&RunId=<RunId>&StepNumber=<StepNumber>&StepId=<StepId>&GlobalKey=<GlobalKey>
 ```
 
 
