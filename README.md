@@ -89,7 +89,7 @@ The code for these can be found in the console app\Tests.cs. There is also a Sim
    - **StepId**: String can be set and used as a key or part of a key in the worker micro-service that is being called, must be unique.
    - **CalloutUrl**: Worker micro-service http end-point, or another Microflow workflow's start endpoint, that is called by Microflow.
    - **WebhookAction**: When this is set Microflow will create a webhook and wait for this to be called, and when not set, Microflow will not create and wait for a webhook callback, but will log the http response, and continue to the next step.
-   - **AsynchronousPollingEnabled**: set this to true and the step will poll for completion before moving on/embed other Microflow workflows and wait for them; or set it to false for fire and forget/call another Microflow workflow and continue immediately with the next step, no waiting for completion.
+   - **AsynchronousPollingEnabled**: Set this to true and the step will poll for completion before moving on/embed other Microflow workflows and wait for them; or set it to false for fire and forget/call another Microflow workflow and continue immediately with the next step, no waiting for completion.
    - **StopOnActionFailed**: If there is any type of failure for callouts or webhooks, including timeouts, and any non-success http responses, this will stop all execution if true, and log and continue to the next step if it is false.
    - **IsHttpGet**: Http post to micro-service endpoint if false.
    - **CalloutTimeoutSeconds**: This is for how long to wait for the http callout, no cloud costs are incurred during the wait.
