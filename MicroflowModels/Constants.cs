@@ -27,7 +27,6 @@ namespace MicroflowModels
         public static class CallNames
         {
             public static readonly string BaseUrl = $"{Environment.GetEnvironmentVariable("BasePrefix")}{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}/{MicroflowPath}";
-            public static readonly string Webhook = $"{BaseUrl}/Webhook";
             public const string CanExecuteNow = "CanExecuteNow";
             public const string ExecuteStep = "ExecuteStep";
             public const string GetStep = "GetStep";

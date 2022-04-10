@@ -41,7 +41,7 @@ namespace Microflow.Helpers
 
             string webhook = string.IsNullOrWhiteSpace(httpCall.WebhookAction)
                     ? ""
-                    : $"{CallNames.Webhook}/{httpCall.WebhookAction}/{instanceId}/{httpCall.RowKey}";
+                    : $"{httpCall.WebhookAction}/{instanceId}/{httpCall.RowKey}";
 
             httpCall.CalculateGlobalKey();
 

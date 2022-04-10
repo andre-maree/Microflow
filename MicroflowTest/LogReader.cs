@@ -5,19 +5,35 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microflow.MicroflowTableModels;
 
 namespace MicroflowTest
 {
     internal class LogReader
     {
-        public static async Task<List<LogErrorEntity>> GetOrchLog(string workflowName)
+        public static async Task<List<LogOrchestrationEntity>> GetOrchLog(string workflowName)
         {
-            List<LogErrorEntity> li = new List<LogErrorEntity>();
-            TableClient tableClient = GetStepsTable();
+            List<LogOrchestrationEntity> li = new List<LogOrchestrationEntity>();
+            TableClient tableClient = GetLogOrchestrationTable();
 
-            var logTask = tableClient.QueryAsync<LogErrorEntity>(filter: $"PartitionKey eq '{workflowName}'", select: new List<string>() { "PartitionKey", "RowKey" });
-
+            var logTask = tableClient.QueryAsync<LogOrchestrationEntity>(filter: $"PartitionKey eq '{workflowName}'");
+            
             await foreach(var log in logTask)
+            {
+                li.Add(log);
+            }
+
+            return li;
+        }
+
+        public static async Task<List<LogStepEntity>> GetStepsLog(string workflowName, string instanceId)
+        {
+            List<LogStepEntity> li = new List<LogStepEntity>();
+            TableClient tableClient = GetStepsLogTable();
+
+            var logTask = tableClient.QueryAsync<LogStepEntity>(filter: $"PartitionKey eq '{workflowName}__{instanceId}'");
+
+            await foreach (var log in logTask)
             {
                 li.Add(log);
             }
@@ -32,11 +48,25 @@ namespace MicroflowTest
             return tableClient.GetTableClient($"MicroflowLogErrors");
         }
 
+        public static TableClient GetStepsLogTable()
+        {
+            TableServiceClient tableClient = GetTableClient();
+
+            return tableClient.GetTableClient($"MicroflowLogSteps");
+        }
+
         public static TableClient GetStepsTable()
         {
             TableServiceClient tableClient = GetTableClient();
 
             return tableClient.GetTableClient($"MicroflowStepConfigs");
+        }
+
+        public static TableClient GetLogOrchestrationTable()
+        {
+            TableServiceClient tableClient = GetTableClient();
+
+            return tableClient.GetTableClient($"MicroflowLogOrchestrations");
         }
 
         public static TableServiceClient GetTableClient()

@@ -21,4 +21,10 @@
     <ProjectReference Include="..\MicroflowSDK\MicroflowSDK.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="MicroflowApp">
+      <HintPath>..\MicroflowFunctionApp\bin\Debug\net6.0\MicroflowApp.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>
