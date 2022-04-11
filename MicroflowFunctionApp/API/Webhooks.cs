@@ -5,6 +5,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using System.Net.Http;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microflow.Models;
+using System.Collections.Generic;
 
 namespace Microflow.Webhook
 {
@@ -37,12 +38,25 @@ namespace Microflow.Webhook
             return await client.GetWebhookResult(req, $"{webhook}/{action}", action, orchestratorId, fail);
         }
 
+        /// <summary>
+        /// For a webhook defined as {webhook}
+        /// </summary>
+        [FunctionName("WebhookSubStepSelector")]
+        public static async Task<HttpResponseMessage> WebhookSubStepSelector(
+        [HttpTrigger(AuthorizationLevel.Function, "get", "post",
+        Route = "/" + MicroflowModels.Constants.MicroflowPath + "/WebhookSubStepSelector/{orchestratorId}/{stepId}/{fail:bool?}")] HttpRequestMessage req,
+        [DurableClient] IDurableOrchestrationClient client, int stepId, string orchestratorId, bool? fail)
+        {
+            return await client.GetWebhookResult(req, "WebhookSubStepSelector", string.Empty, orchestratorId, fail, new List<int>() {3});
+        }
+
         private static async Task<HttpResponseMessage> GetWebhookResult(this IDurableOrchestrationClient client,
                                                                         HttpRequestMessage req,
                                                                         string webhook,
                                                                         string action,
                                                                         string orchestratorId,
-                                                                        bool? fail)
+                                                                        bool? fail,
+                                                                        List<int> SubStepsToRun = null)
         {
             WebhookResult webhookResult = new()
             {
@@ -53,6 +67,11 @@ namespace Microflow.Webhook
             {
                 webhookResult.Content = await req.Content.ReadAsStringAsync();
             }
+
+            //if(SubStepsToRun != null && SubStepsToRun.Length > 0)
+            //{
+                webhookResult.SubStepsToRun = SubStepsToRun;
+            //}
 
             await client.RaiseEventAsync(orchestratorId, $"{webhook}", webhookResult);
 

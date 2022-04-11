@@ -66,7 +66,7 @@ namespace Microflow.HttpOrchestrators
 
                 log.LogCritical($"Waiting for webhook: {CallNames.BaseUrl}/{input.httpCall.WebhookAction}/{context.InstanceId}/{input.httpCall.RowKey}/true");
                 // wait for the external event, set the timeout
-                WebhookResult actionResult = await context.WaitForExternalEvent<WebhookResult>(input.httpCall.WebhookAction,
+                WebhookResult webhookResult = await context.WaitForExternalEvent<WebhookResult>(input.httpCall.WebhookAction,
                                                                                                            TimeSpan.FromSeconds(input.httpCall.WebhookTimeoutSeconds));
 
                 #region Optional: no stepcount
@@ -80,16 +80,21 @@ namespace Microflow.HttpOrchestrators
                 #endregion
 
                 // check for action failed
-                if (actionResult.StatusCode <= 200 && actionResult.StatusCode < 300)
+                if (webhookResult.StatusCode <= 200 && webhookResult.StatusCode < 300)
                 {
                     log.LogWarning($"Step {input.httpCall.RowKey} webhook {input.httpCall.WebhookAction} successful at {context.CurrentUtcDateTime:HH:mm:ss}");
 
-                    microflowHttpResponse.HttpResponseStatusCode = actionResult.StatusCode;
+                    microflowHttpResponse.HttpResponseStatusCode = webhookResult.StatusCode;
 
                     if (input.httpCall.ForwardPostData)
                     {
-                        microflowHttpResponse.Message = actionResult.Content;
+                        microflowHttpResponse.Message = webhookResult.Content;
                     }
+
+                    //if(webhookResult.SubStepsToRun != null)
+                    //{
+                        microflowHttpResponse.SubStepsToRun = webhookResult.SubStepsToRun;
+                    //}
 
                     return microflowHttpResponse;
                 }
@@ -100,7 +105,7 @@ namespace Microflow.HttpOrchestrators
                         return new MicroflowHttpResponse()
                         {
                             Success = false,
-                            HttpResponseStatusCode = actionResult.StatusCode,
+                            HttpResponseStatusCode = webhookResult.StatusCode,
                             Message = $"webhook action {input.httpCall.WebhookAction} falied, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
                         };
                     //}

@@ -275,6 +275,11 @@ namespace Microflow.FlowControl
         /// </summary>
         private List<Task<CanExecuteResult>> CanExecute()
         {
+            bool checkSubStepFromResponce = false;
+            if (MicroflowHttpResponse.SubStepsToRun != null && MicroflowHttpResponse.SubStepsToRun.Count > 0)
+            {
+                checkSubStepFromResponce = true;
+            }
             string[] stepsAndCounts = HttpCallWithRetries.SubSteps.Split(Splitter, StringSplitOptions.RemoveEmptyEntries);
 
             List<Task<CanExecuteResult>> canExecuteTasks = new();
@@ -283,8 +288,15 @@ namespace Microflow.FlowControl
             {
                 // check parentCount
                 // execute immediately if parentCount is 1
+                //int subStepId = Convert.ToInt32(stepsAndCounts[i]);
                 int parentCount = Convert.ToInt32(stepsAndCounts[i + 1]);
                 int waitForAllParents = Convert.ToInt32(stepsAndCounts[i + 2]);
+
+                // check if the http response had a sub step list to indicate which sub steps can execute
+                if (checkSubStepFromResponce && !MicroflowHttpResponse.SubStepsToRun.Contains(Convert.ToInt32(stepsAndCounts[i])))
+                {
+                    continue;
+                }
 
                 if (parentCount < 2 || waitForAllParents == 0)
                 {

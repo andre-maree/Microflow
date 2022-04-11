@@ -69,10 +69,10 @@ namespace MicroflowConsole
 
                 //// callback by step number
                 microFlow.Step(1).WebhookAction= "myhook";
-                microFlow.Step(2).WebhookAction = "with/action"; 
+                //microFlow.Step(2).WebhookAction = "with/action"; 
                 //microFlow.Step(2).WebhookAction = "act";
                 //microFlow.Step(3).WebhookAction = "warra";
-                //microFlow.Step(4).WebhookAction = "warra";
+                microFlow.Step(4).WaitForAllParents = false;
                 //microFlow.Step(5).WebhookAction = "warra";
                 //microFlow.Step(6).WebhookAction = "warra";
                 //microFlow.Step(7).WebhookAction = "warra";
