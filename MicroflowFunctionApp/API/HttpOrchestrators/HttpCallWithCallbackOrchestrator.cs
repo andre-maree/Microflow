@@ -64,7 +64,7 @@ namespace Microflow.HttpOrchestrators
 
                 // TODO: always use https
 
-                log.LogCritical($"Waiting for webhook: {CallNames.BaseUrl}/{input.httpCall.WebhookAction}/{context.InstanceId}/{input.httpCall.RowKey}");
+                log.LogCritical($"Waiting for webhook: {CallNames.BaseUrl}/{input.httpCall.WebhookAction}/{context.InstanceId}/{input.httpCall.RowKey}/true");
                 // wait for the external event, set the timeout
                 WebhookResult actionResult = await context.WaitForExternalEvent<WebhookResult>(input.httpCall.WebhookAction,
                                                                                                            TimeSpan.FromSeconds(input.httpCall.WebhookTimeoutSeconds));
@@ -80,11 +80,11 @@ namespace Microflow.HttpOrchestrators
                 #endregion
 
                 // check for action failed
-                if (actionResult.StatusCode == 200)
+                if (actionResult.StatusCode <= 200 && actionResult.StatusCode < 300)
                 {
                     log.LogWarning($"Step {input.httpCall.RowKey} webhook {input.httpCall.WebhookAction} successful at {context.CurrentUtcDateTime:HH:mm:ss}");
 
-                    microflowHttpResponse.HttpResponseStatusCode = (int)actionResult.StatusCode;
+                    microflowHttpResponse.HttpResponseStatusCode = actionResult.StatusCode;
 
                     if (input.httpCall.ForwardPostData)
                     {
@@ -100,7 +100,7 @@ namespace Microflow.HttpOrchestrators
                         return new MicroflowHttpResponse()
                         {
                             Success = false,
-                            HttpResponseStatusCode = (int)actionResult.StatusCode,
+                            HttpResponseStatusCode = actionResult.StatusCode,
                             Message = $"webhook action {input.httpCall.WebhookAction} falied, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
                         };
                     //}

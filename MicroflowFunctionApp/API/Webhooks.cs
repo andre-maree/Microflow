@@ -8,8 +8,23 @@ using Microflow.Models;
 
 namespace Microflow.Webhook
 {
+    /// <summary>
+    /// These are custom webhooks that can be defined here withing Microflow, or 
+    /// </summary>
     public static class Webhooks
     {
+        /// <summary>
+        /// For a webhook defined as {webhook}
+        /// </summary>
+        [FunctionName("Webhook")]
+        public static async Task<HttpResponseMessage> Webhook(
+        [HttpTrigger(AuthorizationLevel.Function, "get", "post",
+        Route = "/" + MicroflowModels.Constants.MicroflowPath + "/{webhook}/{orchestratorId}/{stepId}/{fail:bool?}")] HttpRequestMessage req,
+        [DurableClient] IDurableOrchestrationClient client, string webhook, int stepId, string orchestratorId, bool? fail)
+        {
+            return await client.GetWebhookResult(req, webhook, string.Empty, orchestratorId, fail);
+        }
+
         /// <summary>
         /// For a webhook defined as {name}/{action}
         /// </summary>
@@ -19,33 +34,27 @@ namespace Microflow.Webhook
         Route = "/" + MicroflowModels.Constants.MicroflowPath + "/{webhook}/{action}/{orchestratorId}/{stepId}/{fail:bool?}")] HttpRequestMessage req,
         [DurableClient] IDurableOrchestrationClient client, string webhook, int stepId, string action, string orchestratorId, bool? fail)
         {
-            string content = await req.Content.ReadAsStringAsync();
-
-            await client.RaiseEventAsync(orchestratorId, $"{webhook}/{action}", new WebhookResult() 
-            { 
-                StatusCode = !fail.HasValue || fail.Value == true ? 200 : -418,  
-                Content = content
-            });
-
-            return new(HttpStatusCode.OK);
+            return await client.GetWebhookResult(req, $"{webhook}/{action}", action, orchestratorId, fail);
         }
 
-        /// <summary>
-        /// For a webhook defined as {webhook}
-        /// </summary>
-        [FunctionName("Webhook")]
-        public static async Task<HttpResponseMessage> Webhook(
-        [HttpTrigger(AuthorizationLevel.Function, "get", "post", 
-        Route = "/" + MicroflowModels.Constants.MicroflowPath + "/{webhook}/{orchestratorId}/{stepId}/{fail:bool?}")] HttpRequestMessage req,
-        [DurableClient] IDurableOrchestrationClient client, string webhook, int stepId, string orchestratorId, bool? fail)
+        private static async Task<HttpResponseMessage> GetWebhookResult(this IDurableOrchestrationClient client,
+                                                                        HttpRequestMessage req,
+                                                                        string webhook,
+                                                                        string action,
+                                                                        string orchestratorId,
+                                                                        bool? fail)
         {
-            string content = await req.Content.ReadAsStringAsync();
-
-            await client.RaiseEventAsync(orchestratorId, $"{webhook}", new WebhookResult()
+            WebhookResult webhookResult = new()
             {
-                StatusCode = !fail.HasValue || fail.Value == true ? 200 : -418,
-                Content = content
-            });
+                StatusCode = !fail.HasValue || fail.Value == true ? 200 : 418
+            };
+
+            if (req.Method == HttpMethod.Post)
+            {
+                webhookResult.Content = await req.Content.ReadAsStringAsync();
+            }
+
+            await client.RaiseEventAsync(orchestratorId, $"{webhook}", webhookResult);
 
             return new(HttpStatusCode.OK);
         }
