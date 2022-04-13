@@ -1,5 +1,7 @@
 ﻿#if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL && !DEBUG_NO_FLOWCONTROL_SCALEGROUPS && !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_FLOWCONTROL && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -12,6 +14,41 @@ namespace MicroflowApi
 {
     public static class FlowControlApi
     {
+        /// <summary>
+        /// Pause, run, or stop the workflow, cmd can be "run", "pause", or "stop"
+        /// </summary>
+        [FunctionName(CallNames.StepFlowControl)]
+        public static async Task<HttpResponseMessage> StepFlowControl([HttpTrigger(AuthorizationLevel.Anonymous, "get",
+                                                                  Route = "StepFlowControl/{webHookKey}/{stepList}")] HttpRequestMessage req,
+                                                                  [DurableClient] IDurableEntityClient client, string webHookKey, string stepList)
+        {
+            EntityId entId = new(MicroflowEntities.StepFlowInfo, webHookKey);
+
+            await client.SignalEntityAsync(entId, MicroflowEntityKeys.Set, stepList.Split(',').Select(x => int.Parse(x)).ToList());
+
+            return new HttpResponseMessage(HttpStatusCode.OK);
+        }
+
+        /// <summary>
+        /// Durable entity to check and set a custom step flow
+        /// </summary>
+        [FunctionName(MicroflowEntities.StepFlowInfo)]
+        public static void StepFlowInfo([EntityTrigger] IDurableEntityContext ctx)
+        {
+            switch (ctx.OperationName)
+            {
+                case MicroflowEntityKeys.Read:
+                    ctx.Return(ctx.GetState<List<int>>());
+                    break;
+                case MicroflowEntityKeys.Set:
+                    ctx.SetState(ctx.GetInput<List<int>>());
+                    break;
+                case MicroflowEntityKeys.Delete:
+                    ctx.DeleteState();
+                    break;
+            }
+        }
+
         /// <summary>
         /// Pause, run, or stop the workflow, cmd can be "run", "pause", or "stop"
         /// </summary>
@@ -65,7 +102,7 @@ namespace MicroflowApi
         }
 
         /// <summary>
-        /// Durable entity check and set if the global state
+        /// Durable to entity check and set if the global state
         /// </summary>
         [FunctionName(MicroflowStateKeys.GlobalState)]
         public static void GlobalState([EntityTrigger] IDurableEntityContext ctx)
@@ -74,7 +111,7 @@ namespace MicroflowApi
         }
 
         /// <summary>
-        /// Durable entity check and set workflow state
+        /// Durable to entity check and set workflow state
         /// </summary>
         [FunctionName(MicroflowStateKeys.WorkflowState)]
         public static void WorkflowState([EntityTrigger] IDurableEntityContext ctx)

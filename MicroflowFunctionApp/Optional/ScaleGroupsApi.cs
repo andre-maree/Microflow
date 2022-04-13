@@ -64,7 +64,7 @@ namespace MicroflowApi
 
             EntityId scaleGroupCountId = new(ScaleGroupCalls.ScaleGroupMaxConcurrentInstanceCount, scaleGroupId);
 
-            await client.SignalEntityAsync(scaleGroupCountId, MicroflowCounterKeys.Set, maxInstanceCount);
+            await client.SignalEntityAsync(scaleGroupCountId, MicroflowEntityKeys.Set, maxInstanceCount);
 
             HttpResponseMessage resp = new(HttpStatusCode.OK);
 

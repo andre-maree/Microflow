@@ -49,7 +49,7 @@ namespace Microflow.Webhook
             => await orchClient.GetWebhookResult(entClient, req, webhook, $"{action}/{subaction}", orchestratorId, fail, lookupSubStepsToRun);
 
         private static async Task<HttpResponseMessage> GetWebhookResult(this IDurableOrchestrationClient client,
-                                                                        IDurableEntityClient client2,
+                                                                        IDurableEntityClient entClient,
                                                                         HttpRequestMessage req,
                                                                         string wehookBase,
                                                                         string webhookAction,
@@ -71,39 +71,39 @@ namespace Microflow.Webhook
                 {
                     if (lookupSubStepsToRun.Value)
                     {
-                        EntityId entId = new(wehookBase, webhookAction);
+                        EntityId entId = new("StepFlowInfo", wehookBase);
 
-                        EntityStateResponse<string> flowInfo = await client2.ReadEntityStateAsync<string>(entId);
+                        EntityStateResponse<List<int>> flowInfo = await entClient.ReadEntityStateAsync<List<int>>(entId);
 
                         if (flowInfo.EntityExists)
                         {
-                            webhookResult.SubStepsToRun = flowInfo.EntityState.Split(',').Select(x => int.Parse(x)).ToList();
+                            webhookResult.SubStepsToRun = flowInfo.EntityState;
                         }
                     }
-                    else // try get it from the post data as 1,2,3
-                    {
-                        List<int> arr = new();
-                        bool? doSubSteps = null;
+                    //else // try get it from the post data as 1,2,3
+                    //{
+                    //    List<int> arr = new();
+                    //    bool? doSubSteps = null;
 
-                        foreach (string s in webhookResult.Content.Split(',', System.StringSplitOptions.RemoveEmptyEntries))
-                        {
-                            if (int.TryParse(s, out int i))
-                            {
-                                arr.Add(i);
-                                doSubSteps = true;
-                            }
-                            else
-                            {
-                                doSubSteps = false;
-                                break;
-                            }
-                        }
+                    //    foreach (string s in webhookResult.Content.Split(',', System.StringSplitOptions.RemoveEmptyEntries))
+                    //    {
+                    //        if (int.TryParse(s, out int i))
+                    //        {
+                    //            arr.Add(i);
+                    //            doSubSteps = true;
+                    //        }
+                    //        else
+                    //        {
+                    //            doSubSteps = false;
+                    //            break;
+                    //        }
+                    //    }
 
-                        if (doSubSteps.HasValue && doSubSteps.Value)
-                        {
-                            webhookResult.SubStepsToRun = arr.ToList();
-                        }
-                    }
+                    //    if (doSubSteps.HasValue && doSubSteps.Value)
+                    //    {
+                    //        webhookResult.SubStepsToRun = arr.ToList();
+                    //    }
+                    //}
                 }
             }
 

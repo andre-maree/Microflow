@@ -46,7 +46,7 @@ namespace Microflow.HttpOrchestrators
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_STEPCOUNT
                 ////////////////////////////////////////////////
                 // set the per step in-progress count to count+1
-                context.SignalEntity(countId, MicroflowCounterKeys.Add);
+                context.SignalEntity(countId, MicroflowEntityKeys.Add);
                 doneAdd = true;
                 ////////////////////////////////////////////////
 #endif
@@ -73,7 +73,7 @@ namespace Microflow.HttpOrchestrators
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_STEPCOUNT
                 ////////////////////////////////////////////////
                 // set the per step in-progress count to count-1
-                context.SignalEntity(countId, MicroflowCounterKeys.Subtract);
+                context.SignalEntity(countId, MicroflowEntityKeys.Subtract);
                 doneSubtract = true;
                 ////////////////////////////////////////////////
 #endif
@@ -151,7 +151,7 @@ namespace Microflow.HttpOrchestrators
                 if (doneAdd && !doneSubtract)
                 {
                     // set the per step in-progress count to count-1
-                    context.SignalEntity(countId, MicroflowCounterKeys.Subtract);
+                    context.SignalEntity(countId, MicroflowEntityKeys.Subtract);
                 }
             }
             ////////////////////////////////////////////////

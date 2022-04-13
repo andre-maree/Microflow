@@ -182,7 +182,7 @@ namespace Microflow.FlowControl
                 {
                     EntityId countId = new(ScaleGroupCalls.CanExecuteNowInScaleGroupCount, HttpCallWithRetries.ScaleGroupId);
 
-                    await MicroflowDurableContext.CallEntityAsync(countId, MicroflowCounterKeys.Subtract);
+                    await MicroflowDurableContext.CallEntityAsync(countId, MicroflowEntityKeys.Subtract);
                 }
                 //////////////////////////////////////////////
 #endif
@@ -368,16 +368,16 @@ namespace Microflow.FlowControl
         {
             switch (ctx.OperationName)
             {
-                case MicroflowCounterKeys.Add:
+                case MicroflowEntityKeys.Add:
                     ctx.SetState(ctx.GetState<int>() + 1);
                     break;
                 //case "reset":
                 //    ctx.SetState(0);
                 //    break;
-                case MicroflowCounterKeys.Read:
+                case MicroflowEntityKeys.Read:
                     ctx.Return(ctx.GetState<int>());
                     break;
-                case MicroflowCounterKeys.Subtract:
+                case MicroflowEntityKeys.Subtract:
                     ctx.SetState(ctx.GetState<int>() - 1);
                     break;
                     //case "delete":
