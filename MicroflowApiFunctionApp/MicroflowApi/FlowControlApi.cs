@@ -15,32 +15,30 @@ namespace MicroflowApi
     public static class FlowControlApi
     {
         /// <summary>
-        /// Pause, run, or stop the workflow, cmd can be "run", "pause", or "stop"
+        /// Save a list of sub steps that must run for a webhook, this is then looked up on the webhook callback
         /// </summary>
         [FunctionName(CallNames.StepFlowControl)]
-        public static async Task<HttpResponseMessage> StepFlowControl([HttpTrigger(AuthorizationLevel.Anonymous, "get",
-                                                                  Route = "StepFlowControl/{wehookBase}/{webhookAction}/{webhookSubAction}/{stepList}")] HttpRequestMessage req,
-                                                                  [DurableClient] IDurableEntityClient client, string wehookBase,
-                                                                        string webhookAction,
-                                                                        string webhookSubAction, string stepList)
+        public static async Task<HttpResponseMessage> StepFlowControl([HttpTrigger(AuthorizationLevel.Anonymous, "get", 
+                                                                      Route = "StepFlowControl/{wehookBase}/{webhookAction}/{webhookSubAction}/{stepList}")] HttpRequestMessage req,
+                                                                      [DurableClient] IDurableEntityClient client,
+                                                                      string wehookBase,
+                                                                      string webhookAction,
+                                                                      string webhookSubAction,
+                                                                      string stepList)
         {
             string entkey;
-            string webhookKey;
 
             if (!string.IsNullOrEmpty(webhookSubAction))
             {
                 entkey = $"{wehookBase}@{webhookAction}@{webhookSubAction}";
-                webhookKey = $"{wehookBase}/{webhookAction}/{webhookSubAction}";
             }
             else if (!string.IsNullOrEmpty(webhookAction))
             {
                 entkey = $"{wehookBase}@{webhookAction}";
-                webhookKey = $"{wehookBase}/{webhookAction}";
             }
             else
             {
                 entkey = $"{wehookBase}";
-                webhookKey = $"{wehookBase}";
             }
 
             EntityId entId = new(MicroflowEntities.StepFlowState, entkey);
