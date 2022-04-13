@@ -68,7 +68,7 @@ namespace MicroflowConsole
                 var microFlow = createResult.Microflow;
 
                 //// callback by step number
-                microFlow.Step(1).WebhookAction= "myhook";
+                microFlow.Step(1).WebhookAction= "myhook/myaction/mysub";
                 //microFlow.Step(2).WebhookAction = "with/action"; 
                 //microFlow.Step(2).WebhookAction = "act";
                 //microFlow.Step(3).WebhookAction = "warra";

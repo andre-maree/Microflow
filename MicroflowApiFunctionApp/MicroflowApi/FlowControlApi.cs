@@ -19,10 +19,31 @@ namespace MicroflowApi
         /// </summary>
         [FunctionName(CallNames.StepFlowControl)]
         public static async Task<HttpResponseMessage> StepFlowControl([HttpTrigger(AuthorizationLevel.Anonymous, "get",
-                                                                  Route = "StepFlowControl/{webHookKey}/{stepList}")] HttpRequestMessage req,
-                                                                  [DurableClient] IDurableEntityClient client, string webHookKey, string stepList)
+                                                                  Route = "StepFlowControl/{wehookBase}/{webhookAction}/{webhookSubAction}/{stepList}")] HttpRequestMessage req,
+                                                                  [DurableClient] IDurableEntityClient client, string wehookBase,
+                                                                        string webhookAction,
+                                                                        string webhookSubAction, string stepList)
         {
-            EntityId entId = new(MicroflowEntities.StepFlowInfo, webHookKey);
+            string entkey;
+            string webhookKey;
+
+            if (!string.IsNullOrEmpty(webhookSubAction))
+            {
+                entkey = $"{wehookBase}@{webhookAction}@{webhookSubAction}";
+                webhookKey = $"{wehookBase}/{webhookAction}/{webhookSubAction}";
+            }
+            else if (!string.IsNullOrEmpty(webhookAction))
+            {
+                entkey = $"{wehookBase}@{webhookAction}";
+                webhookKey = $"{wehookBase}/{webhookAction}";
+            }
+            else
+            {
+                entkey = $"{wehookBase}";
+                webhookKey = $"{wehookBase}";
+            }
+
+            EntityId entId = new(MicroflowEntities.StepFlowState, entkey);
 
             await client.SignalEntityAsync(entId, MicroflowEntityKeys.Set, stepList.Split(',').Select(x => int.Parse(x)).ToList());
 
@@ -32,7 +53,7 @@ namespace MicroflowApi
         /// <summary>
         /// Durable entity to check and set a custom step flow
         /// </summary>
-        [FunctionName(MicroflowEntities.StepFlowInfo)]
+        [FunctionName(MicroflowEntities.StepFlowState)]
         public static void StepFlowInfo([EntityTrigger] IDurableEntityContext ctx)
         {
             switch (ctx.OperationName)

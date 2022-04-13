@@ -6,7 +6,6 @@ using System.Net.Http;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microflow.Models;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Microflow.Webhook
 {
@@ -24,7 +23,7 @@ namespace Microflow.Webhook
         Route = "/" + MicroflowModels.Constants.MicroflowPath + "/{webhook}/{orchestratorId}/{stepId}/{fail:bool?}/{lookupSubStepsToRun:bool?}")] HttpRequestMessage req,
         [DurableClient] IDurableOrchestrationClient orchClient, [DurableClient] IDurableEntityClient entClient,
         string webhook, int stepId, string orchestratorId, bool? fail, bool? lookupSubStepsToRun)
-            => await orchClient.GetWebhookResult(entClient, req, webhook, webhook, orchestratorId, fail, lookupSubStepsToRun);
+            => await orchClient.GetWebhookResult(entClient, req, webhook, string.Empty, string.Empty, orchestratorId, fail, lookupSubStepsToRun);
 
         ///// <summary>
         ///// For a webhook defined as {name}/{action}, this can be changed to a non-catch-all like "myWebhook/myAction"
@@ -35,7 +34,7 @@ namespace Microflow.Webhook
         Route = "/" + MicroflowModels.Constants.MicroflowPath + "/{webhook}/{action}/{orchestratorId}/{stepId}/{fail:bool?}/{lookupSubStepsToRun:bool?}")] HttpRequestMessage req,
         [DurableClient] IDurableOrchestrationClient orchClient, [DurableClient] IDurableEntityClient entClient,
         string webhook, int stepId, string action, string orchestratorId, bool? fail, bool? lookupSubStepsToRun)
-            => await orchClient.GetWebhookResult(entClient, req, webhook, $"{webhook}/{action}", orchestratorId, fail, lookupSubStepsToRun);
+            => await orchClient.GetWebhookResult(entClient, req, webhook, $"{action}", string.Empty, orchestratorId, fail, lookupSubStepsToRun);
 
         /// <summary>
         /// For a webhook defined as {name}/{action}/{subaction}, this can be changed to a non-catch-all like "myWebhook/myAction/mySubAction"
@@ -46,13 +45,14 @@ namespace Microflow.Webhook
         Route = "/" + MicroflowModels.Constants.MicroflowPath + "/{webhook}/{action}/{subaction}/{orchestratorId}/{stepId}/{fail:bool?}/{lookupSubStepsToRun:bool?}")] HttpRequestMessage req,
         [DurableClient] IDurableOrchestrationClient orchClient, [DurableClient] IDurableEntityClient entClient,
         string webhook, int stepId, string action, string subaction, string orchestratorId, bool? fail, bool? lookupSubStepsToRun)
-            => await orchClient.GetWebhookResult(entClient, req, webhook, $"{action}/{subaction}", orchestratorId, fail, lookupSubStepsToRun);
+            => await orchClient.GetWebhookResult(entClient, req, webhook, action, subaction, orchestratorId, fail, lookupSubStepsToRun);
 
         private static async Task<HttpResponseMessage> GetWebhookResult(this IDurableOrchestrationClient client,
                                                                         IDurableEntityClient entClient,
                                                                         HttpRequestMessage req,
                                                                         string wehookBase,
                                                                         string webhookAction,
+                                                                        string webhookSubAction,
                                                                         string orchestratorId,
                                                                         bool? fail,
                                                                         bool? lookupSubStepsToRun)
@@ -62,16 +62,35 @@ namespace Microflow.Webhook
                 StatusCode = !fail.HasValue || fail.Value == true ? 200 : 418
             };
 
+            string entkey;
+            string webhookKey;
+
+            if(!string.IsNullOrEmpty(webhookSubAction))
+                    {
+                entkey = $"{wehookBase}@{webhookAction}@{webhookSubAction}";
+                webhookKey = $"{wehookBase}/{webhookAction}/{webhookSubAction}";
+            }
+            else if(!string.IsNullOrEmpty(webhookAction))
+            {
+                entkey = $"{wehookBase}@{webhookAction}";
+                webhookKey = $"{wehookBase}/{webhookAction}";
+            }
+            else
+            {
+                entkey = $"{wehookBase}";
+                webhookKey = $"{wehookBase}";
+            }
+
             if (req.Method == HttpMethod.Post)
             {
                 webhookResult.Content = await req.Content.ReadAsStringAsync();
 
-                //TODO: lookup substeps to run
+                // lookup substeps to run
                 if (lookupSubStepsToRun.HasValue)
                 {
                     if (lookupSubStepsToRun.Value)
                     {
-                        EntityId entId = new("StepFlowInfo", wehookBase);
+                        EntityId entId = new("StepFlowState", entkey);
 
                         EntityStateResponse<List<int>> flowInfo = await entClient.ReadEntityStateAsync<List<int>>(entId);
 
@@ -107,7 +126,7 @@ namespace Microflow.Webhook
                 }
             }
 
-            await client.RaiseEventAsync(orchestratorId, $"{wehookBase}/{webhookAction}", webhookResult);
+            await client.RaiseEventAsync(orchestratorId, webhookKey, webhookResult);
 
             return new(HttpStatusCode.OK);
         }

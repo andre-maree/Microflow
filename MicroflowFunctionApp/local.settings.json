@@ -7,6 +7,7 @@
     "BasePrefix": "http://",
     "PollingMaxHours": 240,
     "PollingIntervalSeconds": 5,
-    "PollingIntervalMaxSeconds": 15
+    "PollingIntervalMaxSeconds": 15,
+    "AzureWebJobsSecretStorageType": "files"
   }
 }

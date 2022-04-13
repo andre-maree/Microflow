@@ -51,7 +51,7 @@ namespace MicroflowModels
         {
             public const string StepCount = "StepCount";
             public const string CanExecuteNowCount = "CanExecuteNowCount";
-            public const string StepFlowInfo = "StepFlowInfo";
+            public const string StepFlowState= "StepFlowState";
         }
 
         public static class MicroflowEntityKeys
