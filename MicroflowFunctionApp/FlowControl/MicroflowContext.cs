@@ -8,6 +8,7 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using static MicroflowModels.Constants;
@@ -205,16 +206,46 @@ namespace Microflow.FlowControl
         {
             // call out to micro-service
             // wait for external event flow / webhook
-            if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.WebhookAction))
+            if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.Webhook))
             {
                 if (HttpCallWithRetries.RetryDelaySeconds > 0)
                 {
-                    MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(CallNames.HttpCallWithCallbackOrchestrator,
-                                                                                                                                   HttpCallWithRetries.GetRetryOptions(),
-                                                                                                                                   id,
-                                                                                                                                   (HttpCallWithRetries, MicroflowRun.RunObject.PostData));
+                    try
+                    {
+                        MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(CallNames.HttpCallWithCallbackOrchestrator,
+                                                                                                                                       HttpCallWithRetries.GetRetryOptions(),
+                                                                                                                                       id,
+                                                                                                                                       (HttpCallWithRetries, MicroflowRun.RunObject.PostData));
 
-                    return;
+                        return;
+                    }
+                    catch (FunctionFailedException fex)
+                    {
+                        if (fex.InnerException is TimeoutException tex)
+                        {
+                            MicroflowHttpResponse = new MicroflowHttpResponse()
+                            {
+                                Success = false,
+                                HttpResponseStatusCode = -408,
+                                Message = tex.Message
+                                //        Message = doneCallout
+                                //? $"webhook action {input.httpCall.WebhookAction} timed out, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
+                                //: $"callout to {input.httpCall.CalloutUrl} timed out before spawning a webhook, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
+                            };
+
+                            return;
+                        }
+                        //}
+                        //else
+                        //{
+                        //    MicroflowHttpResponse = new MicroflowHttpResponse()
+                        //    {
+                        //        Success = true
+                        //    };
+                        //}
+
+                        throw;
+                    }
                 }
 
                 MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallWithCallbackOrchestrator, id, (HttpCallWithRetries, MicroflowRun.RunObject.PostData));
@@ -478,9 +509,9 @@ namespace Microflow.FlowControl
                                       MicroflowRun.RunObject.GlobalKey,
                                       false,
                                       -408,
-                                      string.IsNullOrWhiteSpace(HttpCallWithRetries.WebhookAction)
+                                      string.IsNullOrWhiteSpace(HttpCallWithRetries.Webhook)
                                         ? "callout timeout"
-                                        : $"action {HttpCallWithRetries.WebhookAction} timed out, StopOnActionFailed is {HttpCallWithRetries.StopOnActionFailed}")
+                                        : $"action timed out, StopOnActionFailed is {HttpCallWithRetries.StopOnActionFailed}")
                 ));
             }
             else

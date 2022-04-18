@@ -4,7 +4,7 @@
     {
         int WebhookTimeoutSeconds { get; set; }
         bool AsynchronousPollingEnabled { get; set; }
-        string WebhookAction { get; set; }
+        string Webhook { get; set; }
         string CalloutUrl { get; set; }
         string GlobalKey { get; set; }
         bool IsHttpGet { get; set; }

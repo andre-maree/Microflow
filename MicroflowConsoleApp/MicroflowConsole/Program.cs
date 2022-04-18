@@ -13,6 +13,7 @@ namespace MicroflowConsole
     {
         public static readonly HttpClient HttpClient = new HttpClient();
         private static string baseUrl = "http://localhost:7071/microflow/v1";
+        private static string apibaseUrl = "http://localhost:5860/microflow/v1/";
         //private static string baseUrl = "https://microflowapp5675763456345345.azurewebsites.net";
 
 
@@ -40,8 +41,8 @@ namespace MicroflowConsole
                 WorkflowName = "Myflow_ClientX2",
                 WorkflowVersion = "v2.1",
                 Steps = workflow,
-                MergeFields = CreateMergeFields(),
-                DefaultRetryOptions = new MicroflowRetryOptions()
+                MergeFields = CreateMergeFields()//,
+                //DefaultRetryOptions = new MicroflowRetryOptions()
             };
 
             string workflowName = string.IsNullOrWhiteSpace(microflow.WorkflowVersion)
@@ -64,15 +65,35 @@ namespace MicroflowConsole
             //var terminate = await client.PostAsync("http://localhost:7071/runtime/webhooks/durabletask/instances/39806875-9c81-4736-81c0-9be562dae71e/terminate?reason=dfgd", null);
             try
             {
+                //string webhook = "myhook/myaction/mysub";
+                string webhook = "managerApproval/{myaction}";
+                //string webhook = "myhook/myaction/mysub";
+                //var setwebhooksteps = await HttpClient.GetAsync(apibaseUrl + "StepFlowControl/" + webhook);
                 var createResult = Create();
                 var microFlow = createResult.Microflow;
 
                 //// callback by step number
-                microFlow.Step(1).WebhookAction= "myhook/myaction/mysub";
+                //microFlow.Step(1).WebhookAction= "myhook/myaction/mysub";
+                microFlow.Step(1).Webhook = new(webhook);
+                microFlow.Step(1).Webhook.SubStepsMappings.Add(new SubStepsMapping()
+                {
+                    ResultLookup = "managerApproval/decline",
+                    SubStepsToRun = new List<int>() { 2 }
+                });
+                microFlow.Step(1).Webhook.SubStepsMappings.Add(new SubStepsMapping()
+                {
+                    ResultLookup = "managerApproval/approve",
+                    SubStepsToRun = new List<int>() { 3 }
+                });
+
+                microFlow.Step(1).WebhookTimeoutSeconds = 40;
+                microFlow.Step(1).RetryOptions = new MicroflowRetryOptions() { BackoffCoefficient = 1, DelaySeconds = 1, MaxDelaySeconds = 1, MaxRetries = 2, TimeOutSeconds = 300 };
+                microFlow.Step(1).StopOnActionFailed = true;
+                //microFlow.Step(1).WebhookAction = "myhook";
                 //microFlow.Step(2).WebhookAction = "with/action"; 
                 //microFlow.Step(2).WebhookAction = "act";
                 //microFlow.Step(3).WebhookAction = "warra";
-                microFlow.Step(4).WaitForAllParents = false;
+                //microFlow.Step(4).WaitForAllParents = false;
                 //microFlow.Step(5).WebhookAction = "warra";
                 //microFlow.Step(6).WebhookAction = "warra";
                 //microFlow.Step(7).WebhookAction = "warra";
@@ -109,9 +130,12 @@ namespace MicroflowConsole
                 //// call other workflow
                 //microFlow.Step(4).CalloutUrl = baseUrl + $"/MicroflowStart/{"MyProject_ClientX"}?globalkey={globalKey}";
                 //microFlow.Step(4).AsynchronousPollingEnabled = false;
-
+                
                 // Upsert
-                var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", microFlow, new JsonSerializerOptions(JsonSerializerDefaults.General));
+                var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", microFlow, new JsonSerializerOptions()
+                {
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+                });
 
                 for (int i = 0; i < 1; i++)
                 {

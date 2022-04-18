@@ -7,10 +7,12 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microflow.Models;
 using System.Collections.Generic;
 
-namespace Microflow.Webhook
+namespace Microflow.Webhooks
 {
     /// <summary>
-    /// These are custom webhooks that can be defined here within Microflow, or extracted into its own function app (response proxies app)
+    /// These are custom webhooks that can be defined here within Microflow, or extracted into its own function app (response proxies app).
+    /// These catch-all webhooks are able to look up which sub steps should execute. Call the Microflow Api "StepFlowControl/{wehookBase}/{webhookAction}/{webhookSubAction}/{stepList}"
+    /// to set the sub steps list for the webhook.
     /// </summary>
     public static class Webhooks
     {
@@ -59,74 +61,53 @@ namespace Microflow.Webhook
         {
             WebhookResult webhookResult = new()
             {
-                StatusCode = !fail.HasValue || fail.Value == true ? 200 : 418
+                StatusCode = !fail.HasValue || fail.Value == true ? 200 : 418                
             };
 
-            string entkey;
-            string webhookKey;
+            //string entkey;
+            ////string webhookKey;
 
-            if(!string.IsNullOrEmpty(webhookSubAction))
-                    {
-                entkey = $"{wehookBase}@{webhookAction}@{webhookSubAction}";
-                webhookKey = $"{wehookBase}/{webhookAction}/{webhookSubAction}";
-            }
-            else if(!string.IsNullOrEmpty(webhookAction))
+            if (!string.IsNullOrEmpty(webhookSubAction))
             {
-                entkey = $"{wehookBase}@{webhookAction}";
-                webhookKey = $"{wehookBase}/{webhookAction}";
+                webhookResult.ActionPath = $"{wehookBase}/{webhookAction}/{webhookSubAction}";
+                //entkey = $"{wehookBase}@{webhookAction}@{webhookSubAction}";
+                //webhookKey = $"{wehookBase}/{webhookAction}/{webhookSubAction}";
+            }
+            else if (!string.IsNullOrEmpty(webhookAction))
+            {
+                webhookResult.ActionPath = $"{wehookBase}/{webhookAction}";
+                //entkey = $"{wehookBase}@{webhookAction}";
+                //webhookKey = $"{wehookBase}/{webhookAction}";
             }
             else
             {
-                entkey = $"{wehookBase}";
-                webhookKey = $"{wehookBase}";
+                webhookResult.ActionPath = $"{wehookBase}";
+                //entkey = $"{wehookBase}";
+                //webhookKey = $"{wehookBase}";
             }
 
-            if (req.Method == HttpMethod.Post)
-            {
-                webhookResult.Content = await req.Content.ReadAsStringAsync();
+            //if (req.Method == HttpMethod.Post)
+            //{
+            //    webhookResult.Content = await req.Content.ReadAsStringAsync();
 
-                // lookup substeps to run
-                if (lookupSubStepsToRun.HasValue)
-                {
-                    if (lookupSubStepsToRun.Value)
-                    {
-                        EntityId entId = new("StepFlowState", entkey);
+            //    // lookup substeps to run
+            //    if (lookupSubStepsToRun.HasValue)
+            //    {
+            //        if (lookupSubStepsToRun.Value)
+            //        {
+            //            //EntityId entId = new("StepFlowState", entkey);
 
-                        EntityStateResponse<List<int>> flowInfo = await entClient.ReadEntityStateAsync<List<int>>(entId);
+            //            //EntityStateResponse<List<int>> flowInfo = await entClient.ReadEntityStateAsync<List<int>>(entId);
 
-                        if (flowInfo.EntityExists)
-                        {
-                            webhookResult.SubStepsToRun = flowInfo.EntityState;
-                        }
-                    }
-                    //else // try get it from the post data as 1,2,3
-                    //{
-                    //    List<int> arr = new();
-                    //    bool? doSubSteps = null;
+            //            //if (flowInfo.EntityExists)
+            //            //{
+            //            //    webhookResult.SubStepsToRun = flowInfo.EntityState;
+            //            //}
+            //        }
+            //    }
+            //}
 
-                    //    foreach (string s in webhookResult.Content.Split(',', System.StringSplitOptions.RemoveEmptyEntries))
-                    //    {
-                    //        if (int.TryParse(s, out int i))
-                    //        {
-                    //            arr.Add(i);
-                    //            doSubSteps = true;
-                    //        }
-                    //        else
-                    //        {
-                    //            doSubSteps = false;
-                    //            break;
-                    //        }
-                    //    }
-
-                    //    if (doSubSteps.HasValue && doSubSteps.Value)
-                    //    {
-                    //        webhookResult.SubStepsToRun = arr.ToList();
-                    //    }
-                    //}
-                }
-            }
-
-            await client.RaiseEventAsync(orchestratorId, webhookKey, webhookResult);
+            await client.RaiseEventAsync(orchestratorId, orchestratorId, webhookResult);
 
             return new(HttpStatusCode.OK);
         }

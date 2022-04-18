@@ -67,7 +67,7 @@ namespace MicroflowModels
         }
         public bool AsynchronousPollingEnabled { get; set; }
         public string CalloutUrl { get; set; }
-        public string WebhookAction { get; set; }
+        public string Webhook { get; set; }
         public bool StopOnActionFailed { get; set; }
         public int WebhookTimeoutSeconds { get; set; }
         public int CalloutTimeoutSeconds { get; set; }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
@@ -12,38 +13,79 @@ using static MicroflowModels.Constants;
 
 namespace MicroflowApi
 {
+    public class WebHook
+    {
+        public string Webhook { get; set; }
+        public List<int> SubStepsToRun { get; set; }
+    }
     public static class FlowControlApi
     {
         /// <summary>
-        /// Save a list of sub steps that must run for a webhook, this is then looked up on the webhook callback
+        /// Get a list of sub steps that must run for a webhook, this is looked up in the webhook callback
         /// </summary>
-        [FunctionName(CallNames.StepFlowControl)]
-        public static async Task<HttpResponseMessage> StepFlowControl([HttpTrigger(AuthorizationLevel.Anonymous, "get", 
-                                                                      Route = "StepFlowControl/{wehookBase}/{webhookAction}/{webhookSubAction}/{stepList}")] HttpRequestMessage req,
-                                                                      [DurableClient] IDurableEntityClient client,
-                                                                      string wehookBase,
-                                                                      string webhookAction,
-                                                                      string webhookSubAction,
-                                                                      string stepList)
+        [FunctionName("GetWebhookSubStepsToRun")]
+        public static async Task<HttpResponseMessage> GetWebhookSubStepsToRun([HttpTrigger(AuthorizationLevel.Anonymous, "get",
+                                                                      Route = "StepFlowControl/{webhook}")] HttpRequestMessage req,
+                                                                      string webhook,
+                                                                      [DurableClient] IDurableEntityClient client)
         {
-            string entkey;
+            EntityId entId = new(MicroflowEntities.StepFlowState, webhook);
 
-            if (!string.IsNullOrEmpty(webhookSubAction))
-            {
-                entkey = $"{wehookBase}@{webhookAction}@{webhookSubAction}";
-            }
-            else if (!string.IsNullOrEmpty(webhookAction))
-            {
-                entkey = $"{wehookBase}@{webhookAction}";
-            }
-            else
-            {
-                entkey = $"{wehookBase}";
-            }
+            //await client.ReadEntityStateAsync<List<int>>(entId, MicroflowEntityKeys.Set, webHook.SubStepsToRun);
+
+            return new HttpResponseMessage(HttpStatusCode.OK);
+        }
+        /// <summary>
+        /// Get a list of sub steps that must run for a webhook, this is looked up in the webhook callback
+        /// </summary>
+        [FunctionName("GetWebhookWithActionSubStepsToRun")]
+        public static async Task<HttpResponseMessage> GetWebhookWithActionSubStepsToRun([HttpTrigger(AuthorizationLevel.Anonymous, "get",
+                                                                      Route = "StepFlowControl/{webhook}/{action}")] HttpRequestMessage req,
+                                                                      [DurableClient] IDurableEntityClient client)
+        {
+            WebHook webHook = JsonSerializer.Deserialize<WebHook>(await req.Content.ReadAsStringAsync());
+
+            string entkey = webHook.Webhook.Replace('/', '@');
 
             EntityId entId = new(MicroflowEntities.StepFlowState, entkey);
 
-            await client.SignalEntityAsync(entId, MicroflowEntityKeys.Set, stepList.Split(',').Select(x => int.Parse(x)).ToList());
+            await client.SignalEntityAsync(entId, MicroflowEntityKeys.Set, webHook.SubStepsToRun);
+
+            return new HttpResponseMessage(HttpStatusCode.OK);
+        }
+        /// <summary>
+        /// Get a list of sub steps that must run for a webhook, this is looked up in the webhook callback
+        /// </summary>
+        [FunctionName("GetWebhookWithActionAndSubActionSubStepsToRun")]
+        public static async Task<HttpResponseMessage> GetWebhookWithActionAndSubActionSubStepsToRun([HttpTrigger(AuthorizationLevel.Anonymous, "get",
+                                                                      Route = "StepFlowControl/{webhook}/{action}/{subaction}")] HttpRequestMessage req,
+                                                                      [DurableClient] IDurableEntityClient client)
+        {
+            WebHook webHook = JsonSerializer.Deserialize<WebHook>(await req.Content.ReadAsStringAsync());
+
+            string entkey = webHook.Webhook.Replace('/', '@');
+
+            EntityId entId = new(MicroflowEntities.StepFlowState, entkey);
+
+            await client.SignalEntityAsync(entId, MicroflowEntityKeys.Set, webHook.SubStepsToRun);
+
+            return new HttpResponseMessage(HttpStatusCode.OK);
+        }
+        /// <summary>
+        /// Save a list of sub steps that must run for a webhook, this is looked up in the webhook callback
+        /// </summary>
+        [FunctionName("SaveWebhookSubStepListToRun")]
+        public static async Task<HttpResponseMessage> StepFlowControl([HttpTrigger(AuthorizationLevel.Anonymous, "post",
+                                                                      Route = "StepFlowControl")] HttpRequestMessage req,
+                                                                      [DurableClient] IDurableEntityClient client)
+        {
+            WebHook webHook = JsonSerializer.Deserialize<WebHook>(await req.Content.ReadAsStringAsync());
+
+            string entkey = webHook.Webhook.Replace('/', '@');
+
+            EntityId entId = new(MicroflowEntities.StepFlowState, entkey);
+
+            await client.SignalEntityAsync(entId, MicroflowEntityKeys.Set, webHook.SubStepsToRun);
 
             return new HttpResponseMessage(HttpStatusCode.OK);
         }

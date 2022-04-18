@@ -6,6 +6,24 @@ namespace MicroflowModels
 {
     #region POCOs
 
+    public class Webhook
+    {
+        public Webhook(string uriPath)
+        {
+            UriPath = uriPath;
+            SubStepsMappings = new();
+        }
+
+        public string UriPath { get; set; }
+        public List<SubStepsMapping> SubStepsMappings { get; set; }
+    }
+
+    public class SubStepsMapping
+    {
+        public string ResultLookup { get; set; }
+        public List<int> SubStepsToRun { get; set; } = new();
+    }
+
     public class MicroflowPostData
     {
         public string WorkflowName { get; set; }
@@ -63,7 +81,6 @@ namespace MicroflowModels
         public string StepId { get; set; }
         public int StepNumber { get; set; }
         public string CalloutUrl { get; set; }
-        public string WebhookAction { get; set; }
         public string ScaleGroupId { get; set; }
         public bool StopOnActionFailed { get; set; } = true;
         public bool IsHttpGet { get; set; }
@@ -71,6 +88,9 @@ namespace MicroflowModels
         public int WebhookTimeoutSeconds { get; set; } = 1000;
         public bool AsynchronousPollingEnabled { get; set; } = true;
         public bool ForwardPostData { get; set; }
+
+        [DataMember(Name = "Webhook", EmitDefaultValue = false)]
+        public Webhook Webhook { get; set; }
 
         [DataMember(Name = "WaitForAllParents", EmitDefaultValue = false)]
         public bool WaitForAllParents { get; set; } = true;

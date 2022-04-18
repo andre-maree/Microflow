@@ -8,6 +8,7 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using static MicroflowModels.Constants;
 
 namespace MicroflowShared
@@ -214,7 +215,7 @@ namespace MicroflowShared
                 {
                     HttpCallWithRetries httpCallRetriesEntity = new(workflowRun.WorkflowName, step.StepNumber.ToString(), step.StepId, sb.ToString())
                     {
-                        WebhookAction = step.WebhookAction,
+                        Webhook = step.Webhook is null ? null : JsonSerializer.Serialize(step.Webhook),
                         StopOnActionFailed = step.StopOnActionFailed,
                         CalloutUrl = step.CalloutUrl,
                         WebhookTimeoutSeconds = step.WebhookTimeoutSeconds,
@@ -238,7 +239,7 @@ namespace MicroflowShared
                 {
                     HttpCall httpCallEntity = new(workflowRun.WorkflowName, step.StepNumber.ToString(), step.StepId, sb.ToString())
                     {
-                        WebhookAction = step.WebhookAction,
+                        Webhook = step.Webhook is null ? null : JsonSerializer.Serialize(step.Webhook),
                         StopOnActionFailed = step.StopOnActionFailed,
                         CalloutUrl = step.CalloutUrl,
                         WebhookTimeoutSeconds = step.WebhookTimeoutSeconds,
@@ -315,7 +316,7 @@ namespace MicroflowShared
                         WebhookTimeoutSeconds = step.WebhookTimeoutSeconds,
                         CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
                         StopOnActionFailed = step.StopOnActionFailed,
-                        WebhookAction = step.WebhookAction,
+                        Webhook = JsonSerializer.Deserialize<Webhook>(step.Webhook),
                         IsHttpGet = step.IsHttpGet,
                         CalloutUrl = step.CalloutUrl,
                         AsynchronousPollingEnabled = step.AsynchronousPollingEnabled,

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microflow.Helpers;
 using Microflow.Models;
@@ -25,7 +27,9 @@ namespace Microflow.HttpOrchestrators
 
             (HttpCall httpCall, string content) input = context.GetInput<(HttpCall, string)>();
 
-            DurableHttpRequest durableHttpRequest = input.httpCall.CreateMicroflowDurableHttpRequest(context.InstanceId, input.content);
+            Webhook webHook = JsonSerializer.Deserialize<Webhook>(input.httpCall.Webhook);
+
+            DurableHttpRequest durableHttpRequest = input.httpCall.CreateMicroflowDurableHttpRequest(context.InstanceId, input.content, webHook);
 
             bool doneCallout = false;
 
@@ -64,9 +68,9 @@ namespace Microflow.HttpOrchestrators
 
                 // TODO: always use https
 
-                log.LogCritical($"Waiting for webhook: {CallNames.BaseUrl}/{input.httpCall.WebhookAction}/{context.InstanceId}/{input.httpCall.RowKey}/true");
+                log.LogCritical($"Waiting for webhook: {CallNames.BaseUrl}/{webHook.UriPath}/{context.InstanceId}/{input.httpCall.RowKey}/true");
                 // wait for the external event, set the timeout
-                WebhookResult webhookResult = await context.WaitForExternalEvent<WebhookResult>(input.httpCall.WebhookAction,
+                WebhookResult webhookResult = await context.WaitForExternalEvent<WebhookResult>(context.InstanceId,
                                                                                                            TimeSpan.FromSeconds(input.httpCall.WebhookTimeoutSeconds));
 
                 #region Optional: no stepcount
@@ -80,9 +84,9 @@ namespace Microflow.HttpOrchestrators
                 #endregion
 
                 // check for action failed
-                if (webhookResult.StatusCode <= 200 && webhookResult.StatusCode < 300)
+                if (webhookResult.StatusCode >= 200 && webhookResult.StatusCode < 300)
                 {
-                    log.LogWarning($"Step {input.httpCall.RowKey} webhook {input.httpCall.WebhookAction} successful at {context.CurrentUtcDateTime:HH:mm:ss}");
+                    log.LogWarning($"Step {input.httpCall.RowKey} webhook {webHook.UriPath} successful at {context.CurrentUtcDateTime:HH:mm:ss}");
 
                     microflowHttpResponse.HttpResponseStatusCode = webhookResult.StatusCode;
 
@@ -91,9 +95,10 @@ namespace Microflow.HttpOrchestrators
                         microflowHttpResponse.Message = webhookResult.Content;
                     }
 
-                    //if(webhookResult.SubStepsToRun != null)
+                    SubStepsMapping actionTuple = webHook.SubStepsMappings.Find(w=>w.ResultLookup.Equals(webhookResult.ActionPath));
+                    //if (actionTuple.SubStepsToRun != null)
                     //{
-                        microflowHttpResponse.SubStepsToRun = webhookResult.SubStepsToRun;
+                        microflowHttpResponse.SubStepsToRun = actionTuple.SubStepsToRun;
                     //}
 
                     return microflowHttpResponse;
@@ -106,26 +111,26 @@ namespace Microflow.HttpOrchestrators
                         {
                             Success = false,
                             HttpResponseStatusCode = webhookResult.StatusCode,
-                            Message = $"webhook action {input.httpCall.WebhookAction} falied, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
+                            Message = $"webhook action {webHook.UriPath} falied, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
                         };
                     //}
                 }
             }
-            catch (TimeoutException)
+            catch (TimeoutException tex)
             {
-                if (!input.httpCall.StopOnActionFailed)
-                {
-                    return new MicroflowHttpResponse()
-                    {
-                        Success = false,
-                        HttpResponseStatusCode = -408,
-                        Message = doneCallout
-                        ? $"webhook action {input.httpCall.WebhookAction} timed out, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
-                        : $"callout to {input.httpCall.CalloutUrl} timed out before spawning a webhook, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
-                    };
-                }
+                //if (!input.httpCall.StopOnActionFailed)
+                //{
+                //    return new MicroflowHttpResponse()
+                //    {
+                //        Success = false,
+                //        HttpResponseStatusCode = -408,
+                //        Message = doneCallout
+                //        ? $"webhook action {input.httpCall.WebhookAction} timed out, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
+                //        : $"callout to {input.httpCall.CalloutUrl} timed out before spawning a webhook, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
+                //    };
+                //}
 
-                throw;
+                throw tex;
             }
             catch (Exception e)
             {
@@ -136,7 +141,7 @@ namespace Microflow.HttpOrchestrators
                         Success = false,
                         HttpResponseStatusCode = -500,
                         Message = doneCallout
-                        ? $"webhook action {input.httpCall.WebhookAction} failed, StopOnActionFailed is {input.httpCall.StopOnActionFailed} - " + e.Message
+                        ? $"webhook action failed, StopOnActionFailed is {input.httpCall.StopOnActionFailed} - " + e.Message
                         : $"callout to {input.httpCall.CalloutUrl} failed before spawning a webhook, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
                     };
                 }
@@ -146,7 +151,8 @@ namespace Microflow.HttpOrchestrators
 
             #region Optional: no stepcount
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_STEPCOUNT
-            ////////////////////////////////////////////////finally
+            ////////////////////////////////////////////////
+            finally
             {
                 if (doneAdd && !doneSubtract)
                 {
@@ -157,8 +163,6 @@ namespace Microflow.HttpOrchestrators
             ////////////////////////////////////////////////
 #endif
             #endregion
-
-            return null;
         }
     }
 }
