@@ -1,4 +1,6 @@
-﻿namespace MicroflowModels
+﻿using System.Collections.Generic;
+
+namespace MicroflowModels
 {
     public interface IHttpCall : IStepEntity
     {
@@ -13,5 +15,6 @@
         string StepId { get; set; }
         bool StopOnActionFailed { get; set; }
         string ScaleGroupId { get; set; }
+        string SubStepsToRunForWebhookTimeout { get; set; }
     }
 }

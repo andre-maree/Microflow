@@ -76,20 +76,21 @@ namespace MicroflowConsole
                 //// callback by step number
                 //microFlow.Step(1).WebhookAction= "myhook/myaction/mysub";
                 microFlow.Step(1).Webhook = new(webhook);
-                microFlow.Step(1).Webhook.SubStepsMappings.Add(new SubStepsMapping()
+                microFlow.Step(1).Webhook.SubStepsMapping.Add(new ()
                 {
-                    ResultLookup = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/decline",
-                    SubStepsToRun = new List<int>() { 2 }
+                    WebhookAction = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/decline",
+                    SubStepsToRunForAction = new List<int>() { 2 }
                 });
-                microFlow.Step(1).Webhook.SubStepsMappings.Add(new SubStepsMapping()
+                microFlow.Step(1).Webhook.SubStepsMapping.Add(new ()
                 {
-                    ResultLookup = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/approve",
-                    SubStepsToRun = new List<int>() { 3 }
+                    WebhookAction = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/approve",
+                    SubStepsToRunForAction = new List<int>() { 3 }
                 });
 
-                microFlow.Step(1).WebhookTimeoutSeconds = 40;
-                microFlow.Step(1).RetryOptions = new MicroflowRetryOptions() { BackoffCoefficient = 1, DelaySeconds = 1, MaxDelaySeconds = 1, MaxRetries = 2, TimeOutSeconds = 300 };
+                microFlow.Step(1).WebhookTimeoutSeconds = 3;
+                //microFlow.Step(1).RetryOptions = new MicroflowRetryOptions() { BackoffCoefficient = 1, DelaySeconds = 1, MaxDelaySeconds = 1, MaxRetries = 2, TimeOutSeconds = 300 };
                 microFlow.Step(1).StopOnActionFailed = true;
+                microFlow.Step(1).SubStepsToRunForWebhookTimeout = new List<int>() { 3 };
                 //microFlow.Step(1).WebhookAction = "myhook";
                 //microFlow.Step(2).WebhookAction = "with/action"; 
                 //microFlow.Step(2).WebhookAction = "act";

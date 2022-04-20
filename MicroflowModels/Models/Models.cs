@@ -11,17 +11,17 @@ namespace MicroflowModels
         public Webhook(string uriPath)
         {
             UriPath = uriPath;
-            SubStepsMappings = new();
+            SubStepsMapping = new();
         }
 
         public string UriPath { get; set; }
-        public List<SubStepsMapping> SubStepsMappings { get; set; }
+        public List<SubStepsMappingForActions> SubStepsMapping { get; set; }
     }
 
-    public class SubStepsMapping
+    public class SubStepsMappingForActions
     {
-        public string ResultLookup { get; set; }
-        public List<int> SubStepsToRun { get; set; } = new();
+        public string WebhookAction { get; set; }
+        public List<int> SubStepsToRunForAction { get; set; } = new();
     }
 
     public class MicroflowPostData
@@ -88,6 +88,7 @@ namespace MicroflowModels
         public int WebhookTimeoutSeconds { get; set; } = 1000;
         public bool AsynchronousPollingEnabled { get; set; } = true;
         public bool ForwardPostData { get; set; }
+        public List<int> SubStepsToRunForWebhookTimeout { get; set; }
 
         [DataMember(Name = "Webhook", EmitDefaultValue = false)]
         public Webhook Webhook { get; set; }

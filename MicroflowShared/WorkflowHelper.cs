@@ -223,7 +223,8 @@ namespace MicroflowShared
                         IsHttpGet = step.IsHttpGet,
                         AsynchronousPollingEnabled = step.AsynchronousPollingEnabled,
                         ScaleGroupId = step.ScaleGroupId,
-                        ForwardPostData = step.ForwardPostData
+                        ForwardPostData = step.ForwardPostData,
+                        SubStepsToRunForWebhookTimeout = JsonSerializer.Serialize(step.SubStepsToRunForWebhookTimeout)
                     };
 
                     httpCallRetriesEntity.RetryDelaySeconds = step.RetryOptions.DelaySeconds;
@@ -247,7 +248,8 @@ namespace MicroflowShared
                         IsHttpGet = step.IsHttpGet,
                         AsynchronousPollingEnabled = step.AsynchronousPollingEnabled,
                         ScaleGroupId = step.ScaleGroupId,
-                        ForwardPostData = step.ForwardPostData
+                        ForwardPostData = step.ForwardPostData,
+                        SubStepsToRunForWebhookTimeout = JsonSerializer.Serialize(step.SubStepsToRunForWebhookTimeout)
                     };
 
                     // batchop
@@ -322,6 +324,7 @@ namespace MicroflowShared
                         AsynchronousPollingEnabled = step.AsynchronousPollingEnabled,
                         ScaleGroupId = step.ScaleGroupId,
                         ForwardPostData = step.ForwardPostData,
+                        SubStepsToRunForWebhookTimeout = JsonSerializer.Deserialize<List<int>>(step.SubStepsToRunForWebhookTimeout),
                         StepNumber = Convert.ToInt32(step.RowKey),
                         RetryOptions = step.RetryDelaySeconds == 0 ? null : new MicroflowRetryOptions()
                         {

@@ -79,11 +79,11 @@ namespace Microflow.Webhooks
 
             MicroflowModels.Webhook webHooks = await webHooksTask;
 
-            var hook = webHooks.SubStepsMappings.Find(h => h.ResultLookup.Equals(webhookResult.ActionPath));
+            var hook = webHooks.SubStepsMapping.Find(h => h.WebhookAction.Equals(webhookResult.ActionPath));
 
             if (hook != null)
             {
-                webhookResult.SubStepsToRun = hook.SubStepsToRun;
+                webhookResult.SubStepsToRun = hook.SubStepsToRunForAction;
                 
                 await client.RaiseEventAsync(orchestratorId, orchestratorId, webhookResult);
 

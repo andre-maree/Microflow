@@ -195,7 +195,16 @@ namespace Microflow.FlowControl
             }
             catch (Exception ex)
             {
-                await HandleCalloutException(ex);
+                if (ex.InnerException is TimeoutException tex)
+                {
+                    HandleWebhookTimeout(tex);
+
+                    MicroflowTasks.Add(ProcessSubSteps());
+                }
+                else
+                {
+                    await HandleCalloutException(ex);
+                }
             }
         }
 
@@ -223,12 +232,7 @@ namespace Microflow.FlowControl
                     {
                         if (fex.InnerException is TimeoutException tex)
                         {
-                            MicroflowHttpResponse = new MicroflowHttpResponse()
-                            {
-                                Success = false,
-                                HttpResponseStatusCode = -408,
-                                Message = tex.Message
-                            };
+                            HandleWebhookTimeout(tex);
 
                             return;
                         }
@@ -257,6 +261,28 @@ namespace Microflow.FlowControl
                 MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallOrchestrator,
                                                                                                                       id,
                                                                                                                       (HttpCallWithRetries, MicroflowRun.RunObject.PostData));
+            }
+        }
+
+        private void HandleWebhookTimeout(TimeoutException tex)
+        {
+            if (!string.IsNullOrEmpty(HttpCallWithRetries.SubStepsToRunForWebhookTimeout))
+            {
+                MicroflowHttpResponse = new MicroflowHttpResponse()
+                {
+                    Success = false,
+                    HttpResponseStatusCode = -408,
+                    SubStepsToRun = JsonSerializer.Deserialize<List<int>>(HttpCallWithRetries.SubStepsToRunForWebhookTimeout)
+                };
+            }
+            else
+            {
+                MicroflowHttpResponse = new MicroflowHttpResponse()
+                {
+                    Success = false,
+                    HttpResponseStatusCode = -408,
+                    Message = tex.Message
+                };
             }
         }
 
