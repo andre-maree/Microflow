@@ -2,6 +2,7 @@
 using System;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace MicroflowModels.Helpers
@@ -46,6 +47,15 @@ namespace MicroflowModels.Helpers
             TableClient tableClient = GetStepsTable();
 
             return await tableClient.GetEntityAsync<HttpCallWithRetries>(workflowRun.WorkflowName, workflowRun.RunObject.StepNumber);
+        }
+
+        public static async Task<Webhook> GetWebhooksForStep(string workflowName, string stepId)
+        {
+            TableClient tableClient = GetStepsTable();
+
+            Azure.Response<HttpCall> step = await tableClient.GetEntityAsync<HttpCall>(workflowName, stepId, new string[] { "Webhook" });
+
+            return JsonSerializer.Deserialize<Webhook>(step.Value.Webhook);
         }
 
         public static TableClient GetErrorsTable()

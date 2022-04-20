@@ -9,7 +9,7 @@ namespace Microflow.Models
         public int StatusCode { get; set; }
         public string Content { get; set; }
         public string ActionPath { get; set; }
-        //public List<int> SubStepsToRun { get; set; }    
+        public List<int> SubStepsToRun { get; set; }    
     }
 
     /// <summary>

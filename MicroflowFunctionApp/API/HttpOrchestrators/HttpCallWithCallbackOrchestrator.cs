@@ -57,7 +57,7 @@ namespace Microflow.HttpOrchestrators
                 #endregion
 
                 DurableHttpResponse durableHttpResponse = await context.CallHttpAsync(durableHttpRequest);
-                
+
                 doneCallout = true;
 
                 MicroflowHttpResponse microflowHttpResponse = durableHttpResponse.GetMicroflowResponse(false);
@@ -68,7 +68,7 @@ namespace Microflow.HttpOrchestrators
 
                 // TODO: always use https
 
-                log.LogCritical($"Waiting for webhook: {CallNames.BaseUrl}/{webHook.UriPath}/{context.InstanceId}/{input.httpCall.RowKey}/true");
+                log.LogCritical($"Waiting for webhook: {CallNames.BaseUrl}/{webHook.UriPath}/{context.InstanceId}/{input.httpCall.RowKey}");
                 // wait for the external event, set the timeout
                 WebhookResult webhookResult = await context.WaitForExternalEvent<WebhookResult>(context.InstanceId,
                                                                                                            TimeSpan.FromSeconds(input.httpCall.WebhookTimeoutSeconds));
@@ -95,41 +95,22 @@ namespace Microflow.HttpOrchestrators
                         microflowHttpResponse.Message = webhookResult.Content;
                     }
 
-                    SubStepsMapping actionTuple = webHook.SubStepsMappings.Find(w=>w.ResultLookup.Equals(webhookResult.ActionPath));
-                    //if (actionTuple.SubStepsToRun != null)
-                    //{
-                        microflowHttpResponse.SubStepsToRun = actionTuple.SubStepsToRun;
-                    //}
+                    microflowHttpResponse.SubStepsToRun = webhookResult.SubStepsToRun;
 
                     return microflowHttpResponse;
                 }
                 else
                 {
-                    //if (!input.httpCall.StopOnActionFailed)
-                    //{
-                        return new MicroflowHttpResponse()
-                        {
-                            Success = false,
-                            HttpResponseStatusCode = webhookResult.StatusCode,
-                            Message = $"webhook action {webHook.UriPath} falied, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
-                        };
-                    //}
+                    return new MicroflowHttpResponse()
+                    {
+                        Success = false,
+                        HttpResponseStatusCode = webhookResult.StatusCode,
+                        Message = $"webhook action {webHook.UriPath} falied, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
+                    };
                 }
             }
             catch (TimeoutException tex)
             {
-                //if (!input.httpCall.StopOnActionFailed)
-                //{
-                //    return new MicroflowHttpResponse()
-                //    {
-                //        Success = false,
-                //        HttpResponseStatusCode = -408,
-                //        Message = doneCallout
-                //        ? $"webhook action {input.httpCall.WebhookAction} timed out, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
-                //        : $"callout to {input.httpCall.CalloutUrl} timed out before spawning a webhook, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
-                //    };
-                //}
-
                 throw tex;
             }
             catch (Exception e)

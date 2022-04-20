@@ -66,23 +66,24 @@ namespace MicroflowConsole
             try
             {
                 //string webhook = "myhook/myaction/mysub";
-                string webhook = "managerApproval/{myaction}";
-                //string webhook = "myhook/myaction/mysub";
                 //var setwebhooksteps = await HttpClient.GetAsync(apibaseUrl + "StepFlowControl/" + webhook);
                 var createResult = Create();
                 var microFlow = createResult.Microflow;
+
+                //string webhook = "myhook/myaction/mysub";
+                string webhook = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion +  "/managerApproval/{myaction}";
 
                 //// callback by step number
                 //microFlow.Step(1).WebhookAction= "myhook/myaction/mysub";
                 microFlow.Step(1).Webhook = new(webhook);
                 microFlow.Step(1).Webhook.SubStepsMappings.Add(new SubStepsMapping()
                 {
-                    ResultLookup = "managerApproval/decline",
+                    ResultLookup = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/decline",
                     SubStepsToRun = new List<int>() { 2 }
                 });
                 microFlow.Step(1).Webhook.SubStepsMappings.Add(new SubStepsMapping()
                 {
-                    ResultLookup = "managerApproval/approve",
+                    ResultLookup = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/approve",
                     SubStepsToRun = new List<int>() { 3 }
                 });
 
@@ -93,7 +94,7 @@ namespace MicroflowConsole
                 //microFlow.Step(2).WebhookAction = "with/action"; 
                 //microFlow.Step(2).WebhookAction = "act";
                 //microFlow.Step(3).WebhookAction = "warra";
-                //microFlow.Step(4).WaitForAllParents = false;
+                microFlow.Step(4).WaitForAllParents = false;
                 //microFlow.Step(5).WebhookAction = "warra";
                 //microFlow.Step(6).WebhookAction = "warra";
                 //microFlow.Step(7).WebhookAction = "warra";

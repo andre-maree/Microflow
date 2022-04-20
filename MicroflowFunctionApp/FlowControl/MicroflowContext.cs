@@ -228,27 +228,18 @@ namespace Microflow.FlowControl
                                 Success = false,
                                 HttpResponseStatusCode = -408,
                                 Message = tex.Message
-                                //        Message = doneCallout
-                                //? $"webhook action {input.httpCall.WebhookAction} timed out, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
-                                //: $"callout to {input.httpCall.CalloutUrl} timed out before spawning a webhook, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
                             };
 
                             return;
                         }
-                        //}
-                        //else
-                        //{
-                        //    MicroflowHttpResponse = new MicroflowHttpResponse()
-                        //    {
-                        //        Success = true
-                        //    };
-                        //}
 
                         throw;
                     }
                 }
 
-                MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallWithCallbackOrchestrator, id, (HttpCallWithRetries, MicroflowRun.RunObject.PostData));
+                MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallWithCallbackOrchestrator,
+                                                                                                                      id,
+                                                                                                                      (HttpCallWithRetries, MicroflowRun.RunObject.PostData));
             }
             // send and receive inline flow
             else
@@ -263,7 +254,9 @@ namespace Microflow.FlowControl
                     return;
                 }
 
-                MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallOrchestrator, id, (HttpCallWithRetries, MicroflowRun.RunObject.PostData));
+                MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallOrchestrator,
+                                                                                                                      id,
+                                                                                                                      (HttpCallWithRetries, MicroflowRun.RunObject.PostData));
             }
         }
 
@@ -306,11 +299,13 @@ namespace Microflow.FlowControl
         /// </summary>
         private List<Task<CanExecuteResult>> CanExecute()
         {
-            bool checkSubStepFromResponce = false;
+            bool checkSubStepFromResponse = false;
+
             if (MicroflowHttpResponse.SubStepsToRun != null && MicroflowHttpResponse.SubStepsToRun.Count > 0)
             {
-                checkSubStepFromResponce = true;
+                checkSubStepFromResponse = true;
             }
+
             string[] stepsAndCounts = HttpCallWithRetries.SubSteps.Split(Splitter, StringSplitOptions.RemoveEmptyEntries);
 
             List<Task<CanExecuteResult>> canExecuteTasks = new();
@@ -319,12 +314,11 @@ namespace Microflow.FlowControl
             {
                 // check parentCount
                 // execute immediately if parentCount is 1
-                //int subStepId = Convert.ToInt32(stepsAndCounts[i]);
                 int parentCount = Convert.ToInt32(stepsAndCounts[i + 1]);
                 int waitForAllParents = Convert.ToInt32(stepsAndCounts[i + 2]);
 
                 // check if the http response had a sub step list to indicate which sub steps can execute
-                if (checkSubStepFromResponce && !MicroflowHttpResponse.SubStepsToRun.Contains(Convert.ToInt32(stepsAndCounts[i])))
+                if (checkSubStepFromResponse && !MicroflowHttpResponse.SubStepsToRun.Contains(Convert.ToInt32(stepsAndCounts[i])))
                 {
                     continue;
                 }
