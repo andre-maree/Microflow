@@ -213,40 +213,8 @@ namespace Microflow.FlowControl
         /// </summary>
         private async Task HttpCallout(string id)
         {
-            // call out to micro-service
-            // wait for external event flow / webhook
-            if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.Webhook))
-            {
-                if (HttpCallWithRetries.RetryDelaySeconds > 0)
-                {
-                    try
-                    {
-                        MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(CallNames.HttpCallWithCallbackOrchestrator,
-                                                                                                                                       HttpCallWithRetries.GetRetryOptions(),
-                                                                                                                                       id,
-                                                                                                                                       (HttpCallWithRetries, MicroflowRun.RunObject.PostData));
-
-                        return;
-                    }
-                    catch (FunctionFailedException fex)
-                    {
-                        if (fex.InnerException is TimeoutException tex)
-                        {
-                            HandleWebhookTimeout(tex);
-
-                            return;
-                        }
-
-                        throw;
-                    }
-                }
-
-                MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallWithCallbackOrchestrator,
-                                                                                                                      id,
-                                                                                                                      (HttpCallWithRetries, MicroflowRun.RunObject.PostData));
-            }
             // send and receive inline flow
-            else
+            if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.CalloutUrl))
             {
                 if (HttpCallWithRetries.RetryDelaySeconds > 0)
                 {
@@ -261,6 +229,39 @@ namespace Microflow.FlowControl
                 MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallOrchestrator,
                                                                                                                       id,
                                                                                                                       (HttpCallWithRetries, MicroflowRun.RunObject.PostData));
+            }
+
+            // call out to micro-service
+            // wait for external event flow / webhook
+            if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.Webhook))
+            {
+                try
+                {
+                    if (HttpCallWithRetries.RetryDelaySeconds > 0)
+                    {
+                        MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(CallNames.HttpCallWithWebhookOrchestrator,
+                                                                                                                                       HttpCallWithRetries.GetRetryOptions(),
+                                                                                                                                       id,
+                                                                                                                                       (HttpCallWithRetries, MicroflowRun.RunObject.PostData));
+
+                        return;
+                    }
+
+                    MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallWithWebhookOrchestrator,
+                                                                                                                          id,
+                                                                                                                          (HttpCallWithRetries, MicroflowRun.RunObject.PostData));
+                }
+                catch (FunctionFailedException fex)
+                {
+                    if (fex.InnerException is TimeoutException tex)
+                    {
+                        HandleWebhookTimeout(tex);
+
+                        return;
+                    }
+
+                    throw;
+                }
             }
         }
 

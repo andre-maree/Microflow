@@ -61,7 +61,7 @@ namespace Microflow.Webhooks
 
             WebhookResult webhookResult = new()
             {
-                StatusCode = 200                
+                StatusCode = 200
             };
 
             if (!string.IsNullOrEmpty(webhookSubAction))
@@ -79,20 +79,23 @@ namespace Microflow.Webhooks
 
             MicroflowModels.Webhook webHooks = await webHooksTask;
 
-            var hook = webHooks.SubStepsMapping.Find(h => h.WebhookAction.Equals(webhookResult.ActionPath));
-
-            if (hook != null)
+            if (webHooks.SubStepsMapping.Count > 0)
             {
-                webhookResult.SubStepsToRun = hook.SubStepsToRunForAction;
-                
-                await client.RaiseEventAsync(orchestratorId, orchestratorId, webhookResult);
+                var hook = webHooks.SubStepsMapping.Find(h => h.WebhookAction.Equals(webhookResult.ActionPath));
 
-                return new(HttpStatusCode.OK);
+                if (hook != null)
+                {
+                    webhookResult.SubStepsToRun = hook.SubStepsToRunForAction;
+                }
+                else
+                {
+                    return new(HttpStatusCode.BadRequest);
+                }
             }
-            else
-            {
-                return new(HttpStatusCode.BadRequest);
-            }
+
+            await client.RaiseEventAsync(orchestratorId, orchestratorId, webhookResult);
+
+            return new(HttpStatusCode.OK);
         }
     }
 }

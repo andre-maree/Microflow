@@ -76,26 +76,26 @@ namespace MicroflowConsole
                 //// callback by step number
                 //microFlow.Step(1).WebhookAction= "myhook/myaction/mysub";
                 microFlow.Step(1).Webhook = new(webhook);
-                microFlow.Step(1).Webhook.SubStepsMapping.Add(new ()
-                {
-                    WebhookAction = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/decline",
-                    SubStepsToRunForAction = new List<int>() { 2 }
-                });
-                microFlow.Step(1).Webhook.SubStepsMapping.Add(new ()
-                {
-                    WebhookAction = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/approve",
-                    SubStepsToRunForAction = new List<int>() { 3 }
-                });
+                //microFlow.Step(1).Webhook.SubStepsMapping.Add(new ()
+                //{
+                //    WebhookAction = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/decline",
+                //    SubStepsToRunForAction = new List<int>() { 2 }
+                //});
+                //microFlow.Step(1).Webhook.SubStepsMapping.Add(new ()
+                //{
+                //    WebhookAction = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/approve",
+                //    SubStepsToRunForAction = new List<int>() { 3 }
+                //});
 
-                microFlow.Step(1).WebhookTimeoutSeconds = 3;
+                //microFlow.Step(1).WebhookTimeoutSeconds = 3;
                 //microFlow.Step(1).RetryOptions = new MicroflowRetryOptions() { BackoffCoefficient = 1, DelaySeconds = 1, MaxDelaySeconds = 1, MaxRetries = 2, TimeOutSeconds = 300 };
-                microFlow.Step(1).StopOnActionFailed = false;
-                microFlow.Step(1).SubStepsToRunForWebhookTimeout = new List<int>() { 3 };
+                //microFlow.Step(1).StopOnActionFailed = false;
+                //microFlow.Step(1).SubStepsToRunForWebhookTimeout = new List<int>() { 3 };
                 //microFlow.Step(1).WebhookAction = "myhook";
                 //microFlow.Step(2).WebhookAction = "with/action"; 
                 //microFlow.Step(2).WebhookAction = "act";
                 //microFlow.Step(3).WebhookAction = "warra";
-                microFlow.Step(4).WaitForAllParents = false;
+                //microFlow.Step(4).WaitForAllParents = false;
                 //microFlow.Step(5).WebhookAction = "warra";
                 //microFlow.Step(6).WebhookAction = "warra";
                 //microFlow.Step(7).WebhookAction = "warra";

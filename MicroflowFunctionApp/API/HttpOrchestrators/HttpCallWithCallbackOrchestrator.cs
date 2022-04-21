@@ -19,7 +19,7 @@ namespace Microflow.HttpOrchestrators
         /// Does the call out and then waits for the webhook
         /// </summary>
         [Deterministic]
-        [FunctionName(CallNames.HttpCallWithCallbackOrchestrator)]
+        [FunctionName(CallNames.HttpCallWithWebhookOrchestrator)]
         public static async Task<MicroflowHttpResponse> HttpCallWithCallback([OrchestrationTrigger] IDurableOrchestrationContext context,
                                                                              ILogger inLog)
         {
@@ -29,9 +29,9 @@ namespace Microflow.HttpOrchestrators
 
             Webhook webHook = JsonSerializer.Deserialize<Webhook>(input.httpCall.Webhook);
 
-            DurableHttpRequest durableHttpRequest = input.httpCall.CreateMicroflowDurableHttpRequest(context.InstanceId, input.content, webHook);
+            //DurableHttpRequest durableHttpRequest = input.httpCall.CreateMicroflowDurableHttpRequest(context.InstanceId, input.content, webHook);
 
-            bool doneCallout = false;
+            //bool doneCallout = false;
 
             #region Optional: no stepcount
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_STEPCOUNT
@@ -56,15 +56,15 @@ namespace Microflow.HttpOrchestrators
 #endif
                 #endregion
 
-                DurableHttpResponse durableHttpResponse = await context.CallHttpAsync(durableHttpRequest);
+                //DurableHttpResponse durableHttpResponse = await context.CallHttpAsync(durableHttpRequest);
 
-                doneCallout = true;
+                //doneCallout = true;
 
-                MicroflowHttpResponse microflowHttpResponse = durableHttpResponse.GetMicroflowResponse(false);
+                //MicroflowHttpResponse microflowHttpResponse = durableHttpResponse.GetMicroflowResponse(false);
 
                 // if failed http status return
-                if (!microflowHttpResponse.Success)
-                    return microflowHttpResponse;
+                //if (!microflowHttpResponse.Success)
+                //    return microflowHttpResponse;
 
                 // TODO: always use https
 
@@ -86,6 +86,8 @@ namespace Microflow.HttpOrchestrators
                 // check for action failed
                 if (webhookResult.StatusCode >= 200 && webhookResult.StatusCode < 300)
                 {
+                    MicroflowHttpResponse microflowHttpResponse = new() { Success = true };
+
                     log.LogWarning($"Step {input.httpCall.RowKey} webhook {webHook.UriPath} successful at {context.CurrentUtcDateTime:HH:mm:ss}");
 
                     microflowHttpResponse.HttpResponseStatusCode = webhookResult.StatusCode;
@@ -121,9 +123,7 @@ namespace Microflow.HttpOrchestrators
                     {
                         Success = false,
                         HttpResponseStatusCode = -500,
-                        Message = doneCallout
-                        ? $"webhook action failed, StopOnActionFailed is {input.httpCall.StopOnActionFailed} - " + e.Message
-                        : $"callout to {input.httpCall.CalloutUrl} failed before spawning a webhook, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
+                        Message = $"Webhook action failed, StopOnActionFailed is {input.httpCall.StopOnActionFailed} - " + e.Message
                     };
                 }
 
