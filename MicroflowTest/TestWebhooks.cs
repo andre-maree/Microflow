@@ -13,25 +13,24 @@ using System.Threading.Tasks;
 namespace MicroflowTest
 {
     [TestClass]
-    public class WorkflowExecution
+    public class TestWwebhooks
     {
         public static readonly HttpClient HttpClient = new HttpClient();
         private static string baseUrl = "http://localhost:7071/microflow/v1";
 
         [TestMethod]
-        public async Task CreateTestWorkflow_Complex1()
+        public async Task CreateTestWebhooksWorkflow()
         {
             string path = Path.GetDirectoryName(System.AppDomain.CurrentDomain.BaseDirectory);
             string pathf = Directory.GetParent(Directory.GetParent(Directory.GetParent(path).FullName).FullName).FullName + "\\config.json";
 
             StreamReader r = new StreamReader(pathf);
 
-
             string jsonString = r.ReadToEnd();
 
-            var ff = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(jsonString);
+            var ff = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonString);
 
-            var workflow = TestWorkflows.CreateTestWorkflow_Complex1();
+            var workflow = TestWorkflows.CreateTestWorkflow_SimpleSteps();
             //var workflow = TestWorkflows.CreateTestWorkflow_SimpleSteps();
 
             var microflow = new MicroflowModels.Microflow()
@@ -105,34 +104,14 @@ namespace MicroflowTest
             Assert.IsTrue(s[0].StepNumber == 1);
             
             if(s[1].StepNumber==2)
-                Assert.IsTrue(s[2].StepNumber==4);
+                Assert.IsTrue(s[2].StepNumber==3);
             else
             {
-                Assert.IsTrue(s[1].StepNumber == 4);
+                Assert.IsTrue(s[1].StepNumber == 3);
                 Assert.IsTrue(s[2].StepNumber == 2);
             }
 
-            Assert.IsTrue(s[3].StepNumber == 5);
-            Assert.IsTrue(s[4].StepNumber == 3);
-
-            if (s[5].StepNumber == 6)
-                Assert.IsTrue(s[6].StepNumber == 7);
-            else
-            {
-                Assert.IsTrue(s[6].StepNumber == 6);
-                Assert.IsTrue(s[5].StepNumber == 7);
-            }
-
-            Assert.IsTrue(s[7].StepNumber == 8);
+            Assert.IsTrue(s[3].StepNumber == 4);
         }
-    }
-
-    public class OrchResult
-    {
-        public string id { get; set; }
-        public string purgeHistoryDeleteUri { get; set; }
-        public string sendEventPostUri { get; set; }
-        public string statusQueryGetUri { get; set; }
-        public string terminatePostUri { get; set; }
     }
 }

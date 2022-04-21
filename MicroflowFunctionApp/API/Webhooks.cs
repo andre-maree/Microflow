@@ -24,7 +24,7 @@ namespace Microflow.Webhooks
         [HttpTrigger(AuthorizationLevel.Function, "get", "post",
         Route = "/" + MicroflowModels.Constants.MicroflowPath + "/{webhook}/{orchestratorId}/{stepId}")] HttpRequestMessage req,
         [DurableClient] IDurableOrchestrationClient orchClient,
-        string webhook, int stepId, string orchestratorId)
+        string webhook, string stepId, string orchestratorId)
             => await orchClient.GetWebhookResult(req, webhook, string.Empty, string.Empty, orchestratorId, stepId);
 
         ///// <summary>
@@ -35,7 +35,7 @@ namespace Microflow.Webhooks
         [HttpTrigger(AuthorizationLevel.Function, "get", "post",
         Route = "/" + MicroflowModels.Constants.MicroflowPath + "/{webhook}/{action}/{orchestratorId}/{stepId}")] HttpRequestMessage req,
         [DurableClient] IDurableOrchestrationClient orchClient,
-        string webhook, int stepId, string action, string orchestratorId)
+        string webhook, string stepId, string action, string orchestratorId)
             => await orchClient.GetWebhookResult(req, webhook, $"{action}", string.Empty, orchestratorId, stepId);
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace Microflow.Webhooks
         [HttpTrigger(AuthorizationLevel.Function, "get", "post",
         Route = "/" + MicroflowModels.Constants.MicroflowPath + "/{webhook}/{action}/{subaction}/{orchestratorId}/{stepId}")] HttpRequestMessage req,
         [DurableClient] IDurableOrchestrationClient orchClient,
-        string webhook, int stepId, string action, string subaction, string orchestratorId)
+        string webhook, string stepId, string action, string subaction, string orchestratorId)
             => await orchClient.GetWebhookResult(req, webhook, action, subaction, orchestratorId, stepId);
 
         private static async Task<HttpResponseMessage> GetWebhookResult(this IDurableOrchestrationClient client,
@@ -55,9 +55,9 @@ namespace Microflow.Webhooks
                                                                         string webhookAction,
                                                                         string webhookSubAction,
                                                                         string orchestratorId,
-                                                                        int stepId)
+                                                                        string stepId)
         {
-            var webHooksTask = TableHelper.GetWebhooksForStep(webhookBase, stepId.ToString());
+            var webHooksTask = TableHelper.GetWebhooksForStep(webhookBase, stepId);
 
             WebhookResult webhookResult = new()
             {

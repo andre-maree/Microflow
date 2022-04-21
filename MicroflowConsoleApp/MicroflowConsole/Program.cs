@@ -89,7 +89,7 @@ namespace MicroflowConsole
 
                 microFlow.Step(1).WebhookTimeoutSeconds = 3;
                 //microFlow.Step(1).RetryOptions = new MicroflowRetryOptions() { BackoffCoefficient = 1, DelaySeconds = 1, MaxDelaySeconds = 1, MaxRetries = 2, TimeOutSeconds = 300 };
-                microFlow.Step(1).StopOnActionFailed = true;
+                microFlow.Step(1).StopOnActionFailed = false;
                 microFlow.Step(1).SubStepsToRunForWebhookTimeout = new List<int>() { 3 };
                 //microFlow.Step(1).WebhookAction = "myhook";
                 //microFlow.Step(2).WebhookAction = "with/action"; 
