@@ -20,27 +20,27 @@ namespace Microflow.HttpOrchestrators
         [FunctionName(CallNames.HttpCallOrchestrator)]
         public static async Task<MicroflowHttpResponse> HttpCallOrchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
-            (HttpCall httpCall, string content) input = context.GetInput<(HttpCall, string)>();
+            (HttpCall httpCall, string content) = context.GetInput<(HttpCall, string)>();
 
             #region Optional: no stepcount
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_STEPCOUNT
             //////////////////////////////////////
             bool doneAdd = false;
             bool doneSubtract = false;
-            EntityId countId = new(MicroflowEntities.StepCount, input.httpCall.PartitionKey + input.httpCall.RowKey);
+            EntityId countId = new(MicroflowEntities.StepCount, httpCall.PartitionKey + httpCall.RowKey);
             ////////////////////////////////////////////////
 #endif
             #endregion
 
             try
             {
-                DurableHttpRequest durableHttpRequest = input.httpCall.CreateMicroflowDurableHttpRequest(context.InstanceId, input.content);
+                DurableHttpRequest durableHttpRequest = httpCall.CreateMicroflowDurableHttpRequest(context.InstanceId, content);
 
                 #region Optional: no stepcount
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_STEPCOUNT
                 //////////////////////////////////////
                 // set the per step in-progress count to count+1
-                context.SignalEntity(countId, MicroflowCounterKeys.Add);
+                context.SignalEntity(countId, MicroflowEntityKeys.Add);
                 doneAdd = true;
                 ////////////////////////////////////////////////
 #endif
@@ -52,24 +52,24 @@ namespace Microflow.HttpOrchestrators
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_STEPCOUNT
                 //////////////////////////////////////
                 // set the per step in-progress count to count-1
-                context.SignalEntity(countId, MicroflowCounterKeys.Subtract);
+                context.SignalEntity(countId, MicroflowEntityKeys.Subtract);
                 doneSubtract = true;
 
                 ////////////////////////////////////////////////
 #endif
                 #endregion
 
-                return durableHttpResponse.GetMicroflowResponse(input.httpCall.ForwardPostData);
+                return durableHttpResponse.GetMicroflowResponse(httpCall.ForwardPostData);
             }
             catch (TimeoutException)
             {
-                if (!input.httpCall.StopOnActionFailed)
+                if (!httpCall.StopOnActionFailed)
                 {
                     return new MicroflowHttpResponse()
                     {
                         Success = false,
                         HttpResponseStatusCode = -408,
-                        Message = $"inline callout to {input.httpCall.CalloutUrl} timed out, StopOnActionFailed is false"
+                        Message = $"inline callout to {httpCall.CalloutUrl} timed out, StopOnActionFailed is false"
                     };
                 }
 
@@ -77,13 +77,13 @@ namespace Microflow.HttpOrchestrators
             }
             catch (Exception e)
             {
-                if (!input.httpCall.StopOnActionFailed)
+                if (!httpCall.StopOnActionFailed)
                 {
                     return new MicroflowHttpResponse()
                     {
                         Success = false,
                         HttpResponseStatusCode = -999,
-                        Message = $"inline callout to to {input.httpCall.CalloutUrl} failed, StopOnActionFailed is false - " + e.Message
+                        Message = $"inline callout to to {httpCall.CalloutUrl} failed, StopOnActionFailed is false - " + e.Message
                     };
                 }
 
@@ -98,7 +98,7 @@ namespace Microflow.HttpOrchestrators
                 if (doneAdd && !doneSubtract)
                 {
                     // set the per step in-progress count to count-1
-                    context.SignalEntity(countId, MicroflowCounterKeys.Subtract);
+                    context.SignalEntity(countId, MicroflowEntityKeys.Subtract);
                 }
             }
             ////////////////////////////////////////////////

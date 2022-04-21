@@ -28,11 +28,11 @@ namespace Microflow.FlowControl
 
             using (await context.LockAsync(countId))
             {
-                int scaleGroupInProcessCount = await context.CallEntityAsync<int>(countId, MicroflowCounterKeys.Read);
+                int scaleGroupInProcessCount = await context.CallEntityAsync<int>(countId, MicroflowEntityKeys.Read);
 
                 if (scaleGroupInProcessCount < scaleGroupMaxCount)
                 {
-                    await context.CallEntityAsync(countId, MicroflowCounterKeys.Add);
+                    await context.CallEntityAsync(countId, MicroflowEntityKeys.Add);
 
                     return;
                 }
@@ -56,11 +56,11 @@ namespace Microflow.FlowControl
 
                         using (await context.LockAsync(countId))
                         {
-                            int scaleGroupInProcessCount = await context.CallEntityAsync<int>(countId, MicroflowCounterKeys.Read);
+                            int scaleGroupInProcessCount = await context.CallEntityAsync<int>(countId, MicroflowEntityKeys.Read);
 
                             if (scaleGroupInProcessCount < scaleGroupMaxCount)
                             {
-                                await context.CallEntityAsync<int>(countId, MicroflowCounterKeys.Add);
+                                await context.CallEntityAsync<int>(countId, MicroflowEntityKeys.Add);
 
                                 return;
                             }
@@ -102,14 +102,14 @@ namespace Microflow.FlowControl
         {
             switch (ctx.OperationName)
             {
-                case MicroflowCounterKeys.Add:
+                case MicroflowEntityKeys.Add:
                     ctx.SetState(ctx.GetState<int>() + 1);
                     break;
-                case MicroflowCounterKeys.Subtract:
+                case MicroflowEntityKeys.Subtract:
                     int state = ctx.GetState<int>();
                     ctx.SetState(state <= 0 ? 0 : state - 1);
                     break;
-                case MicroflowCounterKeys.Read:
+                case MicroflowEntityKeys.Read:
                     ctx.Return(ctx.GetState<int>());
                     break;
                     //case "delete":
@@ -123,10 +123,10 @@ namespace Microflow.FlowControl
         {
             switch (ctx.OperationName.ToLowerInvariant())
             {
-                case MicroflowCounterKeys.Set:
+                case MicroflowEntityKeys.Set:
                     ctx.SetState(ctx.GetInput<int>());
                     break;
-                case MicroflowCounterKeys.Read:
+                case MicroflowEntityKeys.Read:
                     ctx.Return(ctx.GetState<int>());
                     break;
                 //case "delete":

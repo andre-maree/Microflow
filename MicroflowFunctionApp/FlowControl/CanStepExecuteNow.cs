@@ -28,7 +28,7 @@ namespace Microflow.FlowControl
 
                 using (await context.LockAsync(countId))
                 {
-                    int parentCompletedCount = await context.CallEntityAsync<int>(countId, MicroflowCounterKeys.Read);
+                    int parentCompletedCount = await context.CallEntityAsync<int>(countId, MicroflowEntityKeys.Read);
 
                     if (parentCompletedCount + 1 >= canExecuteNowObject.ParentCount)
                     {
@@ -43,7 +43,7 @@ namespace Microflow.FlowControl
                     }
                     else
                     {
-                        await context.CallEntityAsync<int>(countId, MicroflowCounterKeys.Add);
+                        await context.CallEntityAsync<int>(countId, MicroflowEntityKeys.Add);
 
                         canExecuteResult = new CanExecuteResult()
                         {
@@ -55,7 +55,7 @@ namespace Microflow.FlowControl
 
                 if(canExecuteResult.CanExecute)
                 {
-                    context.SignalEntity(countId, MicroflowCounterKeys.Delete);
+                    context.SignalEntity(countId, MicroflowEntityKeys.Delete);
                 }
 
                 return canExecuteResult;
@@ -87,16 +87,16 @@ namespace Microflow.FlowControl
         {
             switch (ctx.OperationName)
             {
-                case MicroflowCounterKeys.Add:
+                case MicroflowEntityKeys.Add:
                     ctx.SetState(ctx.GetState<int>() + 1);
                     break;
                 //case "reset":
                 //    ctx.SetState(0);
                 //    break;
-                case MicroflowCounterKeys.Read:
+                case MicroflowEntityKeys.Read:
                     ctx.Return(ctx.GetState<int>());
                     break;
-                case MicroflowCounterKeys.Delete:
+                case MicroflowEntityKeys.Delete:
                     ctx.DeleteState();
                     break;
             }

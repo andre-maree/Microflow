@@ -8,6 +8,7 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using static MicroflowModels.Constants;
@@ -182,7 +183,7 @@ namespace Microflow.FlowControl
                 {
                     EntityId countId = new(ScaleGroupCalls.CanExecuteNowInScaleGroupCount, HttpCallWithRetries.ScaleGroupId);
 
-                    await MicroflowDurableContext.CallEntityAsync(countId, MicroflowCounterKeys.Subtract);
+                    await MicroflowDurableContext.CallEntityAsync(countId, MicroflowEntityKeys.Subtract);
                 }
                 //////////////////////////////////////////////
 #endif
@@ -194,7 +195,16 @@ namespace Microflow.FlowControl
             }
             catch (Exception ex)
             {
-                await HandleCalloutException(ex);
+                if (ex.InnerException is TimeoutException tex)
+                {
+                    HandleWebhookTimeout(tex);
+
+                    MicroflowTasks.Add(ProcessSubSteps());
+                }
+                else
+                {
+                    await HandleCalloutException(ex);
+                }
             }
         }
 
@@ -205,19 +215,35 @@ namespace Microflow.FlowControl
         {
             // call out to micro-service
             // wait for external event flow / webhook
-            if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.WebhookAction))
+            if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.Webhook))
             {
                 if (HttpCallWithRetries.RetryDelaySeconds > 0)
                 {
-                    MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(CallNames.HttpCallWithCallbackOrchestrator,
-                                                                                                                                   HttpCallWithRetries.GetRetryOptions(),
-                                                                                                                                   id,
-                                                                                                                                   (HttpCallWithRetries, MicroflowRun.RunObject.PostData));
+                    try
+                    {
+                        MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(CallNames.HttpCallWithCallbackOrchestrator,
+                                                                                                                                       HttpCallWithRetries.GetRetryOptions(),
+                                                                                                                                       id,
+                                                                                                                                       (HttpCallWithRetries, MicroflowRun.RunObject.PostData));
 
-                    return;
+                        return;
+                    }
+                    catch (FunctionFailedException fex)
+                    {
+                        if (fex.InnerException is TimeoutException tex)
+                        {
+                            HandleWebhookTimeout(tex);
+
+                            return;
+                        }
+
+                        throw;
+                    }
                 }
 
-                MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallWithCallbackOrchestrator, id, (HttpCallWithRetries, MicroflowRun.RunObject.PostData));
+                MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallWithCallbackOrchestrator,
+                                                                                                                      id,
+                                                                                                                      (HttpCallWithRetries, MicroflowRun.RunObject.PostData));
             }
             // send and receive inline flow
             else
@@ -232,7 +258,31 @@ namespace Microflow.FlowControl
                     return;
                 }
 
-                MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallOrchestrator, id, (HttpCallWithRetries, MicroflowRun.RunObject.PostData));
+                MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallOrchestrator,
+                                                                                                                      id,
+                                                                                                                      (HttpCallWithRetries, MicroflowRun.RunObject.PostData));
+            }
+        }
+
+        private void HandleWebhookTimeout(TimeoutException tex)
+        {
+            if (!string.IsNullOrEmpty(HttpCallWithRetries.SubStepsToRunForWebhookTimeout))
+            {
+                MicroflowHttpResponse = new MicroflowHttpResponse()
+                {
+                    Success = false,
+                    HttpResponseStatusCode = -408,
+                    SubStepsToRun = JsonSerializer.Deserialize<List<int>>(HttpCallWithRetries.SubStepsToRunForWebhookTimeout)
+                };
+            }
+            else
+            {
+                MicroflowHttpResponse = new MicroflowHttpResponse()
+                {
+                    Success = false,
+                    HttpResponseStatusCode = -408,
+                    Message = tex.Message
+                };
             }
         }
 
@@ -275,6 +325,13 @@ namespace Microflow.FlowControl
         /// </summary>
         private List<Task<CanExecuteResult>> CanExecute()
         {
+            bool checkSubStepFromResponse = false;
+
+            if (MicroflowHttpResponse.SubStepsToRun != null && MicroflowHttpResponse.SubStepsToRun.Count > 0)
+            {
+                checkSubStepFromResponse = true;
+            }
+
             string[] stepsAndCounts = HttpCallWithRetries.SubSteps.Split(Splitter, StringSplitOptions.RemoveEmptyEntries);
 
             List<Task<CanExecuteResult>> canExecuteTasks = new();
@@ -285,6 +342,12 @@ namespace Microflow.FlowControl
                 // execute immediately if parentCount is 1
                 int parentCount = Convert.ToInt32(stepsAndCounts[i + 1]);
                 int waitForAllParents = Convert.ToInt32(stepsAndCounts[i + 2]);
+
+                // check if the http response had a sub step list to indicate which sub steps can execute
+                if (checkSubStepFromResponse && !MicroflowHttpResponse.SubStepsToRun.Contains(Convert.ToInt32(stepsAndCounts[i])))
+                {
+                    continue;
+                }
 
                 if (parentCount < 2 || waitForAllParents == 0)
                 {
@@ -356,16 +419,16 @@ namespace Microflow.FlowControl
         {
             switch (ctx.OperationName)
             {
-                case MicroflowCounterKeys.Add:
+                case MicroflowEntityKeys.Add:
                     ctx.SetState(ctx.GetState<int>() + 1);
                     break;
                 //case "reset":
                 //    ctx.SetState(0);
                 //    break;
-                case MicroflowCounterKeys.Read:
+                case MicroflowEntityKeys.Read:
                     ctx.Return(ctx.GetState<int>());
                     break;
-                case MicroflowCounterKeys.Subtract:
+                case MicroflowEntityKeys.Subtract:
                     ctx.SetState(ctx.GetState<int>() - 1);
                     break;
                     //case "delete":
@@ -466,9 +529,9 @@ namespace Microflow.FlowControl
                                       MicroflowRun.RunObject.GlobalKey,
                                       false,
                                       -408,
-                                      string.IsNullOrWhiteSpace(HttpCallWithRetries.WebhookAction)
+                                      string.IsNullOrWhiteSpace(HttpCallWithRetries.Webhook)
                                         ? "callout timeout"
-                                        : $"action {HttpCallWithRetries.WebhookAction} timed out, StopOnActionFailed is {HttpCallWithRetries.StopOnActionFailed}")
+                                        : $"action timed out, StopOnActionFailed is {HttpCallWithRetries.StopOnActionFailed}")
                 ));
             }
             else

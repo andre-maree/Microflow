@@ -37,6 +37,7 @@ namespace MicroflowModels
             public const string HttpCallWithCallbackOrchestrator = "HttpCallWithCallbackOrchestrator";
             public const string MicroflowStart = "MicroflowStart";
             public const string MicroflowStartOrchestration = "MicroflowStartOrchestration";
+            public const string StepFlowControl = "StepFlowControl";
         }
 
         public static class MicroflowStates
@@ -50,9 +51,10 @@ namespace MicroflowModels
         {
             public const string StepCount = "StepCount";
             public const string CanExecuteNowCount = "CanExecuteNowCount";
+            public const string StepFlowState= "StepFlowState";
         }
 
-        public static class MicroflowCounterKeys
+        public static class MicroflowEntityKeys
         {
             public const string Add = "add";
             public const string Subtract = "subtract";

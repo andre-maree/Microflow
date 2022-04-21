@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microflow.Helpers;
 using Microflow.Models;
@@ -25,7 +27,9 @@ namespace Microflow.HttpOrchestrators
 
             (HttpCall httpCall, string content) input = context.GetInput<(HttpCall, string)>();
 
-            DurableHttpRequest durableHttpRequest = input.httpCall.CreateMicroflowDurableHttpRequest(context.InstanceId, input.content);
+            Webhook webHook = JsonSerializer.Deserialize<Webhook>(input.httpCall.Webhook);
+
+            DurableHttpRequest durableHttpRequest = input.httpCall.CreateMicroflowDurableHttpRequest(context.InstanceId, input.content, webHook);
 
             bool doneCallout = false;
 
@@ -46,14 +50,14 @@ namespace Microflow.HttpOrchestrators
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_STEPCOUNT
                 ////////////////////////////////////////////////
                 // set the per step in-progress count to count+1
-                context.SignalEntity(countId, MicroflowCounterKeys.Add);
+                context.SignalEntity(countId, MicroflowEntityKeys.Add);
                 doneAdd = true;
                 ////////////////////////////////////////////////
 #endif
                 #endregion
 
                 DurableHttpResponse durableHttpResponse = await context.CallHttpAsync(durableHttpRequest);
-                
+
                 doneCallout = true;
 
                 MicroflowHttpResponse microflowHttpResponse = durableHttpResponse.GetMicroflowResponse(false);
@@ -64,63 +68,50 @@ namespace Microflow.HttpOrchestrators
 
                 // TODO: always use https
 
-                log.LogCritical($"Waiting for webhook: {CallNames.BaseUrl}/{input.httpCall.WebhookAction}/{context.InstanceId}/{input.httpCall.RowKey}/true");
+                log.LogCritical($"Waiting for webhook: {CallNames.BaseUrl}/{webHook.UriPath}/{context.InstanceId}/{input.httpCall.RowKey}");
                 // wait for the external event, set the timeout
-                WebhookResult actionResult = await context.WaitForExternalEvent<WebhookResult>(input.httpCall.WebhookAction,
+                WebhookResult webhookResult = await context.WaitForExternalEvent<WebhookResult>(context.InstanceId,
                                                                                                            TimeSpan.FromSeconds(input.httpCall.WebhookTimeoutSeconds));
 
                 #region Optional: no stepcount
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_STEPCOUNT
                 ////////////////////////////////////////////////
                 // set the per step in-progress count to count-1
-                context.SignalEntity(countId, MicroflowCounterKeys.Subtract);
+                context.SignalEntity(countId, MicroflowEntityKeys.Subtract);
                 doneSubtract = true;
                 ////////////////////////////////////////////////
 #endif
                 #endregion
 
                 // check for action failed
-                if (actionResult.StatusCode <= 200 && actionResult.StatusCode < 300)
+                if (webhookResult.StatusCode >= 200 && webhookResult.StatusCode < 300)
                 {
-                    log.LogWarning($"Step {input.httpCall.RowKey} webhook {input.httpCall.WebhookAction} successful at {context.CurrentUtcDateTime:HH:mm:ss}");
+                    log.LogWarning($"Step {input.httpCall.RowKey} webhook {webHook.UriPath} successful at {context.CurrentUtcDateTime:HH:mm:ss}");
 
-                    microflowHttpResponse.HttpResponseStatusCode = actionResult.StatusCode;
+                    microflowHttpResponse.HttpResponseStatusCode = webhookResult.StatusCode;
 
                     if (input.httpCall.ForwardPostData)
                     {
-                        microflowHttpResponse.Message = actionResult.Content;
+                        microflowHttpResponse.Message = webhookResult.Content;
                     }
+
+                    microflowHttpResponse.SubStepsToRun = webhookResult.SubStepsToRun;
 
                     return microflowHttpResponse;
                 }
                 else
                 {
-                    //if (!input.httpCall.StopOnActionFailed)
-                    //{
-                        return new MicroflowHttpResponse()
-                        {
-                            Success = false,
-                            HttpResponseStatusCode = actionResult.StatusCode,
-                            Message = $"webhook action {input.httpCall.WebhookAction} falied, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
-                        };
-                    //}
-                }
-            }
-            catch (TimeoutException)
-            {
-                if (!input.httpCall.StopOnActionFailed)
-                {
                     return new MicroflowHttpResponse()
                     {
                         Success = false,
-                        HttpResponseStatusCode = -408,
-                        Message = doneCallout
-                        ? $"webhook action {input.httpCall.WebhookAction} timed out, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
-                        : $"callout to {input.httpCall.CalloutUrl} timed out before spawning a webhook, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
+                        HttpResponseStatusCode = webhookResult.StatusCode,
+                        Message = $"webhook action {webHook.UriPath} falied, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
                     };
                 }
-
-                throw;
+            }
+            catch (TimeoutException tex)
+            {
+                throw tex;
             }
             catch (Exception e)
             {
@@ -131,7 +122,7 @@ namespace Microflow.HttpOrchestrators
                         Success = false,
                         HttpResponseStatusCode = -500,
                         Message = doneCallout
-                        ? $"webhook action {input.httpCall.WebhookAction} failed, StopOnActionFailed is {input.httpCall.StopOnActionFailed} - " + e.Message
+                        ? $"webhook action failed, StopOnActionFailed is {input.httpCall.StopOnActionFailed} - " + e.Message
                         : $"callout to {input.httpCall.CalloutUrl} failed before spawning a webhook, StopOnActionFailed is {input.httpCall.StopOnActionFailed}"
                     };
                 }
@@ -141,19 +132,18 @@ namespace Microflow.HttpOrchestrators
 
             #region Optional: no stepcount
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_STEPCOUNT
-            ////////////////////////////////////////////////finally
+            ////////////////////////////////////////////////
+            finally
             {
                 if (doneAdd && !doneSubtract)
                 {
                     // set the per step in-progress count to count-1
-                    context.SignalEntity(countId, MicroflowCounterKeys.Subtract);
+                    context.SignalEntity(countId, MicroflowEntityKeys.Subtract);
                 }
             }
             ////////////////////////////////////////////////
 #endif
             #endregion
-
-            return null;
         }
     }
 }

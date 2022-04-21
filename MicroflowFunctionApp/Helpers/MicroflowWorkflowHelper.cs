@@ -17,7 +17,7 @@ namespace Microflow.Helpers
         public static RetryOptions GetRetryOptions(this IHttpCallWithRetries httpCallWithRetries)
         {
             RetryOptions ops = new(TimeSpan.FromSeconds(httpCallWithRetries.RetryDelaySeconds),
-                                                httpCallWithRetries.RetryMaxRetries)
+                                                httpCallWithRetries.RetryMaxRetries + 1)
             {
                 RetryTimeout = TimeSpan.FromSeconds(httpCallWithRetries.RetryTimeoutSeconds),
                 MaxRetryInterval = TimeSpan.FromSeconds(httpCallWithRetries.RetryMaxDelaySeconds),

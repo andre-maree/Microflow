@@ -1,4 +1,6 @@
-﻿namespace Microflow.Models
+﻿using System.Collections.Generic;
+
+namespace Microflow.Models
 {
     #region POCOs
 
@@ -6,6 +8,8 @@
     {
         public int StatusCode { get; set; }
         public string Content { get; set; }
+        public string ActionPath { get; set; }
+        public List<int> SubStepsToRun { get; set; }    
     }
 
     /// <summary>
@@ -16,6 +20,7 @@
         public bool Success { get; set; }
         public int HttpResponseStatusCode { get; set; }
         public string Message { get; set; }
+        public List<int> SubStepsToRun { get; set; }
     }
 
     /// <summary>
