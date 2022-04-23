@@ -6,6 +6,7 @@ using System.Net.Http;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microflow.Models;
 using MicroflowModels.Helpers;
+using MicroflowModels;
 
 namespace Microflow.Webhooks
 {
@@ -59,29 +60,32 @@ namespace Microflow.Webhooks
         {
             var webHooksTask = TableHelper.GetWebhooksForStep(webhookBase, stepId);
 
-            WebhookResult webhookResult = new()
+            MicroflowHttpResponse webhookResult = new()
             {
-                StatusCode = 200
+                Success = true,
+                HttpResponseStatusCode = 200
             };
+
+            string action;
 
             if (!string.IsNullOrEmpty(webhookSubAction))
             {
-                webhookResult.ActionPath = $"{webhookBase}/{webhookAction}/{webhookSubAction}";
+                action = $"{webhookBase}/{webhookAction}/{webhookSubAction}";
             }
             else if (!string.IsNullOrEmpty(webhookAction))
             {
-                webhookResult.ActionPath = $"{webhookBase}/{webhookAction}";
+                action = $"{webhookBase}/{webhookAction}";
             }
             else
             {
-                webhookResult.ActionPath = $"{webhookBase}";
+                action = $"{webhookBase}";
             }
 
             MicroflowModels.Webhook webHooks = await webHooksTask;
 
             if (webHooks.SubStepsMapping.Count > 0)
             {
-                var hook = webHooks.SubStepsMapping.Find(h => h.WebhookAction.Equals(webhookResult.ActionPath));
+                var hook = webHooks.SubStepsMapping.Find(h => h.WebhookAction.Equals(action));
 
                 if (hook != null)
                 {

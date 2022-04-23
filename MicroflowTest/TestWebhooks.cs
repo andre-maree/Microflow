@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 namespace MicroflowTest
 {
     [TestClass]
-    public class TestWwebhooks
+    public class TestWebhooks
     {
         public static readonly HttpClient HttpClient = new HttpClient();
         private static string baseUrl = "http://localhost:7071/microflow/v1";
@@ -33,7 +33,7 @@ namespace MicroflowTest
             var workflow = TestWorkflows.CreateTestWorkflow_SimpleSteps();
             //var workflow = TestWorkflows.CreateTestWorkflow_SimpleSteps();
 
-            var microflow = new MicroflowModels.Microflow()
+            var microFlow = new MicroflowModels.Microflow()
             {
                 WorkflowName = "Myflow_ClientX2",
                 WorkflowVersion = "v2.1",
@@ -42,17 +42,17 @@ namespace MicroflowTest
                 DefaultRetryOptions = new MicroflowRetryOptions()
             };
 
-            string workflowName = string.IsNullOrWhiteSpace(microflow.WorkflowVersion)
-                                ? microflow.WorkflowName
-                                : $"{microflow.WorkflowName}@{microflow.WorkflowVersion}";
+            string workflowName = string.IsNullOrWhiteSpace(microFlow.WorkflowVersion)
+                                ? microFlow.WorkflowName
+                                : $"{microFlow.WorkflowName}@{microFlow.WorkflowVersion}";
 
             var tasks = new List<Task<HttpResponseMessage>>();
 
             int loop = 1;
             string globalKey = Guid.NewGuid().ToString();
 
-            //microflow.Step(1).WaitForAllParents = false;
-
+            string webhook = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/test";
+            microFlow.Step(1).Webhook = new(webhook);
             //microflow.Step(2).WaitForAllParents = false;
             //microflow.Step(3).WaitForAllParents = false;
             //microflow.Step(4).WaitForAllParents = false;
@@ -62,7 +62,7 @@ namespace MicroflowTest
             //microflow.Step(8).WaitForAllParents = false;
 
             // Upsert
-            var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", microflow, new JsonSerializerOptions(JsonSerializerDefaults.General));
+            var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", microFlow, new JsonSerializerOptions(JsonSerializerDefaults.General));
 
             //Assert.IsTrue(result.StatusCode == System.Net.HttpStatusCode.OK);
 

@@ -74,7 +74,7 @@ namespace MicroflowModels
         public bool IsHttpGet { get; set; }
         public string StepId { get; set; }
         public string ScaleGroupId { get; set; }
-        public bool ForwardPostData { get; set; }
+        public bool ForwardResponseData { get; set; }
         public string SubStepsToRunForWebhookTimeout { get; set; }
 
         [IgnoreDataMember]

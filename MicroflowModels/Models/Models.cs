@@ -87,7 +87,7 @@ namespace MicroflowModels
         public int CalloutTimeoutSeconds { get; set; } = 1000;
         public int WebhookTimeoutSeconds { get; set; } = 1000;
         public bool AsynchronousPollingEnabled { get; set; } = true;
-        public bool ForwardPostData { get; set; }
+        public bool ForwardResponseData { get; set; }
         public List<int> SubStepsToRunForWebhookTimeout { get; set; }
 
         [DataMember(Name = "Webhook", EmitDefaultValue = false)]

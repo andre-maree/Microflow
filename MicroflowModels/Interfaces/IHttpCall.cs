@@ -16,5 +16,6 @@ namespace MicroflowModels
         bool StopOnActionFailed { get; set; }
         string ScaleGroupId { get; set; }
         string SubStepsToRunForWebhookTimeout { get; set; }
+        bool ForwardResponseData { get; set; }
     }
 }

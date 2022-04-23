@@ -1,4 +1,6 @@
-﻿namespace MicroflowModels
+﻿using System.Collections.Generic;
+
+namespace MicroflowModels
 {
     /// <summary>
     /// This is the minimalist workflow object that is passed during execution
@@ -21,6 +23,28 @@
         public string RunId { get; set; }
         public string StepNumber { get; set; }
         public string GlobalKey { get; set; }
-        public string PostData { get; set; }
+        public MicroflowHttpResponse MicroflowStepResponseData { get; set; }
     }
+
+    /// <summary>
+    /// Used to hold Microflow specific http status code results
+    /// </summary>
+    public class MicroflowHttpResponseBase
+    {
+        public bool Success { get; set; }
+        public int HttpResponseStatusCode { get; set; }
+        public string Content { get; set; }
+    }
+
+    public class MicroflowHttpResponse : MicroflowHttpResponseBase//, IMicroflowHttpResponse
+    {
+        public List<int> SubStepsToRun { get; set; }
+    }
+    //public interface IMicroflowHttpResponse
+    //{
+    //    int HttpResponseStatusCode { get; set; }
+    //    string Content { get; set; }
+    //    bool Success { get; set; }
+    //    public List<int> SubStepsToRun { get; set; }
+    //}
 }

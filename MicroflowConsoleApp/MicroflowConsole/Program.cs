@@ -76,16 +76,16 @@ namespace MicroflowConsole
                 //// callback by step number
                 //microFlow.Step(1).WebhookAction= "myhook/myaction/mysub";
                 microFlow.Step(1).Webhook = new(webhook);
-                //microFlow.Step(1).Webhook.SubStepsMapping.Add(new ()
-                //{
-                //    WebhookAction = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/decline",
-                //    SubStepsToRunForAction = new List<int>() { 2 }
-                //});
-                //microFlow.Step(1).Webhook.SubStepsMapping.Add(new ()
-                //{
-                //    WebhookAction = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/approve",
-                //    SubStepsToRunForAction = new List<int>() { 3 }
-                //});
+                microFlow.Step(1).Webhook.SubStepsMapping.Add(new()
+                {
+                    WebhookAction = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/decline",
+                    SubStepsToRunForAction = new List<int>() { 2 }
+                });
+                microFlow.Step(1).Webhook.SubStepsMapping.Add(new()
+                {
+                    WebhookAction = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/approve",
+                    SubStepsToRunForAction = new List<int>() { 3 }
+                });
 
                 //microFlow.Step(1).WebhookTimeoutSeconds = 3;
                 //microFlow.Step(1).RetryOptions = new MicroflowRetryOptions() { BackoffCoefficient = 1, DelaySeconds = 1, MaxDelaySeconds = 1, MaxRetries = 2, TimeOutSeconds = 300 };
@@ -132,12 +132,9 @@ namespace MicroflowConsole
                 //// call other workflow
                 //microFlow.Step(4).CalloutUrl = baseUrl + $"/MicroflowStart/{"MyProject_ClientX"}?globalkey={globalKey}";
                 //microFlow.Step(4).AsynchronousPollingEnabled = false;
-                
+
                 // Upsert
-                var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", microFlow, new JsonSerializerOptions()
-                {
-                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-                });
+                //var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", microFlow, new JsonSerializerOptions() { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull });
 
                 for (int i = 0; i < 1; i++)
                 {
