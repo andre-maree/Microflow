@@ -13,13 +13,13 @@ using System.Threading.Tasks;
 namespace MicroflowTest
 {
     [TestClass]
-    public class TestWebhooks
+    public class TestRetries
     {
         public static readonly HttpClient HttpClient = new HttpClient();
         private static string baseUrl = "http://localhost:7071/microflow/v1";
 
         [TestMethod]
-        public async Task CreateTestWebhooksWorkflow()
+        public async Task CreateTestReties()
         {
             string path = Path.GetDirectoryName(System.AppDomain.CurrentDomain.BaseDirectory);
             string pathf = Directory.GetParent(Directory.GetParent(Directory.GetParent(path).FullName).FullName).FullName + "\\config.json";
@@ -53,13 +53,9 @@ namespace MicroflowTest
 
             string webhook = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/test";
             microFlow.Step(1).Webhook = new(webhook);
-            //microflow.Step(2).WaitForAllParents = false;
-            //microflow.Step(3).WaitForAllParents = false;
-            //microflow.Step(4).WaitForAllParents = false;
-            //microflow.Step(5).WaitForAllParents = false;
-            //microflow.Step(6).WaitForAllParents = false;
-            //microflow.Step(7).WaitForAllParents = false;
-            //microflow.Step(8).WaitForAllParents = false;
+
+            microFlow.Step(1).WebhookTimeoutSeconds = 3;
+            microFlow.Step(1).RetryOptions = new MicroflowRetryOptions() { BackoffCoefficient = 1, DelaySeconds = 1, MaxDelaySeconds = 1, MaxRetries = 2, TimeOutSeconds = 300 };
 
             // Upsert
             var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", microFlow, new JsonSerializerOptions(JsonSerializerDefaults.General));
@@ -82,11 +78,6 @@ namespace MicroflowTest
                 while (true)
                 {
                     await Task.Delay(2000);
-
-                    //TODO: set the webhook to be the orchId/action
-                    var webhookcall = await HttpClient.GetAsync("http://localhost:7071/microflow/v1/Myflow_ClientX2@v2.1/managerApproval/test/60f22c7a-a905-5003-aa22-c57efd83918d/1");
-
-                    
 
                     string content = await task[0].Content.ReadAsStringAsync();
                     var res = JsonSerializer.Deserialize<OrchResult>(content);
