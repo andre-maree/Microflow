@@ -20,6 +20,30 @@ namespace Microflow.Webhooks
         /// <summary>
         /// For a webhook defined as "{webhook}", this can be changed to a non-catch-all like "myWebhook"
         /// </summary>
+        [FunctionName("DynaWebhook")]
+        public static async Task<HttpResponseMessage> DynaWebhook(
+        [HttpTrigger(AuthorizationLevel.Function, "get", "post",
+        Route = "/" + MicroflowModels.Constants.MicroflowPath + "/webhook/{webhookId}")] HttpRequestMessage req,
+        [DurableClient] IDurableOrchestrationClient orchClient,
+        string webhookId)
+        {
+            MicroflowHttpResponseBase webhookResult = new()
+            {
+                Content = await req.Content.ReadAsStringAsync(),
+                HttpResponseStatusCode = 200,
+                Success = true
+            };
+
+            string key = "webhook@" + webhookId;
+            await orchClient.RaiseEventAsync(key, key, webhookResult);
+
+            return new(HttpStatusCode.OK);
+            //return await orchClient.GetWebhookResult(req, webhook, string.Empty, string.Empty, orchestratorId, stepId);
+        }
+
+        /// <summary>
+        /// For a webhook defined as "{webhook}", this can be changed to a non-catch-all like "myWebhook"
+        /// </summary>
         [FunctionName("Webhook")]
         public static async Task<HttpResponseMessage> Webhook(
         [HttpTrigger(AuthorizationLevel.Function, "get", "post",
@@ -58,7 +82,7 @@ namespace Microflow.Webhooks
                                                                         string orchestratorId,
                                                                         string stepId)
         {
-            var webHooksTask = TableHelper.GetWebhooksForStep(webhookBase, stepId);
+            var webHooksTask = TableHelper.GetWebhookSubSteps(webhookBase, stepId);
 
             MicroflowHttpResponse webhookResult = new()
             {
@@ -81,11 +105,11 @@ namespace Microflow.Webhooks
                 action = $"{webhookBase}";
             }
 
-            MicroflowModels.Webhook webHooks = await webHooksTask;
+            var subStepsMapping = await webHooksTask;
 
-            if (webHooks.SubStepsMapping.Count > 0)
+            if (subStepsMapping.Count > 0)
             {
-                var hook = webHooks.SubStepsMapping.Find(h => h.WebhookAction.Equals(action));
+                var hook = subStepsMapping.Find(h => h.WebhookAction.Equals(action));
 
                 if (hook != null)
                 {

@@ -51,8 +51,8 @@ namespace MicroflowTest
             int loop = 1;
             string globalKey = Guid.NewGuid().ToString();
 
-            string webhook = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/test";
-            microFlow.Step(1).Webhook = new(webhook);
+            string webhookId = $"{microFlow.WorkflowName}@{microFlow.WorkflowVersion}@1@managerApproval@test";
+            microFlow.Step(1).SetWebhook("webhook", webhookId);
             //microflow.Step(2).WaitForAllParents = false;
             //microflow.Step(3).WaitForAllParents = false;
             //microflow.Step(4).WaitForAllParents = false;
@@ -76,6 +76,7 @@ namespace MicroflowTest
             var task = await Task.WhenAll(tasks);
 
             string instanceId = "qwerty";
+            bool donewebhook = false;
 
             if(task[0].StatusCode==System.Net.HttpStatusCode.Accepted)
             {
@@ -83,10 +84,16 @@ namespace MicroflowTest
                 {
                     await Task.Delay(2000);
 
-                    //TODO: set the webhook to be the orchId/action
-                    var webhookcall = await HttpClient.GetAsync("http://localhost:7071/microflow/v1/Myflow_ClientX2@v2.1/managerApproval/test/60f22c7a-a905-5003-aa22-c57efd83918d/1");
+                    if (!donewebhook)
+                    {
+                        //TODO: set the webhook to be the orchId/action
+                        var webhookcall = await HttpClient.GetAsync("http://localhost:7071/microflow/v1/webhook/Myflow_ClientX2@v2.1@1@managerApproval@test");
 
-                    
+                        if (webhookcall.StatusCode == System.Net.HttpStatusCode.OK)
+                        {
+                            donewebhook = true;
+                        }
+                    }
 
                     string content = await task[0].Content.ReadAsStringAsync();
                     var res = JsonSerializer.Deserialize<OrchResult>(content);

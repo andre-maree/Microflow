@@ -215,16 +215,19 @@ namespace MicroflowShared
                 {
                     HttpCallWithRetries httpCallRetriesEntity = new(workflowRun.WorkflowName, step.StepNumber.ToString(), step.StepId, sb.ToString())
                     {
-                        Webhook = step.Webhook is null ? null : JsonSerializer.Serialize(step.Webhook),
-                        StopOnActionFailed = step.StopOnActionFailed,
-                        CalloutUrl = step.CalloutUrl,
+                        WebhookId= step.WebhookId,
+                        WebhookBase = step.WebhookBase,
                         WebhookTimeoutSeconds = step.WebhookTimeoutSeconds,
+                        SubStepsToRunForWebhookTimeout = JsonSerializer.Serialize(step.SubStepsToRunForWebhookTimeout),
+                        WebhookSubStepsMapping = JsonSerializer.Serialize(step.WebhookSubStepsMapping),
+
+                        StopOnWebhookFailed = step.StopOnWebhookFailed,
+                        CalloutUrl = step.CalloutUrl,
                         CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
                         IsHttpGet = step.IsHttpGet,
                         AsynchronousPollingEnabled = step.AsynchronousPollingEnabled,
                         ScaleGroupId = step.ScaleGroupId,
                         ForwardResponseData = step.ForwardResponseData,
-                        SubStepsToRunForWebhookTimeout = JsonSerializer.Serialize(step.SubStepsToRunForWebhookTimeout)
                     };
 
                     httpCallRetriesEntity.RetryDelaySeconds = step.RetryOptions.DelaySeconds;
@@ -240,16 +243,19 @@ namespace MicroflowShared
                 {
                     HttpCall httpCallEntity = new(workflowRun.WorkflowName, step.StepNumber.ToString(), step.StepId, sb.ToString())
                     {
-                        Webhook = step.Webhook is null ? null : JsonSerializer.Serialize(step.Webhook),
-                        StopOnActionFailed = step.StopOnActionFailed,
-                        CalloutUrl = step.CalloutUrl,
+                        WebhookId = step.WebhookId,
+                        WebhookBase = step.WebhookBase,
                         WebhookTimeoutSeconds = step.WebhookTimeoutSeconds,
+                        SubStepsToRunForWebhookTimeout = JsonSerializer.Serialize(step.SubStepsToRunForWebhookTimeout),
+                        WebhookSubStepsMapping = JsonSerializer.Serialize(step.WebhookSubStepsMapping),
+
+                        StopOnWebhookFailed = step.StopOnWebhookFailed,
+                        CalloutUrl = step.CalloutUrl,
                         CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
                         IsHttpGet = step.IsHttpGet,
                         AsynchronousPollingEnabled = step.AsynchronousPollingEnabled,
                         ScaleGroupId = step.ScaleGroupId,
-                        ForwardResponseData = step.ForwardResponseData,
-                        SubStepsToRunForWebhookTimeout = JsonSerializer.Serialize(step.SubStepsToRunForWebhookTimeout)
+                        ForwardResponseData = step.ForwardResponseData
                     };
 
                     // batchop
@@ -317,8 +323,12 @@ namespace MicroflowShared
                         StepId = step.RowKey,
                         WebhookTimeoutSeconds = step.WebhookTimeoutSeconds,
                         CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
-                        StopOnActionFailed = step.StopOnActionFailed,
-                        Webhook = JsonSerializer.Deserialize<Webhook>(step.Webhook),
+                        StopOnWebhookFailed = step.StopOnWebhookFailed,
+                        WebhookSubStepsMapping = JsonSerializer.Deserialize<List<SubStepsMappingForActions>>(step.WebhookSubStepsMapping),
+                        WebhookBase = step.WebhookBase,
+                        WebhookId = step.WebhookId,
+                        //SubSteps = step.SubSteps,
+                        //WaitForAllParents = step.
                         IsHttpGet = step.IsHttpGet,
                         CalloutUrl = step.CalloutUrl,
                         AsynchronousPollingEnabled = step.AsynchronousPollingEnabled,

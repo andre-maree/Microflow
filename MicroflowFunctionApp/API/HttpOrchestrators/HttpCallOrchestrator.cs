@@ -62,7 +62,7 @@ namespace Microflow.HttpOrchestrators
             }
             catch (TimeoutException)
             {
-                if (!httpCall.StopOnActionFailed)
+                if (!httpCall.StopOnWebhookFailed)
                 {
                     return new MicroflowHttpResponse()
                     {
@@ -76,7 +76,7 @@ namespace Microflow.HttpOrchestrators
             }
             catch (Exception e)
             {
-                if (!httpCall.StopOnActionFailed)
+                if (!httpCall.StopOnWebhookFailed)
                 {
                     return new MicroflowHttpResponse()
                     {

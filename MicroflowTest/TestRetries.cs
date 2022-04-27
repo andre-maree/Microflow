@@ -51,8 +51,10 @@ namespace MicroflowTest
             int loop = 1;
             string globalKey = Guid.NewGuid().ToString();
 
-            string webhook = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/test";
-            microFlow.Step(1).Webhook = new(webhook);
+            string webhookId = $"{microFlow.WorkflowName}@{microFlow.WorkflowVersion}@1@managerApproval@test";
+            microFlow.Step(1).SetWebhook("webhook", webhookId);
+
+            microFlow.Step(1).StopOnWebhookFailed = false;
 
             microFlow.Step(1).WebhookTimeoutSeconds = 3;
             microFlow.Step(1).RetryOptions = new MicroflowRetryOptions() { BackoffCoefficient = 1, DelaySeconds = 1, MaxDelaySeconds = 1, MaxRetries = 2, TimeOutSeconds = 300 };

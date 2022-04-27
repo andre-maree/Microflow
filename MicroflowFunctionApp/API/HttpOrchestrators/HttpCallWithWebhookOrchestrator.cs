@@ -23,7 +23,7 @@ namespace Microflow.HttpOrchestrators
 
             (HttpCall httpCall, MicroflowHttpResponse callOutResponse, MicroflowHttpResponse runObjectResponse) = context.GetInput<(HttpCall, MicroflowHttpResponse, MicroflowHttpResponse)>();
 
-            Webhook webHook = JsonSerializer.Deserialize<Webhook>(httpCall.Webhook);
+            //Webhook webHook = JsonSerializer.Deserialize<Webhook>(httpCall.Webhook);
 
             #region Optional: no stepcount
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_STEPCOUNT
@@ -49,9 +49,9 @@ namespace Microflow.HttpOrchestrators
 
                 // TODO: always use https
 
-                log.LogCritical($"Waiting for webhook: {CallNames.BaseUrl}/{webHook.UriPath}/{context.InstanceId}/{httpCall.RowKey}");
+                log.LogCritical($"Waiting for webhook: {CallNames.BaseUrl}/{httpCall.WebhookBase}/{httpCall.WebhookId}");
                 // wait for the external event, set the timeout
-                MicroflowHttpResponse microflowWebhookResponse = await context.WaitForExternalEvent<MicroflowHttpResponse>(context.InstanceId,
+                MicroflowHttpResponse microflowWebhookResponse = await context.WaitForExternalEvent<MicroflowHttpResponse>($"{httpCall.WebhookBase}@{httpCall.WebhookId}",
                                                                                                            TimeSpan.FromSeconds(httpCall.WebhookTimeoutSeconds));
 
                 #region Optional: no stepcount
@@ -67,7 +67,7 @@ namespace Microflow.HttpOrchestrators
                 // check for action failed
                 if (microflowWebhookResponse.HttpResponseStatusCode >= 200 && microflowWebhookResponse.HttpResponseStatusCode < 300)
                 {
-                    log.LogWarning($"Step {httpCall.RowKey} webhook {webHook.UriPath} successful at {context.CurrentUtcDateTime:HH:mm:ss}");
+                    log.LogWarning($"Step {httpCall.RowKey} webhook {httpCall.WebhookId} successful at {context.CurrentUtcDateTime:HH:mm:ss}");
 
                     return microflowWebhookResponse;
                 }
@@ -77,7 +77,7 @@ namespace Microflow.HttpOrchestrators
                     {
                         Success = false,
                         HttpResponseStatusCode = microflowWebhookResponse.HttpResponseStatusCode,
-                        Content = $"webhook action {webHook.UriPath} falied, StopOnActionFailed is {httpCall.StopOnActionFailed}"
+                        Content = $"webhook action {httpCall.WebhookId} falied, StopOnActionFailed is {httpCall.StopOnWebhookFailed}"
                     };
                 }
             }
@@ -87,13 +87,13 @@ namespace Microflow.HttpOrchestrators
             }
             catch (Exception e)
             {
-                if (!httpCall.StopOnActionFailed)
+                if (!httpCall.StopOnWebhookFailed)
                 {
                     return new MicroflowHttpResponse()
                     {
                         Success = false,
                         HttpResponseStatusCode = -500,
-                        Content = $"Webhook action failed, StopOnActionFailed is {httpCall.StopOnActionFailed} - " + e.Message
+                        Content = $"Webhook action failed, StopOnActionFailed is {httpCall.StopOnWebhookFailed} - " + e.Message
                     };
                 }
 

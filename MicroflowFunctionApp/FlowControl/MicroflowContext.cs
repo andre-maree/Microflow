@@ -157,8 +157,6 @@ namespace Microflow.FlowControl
         {
             try
             {
-                string id = MicroflowDurableContext.NewGuid().ToString();
-
                 // log start of step
                 LogStepStart();
 
@@ -173,7 +171,7 @@ namespace Microflow.FlowControl
                 }
                 else
                 {
-                    await HttpCallout(id);
+                    await HttpCallout();
                 }
 
                 #region Region optional: no scale groups
@@ -211,7 +209,7 @@ namespace Microflow.FlowControl
         /// <summary>
         /// Do the http callout
         /// </summary>
-        private async Task HttpCallout(string id)
+        private async Task HttpCallout()
         {
             MicroflowHttpResponse runObjectResponseData = MicroflowRun.RunObject.MicroflowStepResponseData ?? null;
 
@@ -222,20 +220,20 @@ namespace Microflow.FlowControl
                 {
                     MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(CallNames.HttpCallOrchestrator,
                                                                                                                                    HttpCallWithRetries.GetRetryOptions(),
-                                                                                                                                   id,
+                                                                                                                                   MicroflowDurableContext.NewGuid().ToString(),
                                                                                                                                    (HttpCallWithRetries, runObjectResponseData));
                 }
                 else
                 {
                     MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallOrchestrator,
-                                                                                                                          id,
+                                                                                                                          MicroflowDurableContext.NewGuid().ToString(),
                                                                                                                           (HttpCallWithRetries, runObjectResponseData));
                 }
             }
 
             // call out to micro-service
             // wait for external event flow / webhook
-            if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.Webhook))
+            if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.WebhookId))
             {
                 try
                 {
@@ -243,14 +241,14 @@ namespace Microflow.FlowControl
                     {
                         MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(CallNames.HttpCallWithWebhookOrchestrator,
                                                                                                                                        HttpCallWithRetries.GetRetryOptions(),
-                                                                                                                                       id,
+                                                                                                                                       $"{HttpCallWithRetries.WebhookBase}@{HttpCallWithRetries.WebhookId}",
                                                                                                                                        (HttpCallWithRetries, runObjectResponseData, MicroflowHttpResponse));
 
                         return;
                     }
 
                     MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallWithWebhookOrchestrator,
-                                                                                                                          id,
+                                                                                                                          $"{HttpCallWithRetries.WebhookBase}@{HttpCallWithRetries.WebhookId}",
                                                                                                                           (HttpCallWithRetries, runObjectResponseData, MicroflowHttpResponse));
                 }
                 catch (FunctionFailedException fex)
@@ -309,7 +307,7 @@ namespace Microflow.FlowControl
         [Deterministic]
         private async Task ProcessSubSteps()
         {
-            if (MicroflowHttpResponse.Success || !HttpCallWithRetries.StopOnActionFailed)
+            if (MicroflowHttpResponse.Success || !HttpCallWithRetries.StopOnWebhookFailed)
             {
                 LogStepEnd();
 
@@ -532,9 +530,9 @@ namespace Microflow.FlowControl
                                       MicroflowRun.RunObject.GlobalKey,
                                       false,
                                       -408,
-                                      string.IsNullOrWhiteSpace(HttpCallWithRetries.Webhook)
+                                      string.IsNullOrWhiteSpace(HttpCallWithRetries.WebhookId)
                                         ? "callout timeout"
-                                        : $"action timed out, StopOnActionFailed is {HttpCallWithRetries.StopOnActionFailed}")
+                                        : $"action timed out, StopOnActionFailed is {HttpCallWithRetries.StopOnWebhookFailed}")
                 ));
             }
             else

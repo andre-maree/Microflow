@@ -71,21 +71,20 @@ namespace MicroflowConsole
                 var microFlow = createResult.Microflow;
 
                 //string webhook = "myhook/myaction/mysub";
-                string webhook = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion +  "/managerApproval/{myaction}";
-
                 //// callback by step number
-                //microFlow.Step(1).WebhookAction= "myhook/myaction/mysub";
-                microFlow.Step(1).Webhook = new(webhook);
-                microFlow.Step(1).Webhook.SubStepsMapping.Add(new()
-                {
-                    WebhookAction = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/decline",
-                    SubStepsToRunForAction = new List<int>() { 2 }
-                });
-                microFlow.Step(1).Webhook.SubStepsMapping.Add(new()
-                {
-                    WebhookAction = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/approve",
-                    SubStepsToRunForAction = new List<int>() { 3 }
-                });
+                string webhook = microFlow.WorkflowName + "@1@managerApproval@test";
+                microFlow.Step(1).WebhookId = webhook;
+                microFlow.Step(1).WebhookBase = "webhook";
+                //microFlow.Step(1).Webhook.SubStepsMapping.Add(new()
+                //{
+                //    WebhookAction = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/decline",
+                //    SubStepsToRunForAction = new List<int>() { 2 }
+                //});
+                //microFlow.Step(1).Webhook.SubStepsMapping.Add(new()
+                //{
+                //    WebhookAction = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/approve",
+                //    SubStepsToRunForAction = new List<int>() { 3 }
+                //});
 
                 //microFlow.Step(1).WebhookTimeoutSeconds = 3;
                 //microFlow.Step(1).RetryOptions = new MicroflowRetryOptions() { BackoffCoefficient = 1, DelaySeconds = 1, MaxDelaySeconds = 1, MaxRetries = 2, TimeOutSeconds = 300 };
@@ -134,7 +133,7 @@ namespace MicroflowConsole
                 //microFlow.Step(4).AsynchronousPollingEnabled = false;
 
                 // Upsert
-                //var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", microFlow, new JsonSerializerOptions() { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull });
+                var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", microFlow, new JsonSerializerOptions() { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull });
 
                 for (int i = 0; i < 1; i++)
                 {

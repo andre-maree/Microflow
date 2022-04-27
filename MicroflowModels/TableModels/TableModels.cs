@@ -8,11 +8,34 @@ using MicroflowModels.Helpers;
 namespace MicroflowModels
 {
     #region TableEntity
-    
-        /// <summary>
-        /// Used for step level logging
-        /// </summary>
-        public class LogErrorEntity : ITableEntity
+
+    //public class Webhook : ITableEntity
+    //{
+    //    public string WebhookId { get; set; }
+    //    public string WebhookPath { get; set; }
+    //    public int WebhookTimeoutSeconds { get; set; } = 1000;
+    //    public string WebhookSubStepsMapping { get; set; }
+
+    //    public string PartitionKey { get; set; }
+    //    public string RowKey { get; set; }
+    //    public DateTimeOffset? Timestamp { get; set; }
+    //    public ETag ETag { get; set; }
+    //}
+
+    public class WebhookSubStepsMappingEntity : ITableEntity
+    {
+        public string WebhookSubStepsMapping { get; set; }
+
+        public string PartitionKey { get; set; }
+        public string RowKey { get; set; }
+        public DateTimeOffset? Timestamp { get; set; }
+        public ETag ETag { get; set; }
+    }
+
+    /// <summary>
+    /// Used for step level logging
+    /// </summary>
+    public class LogErrorEntity : ITableEntity
     {
         public LogErrorEntity() { }
 
@@ -67,9 +90,12 @@ namespace MicroflowModels
         }
         public bool AsynchronousPollingEnabled { get; set; }
         public string CalloutUrl { get; set; }
-        public string Webhook { get; set; }
-        public bool StopOnActionFailed { get; set; }
-        public int WebhookTimeoutSeconds { get; set; }
+
+        public string WebhookId { get; set; }
+        public string WebhookBase { get; set; }
+        public int WebhookTimeoutSeconds { get; set; } = 1000;
+        public string WebhookSubStepsMapping { get; set; }
+        public bool StopOnWebhookFailed { get; set; }
         public int CalloutTimeoutSeconds { get; set; }
         public bool IsHttpGet { get; set; }
         public string StepId { get; set; }

@@ -35,13 +35,13 @@ namespace Microflow.Helpers
         }
 
         [Deterministic]
-        public static DurableHttpRequest CreateMicroflowDurableHttpRequest(this HttpCall httpCall, string instanceId, MicroflowHttpResponse microflowHttpResponse, Webhook webHook = null)
+        public static DurableHttpRequest CreateMicroflowDurableHttpRequest(this HttpCall httpCall, string instanceId, MicroflowHttpResponse microflowHttpResponse, string webHook = null)
         {
             DurableHttpRequest newDurableHttpRequest;
 
-            string webhook = string.IsNullOrWhiteSpace(webHook?.UriPath)
+            string webhook = string.IsNullOrWhiteSpace(webHook)
                     ? ""
-                    : $"{webHook.UriPath}/{instanceId}/{httpCall.RowKey}";
+                    : $"{webHook}";
 
             httpCall.CalculateGlobalKey();
 
