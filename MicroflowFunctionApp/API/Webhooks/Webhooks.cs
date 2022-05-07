@@ -17,29 +17,6 @@ namespace Microflow.Webhooks
     /// </summary>
     public static class Webhooks
     {
-        /// <summary>
-        /// For a webhook defined as "{webhook}", this can be changed to a non-catch-all like "myWebhook"
-        /// </summary>
-        [FunctionName("DynaWebhook")]
-        public static async Task<HttpResponseMessage> DynaWebhook(
-        [HttpTrigger(AuthorizationLevel.Function, "get", "post",
-        Route = "/" + MicroflowModels.Constants.MicroflowPath + "/webhook/{webhookId}")] HttpRequestMessage req,
-        [DurableClient] IDurableOrchestrationClient orchClient,
-        string webhookId)
-        {
-            MicroflowHttpResponseBase webhookResult = new()
-            {
-                Content = await req.Content.ReadAsStringAsync(),
-                HttpResponseStatusCode = 200,
-                Success = true
-            };
-
-            string key = "webhook@" + webhookId;
-            await orchClient.RaiseEventAsync(key, key, webhookResult);
-
-            return new(HttpStatusCode.OK);
-            //return await orchClient.GetWebhookResult(req, webhook, string.Empty, string.Empty, orchestratorId, stepId);
-        }
 
         /// <summary>
         /// For a webhook defined as "{webhook}", this can be changed to a non-catch-all like "myWebhook"
