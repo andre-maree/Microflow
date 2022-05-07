@@ -22,7 +22,7 @@ namespace Microflow.Helpers
 
             if (statusCode <= 200 || ((statusCode > 201) && (statusCode < 300)))
             {
-                return new MicroflowHttpResponse() { Success = true, HttpResponseStatusCode = statusCode, Message = forwardPostData ? durableHttpResponse.Content : string.Empty };
+                return new MicroflowHttpResponse() { Success = true, HttpResponseStatusCode = statusCode, Content = forwardPostData ? durableHttpResponse.Content : string.Empty };
             }
 
             // if 201 created try get the location header to save it in the steps log
@@ -30,18 +30,18 @@ namespace Microflow.Helpers
                 return new MicroflowHttpResponse() { Success = false, HttpResponseStatusCode = statusCode };
 
             return durableHttpResponse.Headers.TryGetValue("location", out StringValues values)
-                ? new MicroflowHttpResponse() { Success = true, HttpResponseStatusCode = statusCode, Message = values[0] }
+                ? new MicroflowHttpResponse() { Success = true, HttpResponseStatusCode = statusCode, Content = values[0] }
                 : new MicroflowHttpResponse() { Success = true, HttpResponseStatusCode = statusCode };
         }
 
         [Deterministic]
-        public static DurableHttpRequest CreateMicroflowDurableHttpRequest(this HttpCall httpCall, string instanceId, string content, Webhook webHook = null)
+        public static DurableHttpRequest CreateMicroflowDurableHttpRequest(this HttpCall httpCall, string instanceId, MicroflowHttpResponse microflowHttpResponse, string webHook = null)
         {
             DurableHttpRequest newDurableHttpRequest;
 
-            string webhook = string.IsNullOrWhiteSpace(webHook?.UriPath)
+            string webhook = string.IsNullOrWhiteSpace(webHook)
                     ? ""
-                    : $"{webHook.UriPath}/{instanceId}/{httpCall.RowKey}";
+                    : $"{webHook}";
 
             httpCall.CalculateGlobalKey();
 
@@ -57,7 +57,7 @@ namespace Microflow.Helpers
                     MainOrchestrationId = httpCall.MainOrchestrationId,
                     Webhook = webhook,
                     GlobalKey = httpCall.GlobalKey,
-                    PostData = content
+                    PostData = microflowHttpResponse.Content
                 };
 
                 string body = JsonSerializer.Serialize(postData);

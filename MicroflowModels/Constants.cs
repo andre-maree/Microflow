@@ -34,7 +34,7 @@ namespace MicroflowModels
             public const string LogStep = "LogStep";
             public const string LogOrchestration = "LogOrchestration";
             public const string HttpCallOrchestrator = "HttpCallOrchestrator";
-            public const string HttpCallWithCallbackOrchestrator = "HttpCallWithCallbackOrchestrator";
+            public const string HttpCallWithWebhookOrchestrator = "HttpCallWithCallbackOrchestrator";
             public const string MicroflowStart = "MicroflowStart";
             public const string MicroflowStartOrchestration = "MicroflowStartOrchestration";
             public const string StepFlowControl = "StepFlowControl";

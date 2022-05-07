@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microflow.Helpers;
-using Microflow.Models;
 using MicroflowModels;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
@@ -20,7 +19,7 @@ namespace Microflow.HttpOrchestrators
         [FunctionName(CallNames.HttpCallOrchestrator)]
         public static async Task<MicroflowHttpResponse> HttpCallOrchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
-            (HttpCall httpCall, string content) = context.GetInput<(HttpCall, string)>();
+            (HttpCall httpCall, MicroflowHttpResponse runObjectResponse) = context.GetInput<(HttpCall, MicroflowHttpResponse)>();
 
             #region Optional: no stepcount
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_STEPCOUNT
@@ -34,7 +33,7 @@ namespace Microflow.HttpOrchestrators
 
             try
             {
-                DurableHttpRequest durableHttpRequest = httpCall.CreateMicroflowDurableHttpRequest(context.InstanceId, content);
+                DurableHttpRequest durableHttpRequest = httpCall.CreateMicroflowDurableHttpRequest(context.InstanceId, runObjectResponse ?? new MicroflowHttpResponse());
 
                 #region Optional: no stepcount
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_STEPCOUNT
@@ -59,17 +58,17 @@ namespace Microflow.HttpOrchestrators
 #endif
                 #endregion
 
-                return durableHttpResponse.GetMicroflowResponse(httpCall.ForwardPostData);
+                return durableHttpResponse.GetMicroflowResponse(httpCall.ForwardResponseData);
             }
             catch (TimeoutException)
             {
-                if (!httpCall.StopOnActionFailed)
+                if (!httpCall.StopOnWebhookFailed)
                 {
                     return new MicroflowHttpResponse()
                     {
                         Success = false,
                         HttpResponseStatusCode = -408,
-                        Message = $"inline callout to {httpCall.CalloutUrl} timed out, StopOnActionFailed is false"
+                        Content = $"inline callout to {httpCall.CalloutUrl} timed out, StopOnActionFailed is false"
                     };
                 }
 
@@ -77,13 +76,13 @@ namespace Microflow.HttpOrchestrators
             }
             catch (Exception e)
             {
-                if (!httpCall.StopOnActionFailed)
+                if (!httpCall.StopOnWebhookFailed)
                 {
                     return new MicroflowHttpResponse()
                     {
                         Success = false,
                         HttpResponseStatusCode = -999,
-                        Message = $"inline callout to to {httpCall.CalloutUrl} failed, StopOnActionFailed is false - " + e.Message
+                        Content = $"inline callout to to {httpCall.CalloutUrl} failed, StopOnActionFailed is false - " + e.Message
                     };
                 }
 

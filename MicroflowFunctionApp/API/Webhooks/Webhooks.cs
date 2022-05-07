@@ -6,6 +6,7 @@ using System.Net.Http;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microflow.Models;
 using MicroflowModels.Helpers;
+using MicroflowModels;
 
 namespace Microflow.Webhooks
 {
@@ -16,6 +17,7 @@ namespace Microflow.Webhooks
     /// </summary>
     public static class Webhooks
     {
+
         /// <summary>
         /// For a webhook defined as "{webhook}", this can be changed to a non-catch-all like "myWebhook"
         /// </summary>
@@ -57,42 +59,48 @@ namespace Microflow.Webhooks
                                                                         string orchestratorId,
                                                                         string stepId)
         {
-            var webHooksTask = TableHelper.GetWebhooksForStep(webhookBase, stepId);
+            var webHooksTask = TableHelper.GetWebhookSubSteps(webhookBase, stepId);
 
-            WebhookResult webhookResult = new()
+            MicroflowHttpResponse webhookResult = new()
             {
-                StatusCode = 200                
+                Success = true,
+                HttpResponseStatusCode = 200
             };
+
+            string action;
 
             if (!string.IsNullOrEmpty(webhookSubAction))
             {
-                webhookResult.ActionPath = $"{webhookBase}/{webhookAction}/{webhookSubAction}";
+                action = $"{webhookBase}/{webhookAction}/{webhookSubAction}";
             }
             else if (!string.IsNullOrEmpty(webhookAction))
             {
-                webhookResult.ActionPath = $"{webhookBase}/{webhookAction}";
+                action = $"{webhookBase}/{webhookAction}";
             }
             else
             {
-                webhookResult.ActionPath = $"{webhookBase}";
+                action = $"{webhookBase}";
             }
 
-            MicroflowModels.Webhook webHooks = await webHooksTask;
+            var subStepsMapping = await webHooksTask;
 
-            var hook = webHooks.SubStepsMapping.Find(h => h.WebhookAction.Equals(webhookResult.ActionPath));
-
-            if (hook != null)
+            if (subStepsMapping.Count > 0)
             {
-                webhookResult.SubStepsToRun = hook.SubStepsToRunForAction;
-                
-                await client.RaiseEventAsync(orchestratorId, orchestratorId, webhookResult);
+                var hook = subStepsMapping.Find(h => h.WebhookAction.Equals(action));
 
-                return new(HttpStatusCode.OK);
+                if (hook != null)
+                {
+                    webhookResult.SubStepsToRun = hook.SubStepsToRunForAction;
+                }
+                else
+                {
+                    return new(HttpStatusCode.BadRequest);
+                }
             }
-            else
-            {
-                return new(HttpStatusCode.BadRequest);
-            }
+
+            await client.RaiseEventAsync(orchestratorId, orchestratorId, webhookResult);
+
+            return new(HttpStatusCode.OK);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Azure.Data.Tables;
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
@@ -49,13 +50,13 @@ namespace MicroflowModels.Helpers
             return await tableClient.GetEntityAsync<HttpCallWithRetries>(workflowRun.WorkflowName, workflowRun.RunObject.StepNumber);
         }
 
-        public static async Task<Webhook> GetWebhooksForStep(string workflowName, string stepId)
+        public static async Task<List<SubStepsMappingForActions>> GetWebhookSubSteps(string workflowName, string stepId)
         {
             TableClient tableClient = GetStepsTable();
 
-            Azure.Response<HttpCall> step = await tableClient.GetEntityAsync<HttpCall>(workflowName, stepId, new string[] { "Webhook" });
+            Azure.Response<WebhookSubStepsMappingEntity> mapping = await tableClient.GetEntityAsync<WebhookSubStepsMappingEntity>(workflowName, stepId, new string[] { "WebhookSubStepsMapping" });
 
-            return JsonSerializer.Deserialize<Webhook>(step.Value.Webhook);
+            return JsonSerializer.Deserialize<List<SubStepsMappingForActions>>(mapping.Value.WebhookSubStepsMapping);
         }
 
         public static TableClient GetErrorsTable()
