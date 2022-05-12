@@ -4,8 +4,6 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using System.Net.Http;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Microflow.Models;
-using MicroflowModels.Helpers;
 using MicroflowModels;
 
 namespace Microflow.Webhooks
@@ -23,7 +21,7 @@ namespace Microflow.Webhooks
         [FunctionName("DynamicWebhook")]
         public static async Task<HttpResponseMessage> DynaWebhook(
         [HttpTrigger(AuthorizationLevel.Function, "get", "post",
-        Route = "/" + MicroflowModels.Constants.MicroflowPath + "/webhook/{webhookId}")] HttpRequestMessage req,
+        Route = Constants.MicroflowPath + "/webhook/{webhookId}")] HttpRequestMessage req,
         [DurableClient] IDurableOrchestrationClient orchClient,
         string webhookId)
         {
