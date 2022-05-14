@@ -24,7 +24,7 @@ namespace Microflow.Webhooks
         [FunctionName("Webhook")]
         public static async Task<HttpResponseMessage> Webhook(
         [HttpTrigger(AuthorizationLevel.Function, "get", "post",
-        Route = "/" + MicroflowModels.Constants.MicroflowPath + "/{webhook}/{orchestratorId}/{stepId}")] HttpRequestMessage req,
+        Route = Constants.MicroflowPath + "/{webhook}/{orchestratorId}/{stepId}")] HttpRequestMessage req,
         [DurableClient] IDurableOrchestrationClient orchClient,
         string webhook, string stepId, string orchestratorId)
             => await orchClient.GetWebhookResult(req, webhook, string.Empty, string.Empty, orchestratorId, stepId);
@@ -35,7 +35,7 @@ namespace Microflow.Webhooks
         [FunctionName("WebhookWithAction")]
         public static async Task<HttpResponseMessage> WebhookWithAction(
         [HttpTrigger(AuthorizationLevel.Function, "get", "post",
-        Route = "/" + MicroflowModels.Constants.MicroflowPath + "/{webhook}/{action}/{orchestratorId}/{stepId}")] HttpRequestMessage req,
+        Route = Constants.MicroflowPath + "/{webhook}/{action}/{orchestratorId}/{stepId}")] HttpRequestMessage req,
         [DurableClient] IDurableOrchestrationClient orchClient,
         string webhook, string stepId, string action, string orchestratorId)
             => await orchClient.GetWebhookResult(req, webhook, $"{action}", string.Empty, orchestratorId, stepId);
@@ -46,7 +46,7 @@ namespace Microflow.Webhooks
         [FunctionName("WebhookWithActionAndSubAction")]
         public static async Task<HttpResponseMessage> WebhookWithActionAndSubAction(
         [HttpTrigger(AuthorizationLevel.Function, "get", "post",
-        Route = "/" + MicroflowModels.Constants.MicroflowPath + "/{webhook}/{action}/{subaction}/{orchestratorId}/{stepId}")] HttpRequestMessage req,
+        Route = Constants.MicroflowPath + "/{webhook}/{action}/{subaction}/{orchestratorId}/{stepId}")] HttpRequestMessage req,
         [DurableClient] IDurableOrchestrationClient orchClient,
         string webhook, string stepId, string action, string subaction, string orchestratorId)
             => await orchClient.GetWebhookResult(req, webhook, action, subaction, orchestratorId, stepId);
