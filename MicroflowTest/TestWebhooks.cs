@@ -31,7 +31,6 @@ namespace MicroflowTest
             var ff = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonString);
 
             var workflow = TestWorkflows.CreateTestWorkflow_SimpleSteps();
-            //var workflow = TestWorkflows.CreateTestWorkflow_SimpleSteps();
 
             var microFlow = new MicroflowModels.Microflow()
             {
@@ -53,24 +52,13 @@ namespace MicroflowTest
 
             string webhookId = $"{microFlow.WorkflowName}@{microFlow.WorkflowVersion}@1@managerApproval@test";
             microFlow.Step(1).SetWebhook("webhook", webhookId);
-            //microflow.Step(2).WaitForAllParents = false;
-            //microflow.Step(3).WaitForAllParents = false;
-            //microflow.Step(4).WaitForAllParents = false;
-            //microflow.Step(5).WaitForAllParents = false;
-            //microflow.Step(6).WaitForAllParents = false;
-            //microflow.Step(7).WaitForAllParents = false;
-            //microflow.Step(8).WaitForAllParents = false;
 
             // Upsert
             var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", microFlow, new JsonSerializerOptions(JsonSerializerDefaults.General));
 
-            //Assert.IsTrue(result.StatusCode == System.Net.HttpStatusCode.OK);
-
             for (int i = 0; i < 1; i++)
             {
-                //await Task.Delay(200);
                 tasks.Add(HttpClient.GetAsync(baseUrl + $"/Start/{workflowName}?globalkey={globalKey}&loop={loop}"));
-                //tasks.Add(HttpClient.GetAsync(baseUrl + $"/MicroflowStart/{project.ProjectName}/33306875-9c81-4736-81c0-9be562dae777"));
             }
 
             var task = await Task.WhenAll(tasks);
@@ -78,7 +66,7 @@ namespace MicroflowTest
             string instanceId = "qwerty";
             bool donewebhook = false;
 
-            if(task[0].StatusCode==System.Net.HttpStatusCode.Accepted)
+            if (task[0].StatusCode == System.Net.HttpStatusCode.Accepted)
             {
                 while (true)
                 {
@@ -86,7 +74,6 @@ namespace MicroflowTest
 
                     if (!donewebhook)
                     {
-                        //TODO: set the webhook to be the orchId/action
                         var webhookcall = await HttpClient.GetAsync("http://localhost:7071/microflow/v1/webhook/Myflow_ClientX2@v2.1@1@managerApproval@test");
 
                         if (webhookcall.StatusCode == System.Net.HttpStatusCode.OK)
@@ -107,16 +94,16 @@ namespace MicroflowTest
 
             var log = await LogReader.GetOrchLog(workflowName);
 
-            Assert.IsTrue(log.FindIndex(i=>i.OrchestrationId.Equals(instanceId))>=0);
+            Assert.IsTrue(log.FindIndex(i => i.OrchestrationId.Equals(instanceId)) >= 0);
 
             var steps = await LogReader.GetStepsLog(workflowName, instanceId);
 
             var s = steps.OrderBy(e => e.EndDate).ToList();
-            
+
             Assert.IsTrue(s[0].StepNumber == 1);
-            
-            if(s[1].StepNumber==2)
-                Assert.IsTrue(s[2].StepNumber==3);
+
+            if (s[1].StepNumber == 2)
+                Assert.IsTrue(s[2].StepNumber == 3);
             else
             {
                 Assert.IsTrue(s[1].StepNumber == 3);
