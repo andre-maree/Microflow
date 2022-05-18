@@ -29,7 +29,7 @@ namespace MicroflowModels
             public static readonly string BaseUrl = $"{Environment.GetEnvironmentVariable("BasePrefix")}{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}/{MicroflowPath}";
             public const string CanExecuteNow = "CanExecuteNow";
             public const string ExecuteStep = "ExecuteStep";
-            public const string GetStep = "GetStep";
+            public const string GetStepInternal = "GetStepInternal";
             public const string LogError = "LogError";
             public const string LogStep = "LogStep";
             public const string LogOrchestration = "LogOrchestration";
