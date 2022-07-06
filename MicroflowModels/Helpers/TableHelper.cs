@@ -24,6 +24,13 @@ namespace MicroflowModels.Helpers
 
         #endregion
 
+        public static async Task UpsertStep(this HttpCallWithRetries step)
+        {
+            TableClient tableClient = GetStepsTable();
+
+            await tableClient.UpsertEntityAsync(step);
+        }
+
         public static async Task LogError(this LogErrorEntity logEntity)
         {
             TableClient tableClient = GetErrorsTable();

@@ -14,7 +14,7 @@ namespace Microflow.FlowControl
         /// <summary>
         /// Get the current step table config
         /// </summary>
-        [FunctionName(CallNames.GetStep)]
+        [FunctionName(CallNames.GetStepInternal)]
         public static async Task<IHttpCallWithRetries> GetStep([ActivityTrigger] MicroflowRun workflowRun) => await workflowRun.GetStep();
 
         /// <summary>

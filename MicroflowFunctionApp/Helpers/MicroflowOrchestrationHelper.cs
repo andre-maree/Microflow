@@ -56,7 +56,7 @@ namespace Microflow.Helpers
             {
                 // get the top container step from table storage (from PrepareWorkflow)
                 workflowRun.RunObject.StepNumber = "-1";
-                Task<HttpCallWithRetries> httpTask = context.CallActivityAsync<HttpCallWithRetries>(CallNames.GetStep, workflowRun);
+                Task<HttpCallWithRetries> httpTask = context.CallActivityAsync<HttpCallWithRetries>(CallNames.GetStepInternal, workflowRun);
 
                 string guid = context.NewGuid().ToString();
 

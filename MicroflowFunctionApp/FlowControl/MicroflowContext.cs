@@ -292,7 +292,7 @@ namespace Microflow.FlowControl
         /// </summary>
         private async Task GetHttpCall()
         {
-            HttpCallWithRetries = await MicroflowDurableContext.CallActivityAsync<HttpCallWithRetries>(CallNames.GetStep, MicroflowRun);
+            HttpCallWithRetries = await MicroflowDurableContext.CallActivityAsync<HttpCallWithRetries>(CallNames.GetStepInternal, MicroflowRun);
 
             HttpCallWithRetries.RunId = MicroflowRun.RunObject.RunId;
             HttpCallWithRetries.MainOrchestrationId = MicroflowRun.OrchestratorInstanceId;
