@@ -38,7 +38,7 @@ namespace MicroflowTest
             Assert.IsTrue(scaleGroupSet.StatusCode == System.Net.HttpStatusCode.OK);
 
             Dictionary<string, int> scaleGroupGet = await ScaleGroupsManager.GetScaleGroupsWithMaxInstanceCounts("mytestgroup", TestWorkflowHelper.BaseUrl, TestWorkflowHelper.HttpClient);
-
+            Assert.IsTrue(scaleGroupGet["mytestgroup"]==1);
             // upsert Microflow json
             //string json = JsonSerializer.Serialize(microflow.workflow);
             bool successUpsert = await TestWorkflowHelper.UpsertWorkFlow(microflow.workflow);
