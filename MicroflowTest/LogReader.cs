@@ -13,12 +13,12 @@ namespace MicroflowTest
     {
         public static async Task<List<LogOrchestrationEntity>> GetOrchLog(string workflowName)
         {
-            List<LogOrchestrationEntity> li = new List<LogOrchestrationEntity>();
+            List<LogOrchestrationEntity> li = new();
             TableClient tableClient = GetLogOrchestrationTable();
 
-            var logTask = tableClient.QueryAsync<LogOrchestrationEntity>(filter: $"PartitionKey eq '{workflowName}'");
+            Azure.AsyncPageable<LogOrchestrationEntity> logTask = tableClient.QueryAsync<LogOrchestrationEntity>(filter: $"PartitionKey eq '{workflowName}'");
             
-            await foreach(var log in logTask)
+            await foreach(LogOrchestrationEntity log in logTask)
             {
                 li.Add(log);
             }
@@ -28,12 +28,12 @@ namespace MicroflowTest
 
         public static async Task<List<LogStepEntity>> GetStepsLog(string workflowName, string instanceId)
         {
-            List<LogStepEntity> li = new List<LogStepEntity>();
+            List<LogStepEntity> li = new();
             TableClient tableClient = GetStepsLogTable();
 
-            var logTask = tableClient.QueryAsync<LogStepEntity>(filter: $"PartitionKey eq '{workflowName}__{instanceId}'");
+            Azure.AsyncPageable<LogStepEntity> logTask = tableClient.QueryAsync<LogStepEntity>(filter: $"PartitionKey eq '{workflowName}__{instanceId}'");
 
-            await foreach (var log in logTask)
+            await foreach (LogStepEntity log in logTask)
             {
                 li.Add(log);
             }

@@ -11,7 +11,7 @@ namespace MicroflowConsole
 {
     public class Program
     {
-        public static readonly HttpClient HttpClient = new HttpClient();
+        public static readonly HttpClient HttpClient = new();
         private static string baseUrl = "http://localhost:7071/microflow/v1";
         private static string apibaseUrl = "http://localhost:5860/microflow/v1/";
         //private static string baseUrl = "https://microflowapp5675763456345345.azurewebsites.net";
@@ -41,7 +41,7 @@ namespace MicroflowConsole
                 WorkflowName = "Myflow_ClientX2",
                 WorkflowVersion = "v2.1",
                 Steps = workflow,
-                MergeFields = CreateMergeFields()//,
+                MergeFields = WorkflowManager.CreateMergeFields()//,
                 //DefaultRetryOptions = new MicroflowRetryOptions()
             };
 
@@ -110,7 +110,7 @@ namespace MicroflowConsole
                 //}
 
                 //// set max count
-                //var scaleres = await SetMaxInstanceCountForScaleGroup(scalegroup, 5);
+                var scaleres = await ScaleGroupsManager.SetMaxInstanceCountForScaleGroup("scalegroup", 5, baseUrl, HttpClient);
                 //// get max count for group
                 //var getScaleGroup = await GetScaleGroupsWithMaxInstanceCounts(scalegroup);
                 //// get max counts for all groups
@@ -159,41 +159,18 @@ namespace MicroflowConsole
             }
         }
 
-        private static async Task<HttpResponseMessage> SetMaxInstanceCountForScaleGroup(string scaleGroupId, int maxInstanceCount)
-        {
-            return await HttpClient.PostAsJsonAsync($"http://localhost:7071/ScaleGroup/{scaleGroupId}/{maxInstanceCount}", new JsonSerializerOptions(JsonSerializerDefaults.General));
-        }
+        //public static Dictionary<string, string> CreateMergeFields()
+        //{
+        //    string querystring = "?ProjectName=<ProjectName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&CallbackUrl=<CallbackUrl>&RunId=<RunId>&StepNumber=<StepNumber>&GlobalKey=<GlobalKey>";// &StepId=<StepId>";
 
-        private static async Task<Dictionary<string, int>> GetScaleGroupsWithMaxInstanceCounts(string scaleGroupId)
-        {
-            Dictionary<string, int> li = null;
+        //    Dictionary<string, string> mergeFields = new();
+        //    // use 
+        //    mergeFields.Add("default_post_url", "https://reqbin.com/echo/post/json" + querystring);
+        //    // set the callout url to the new SleepTestOrchestrator http normal function url
+        //    //mergeFields.Add("default_post_url", baseUrl + "/SleepTestOrchestrator_HttpStart" + querystring);
+        //    //mergeFields.Add("default_post_url", baseUrl + "/testpost" + querystring);
 
-            if (!string.IsNullOrWhiteSpace(scaleGroupId))
-            {
-                string t = await HttpClient.GetStringAsync($"http://localhost:7071/api/ScaleGroup/{scaleGroupId}");
-                li = JsonSerializer.Deserialize<Dictionary<string, int>>(t);
-            }
-            else
-            {
-                string t = await HttpClient.GetStringAsync($"http://localhost:7071/api/ScaleGroup");
-                li = JsonSerializer.Deserialize<Dictionary<string, int>>(t);
-            }
-
-            return li;
-        }
-
-        public static Dictionary<string, string> CreateMergeFields()
-        {
-            string querystring = "?ProjectName=<ProjectName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&CallbackUrl=<CallbackUrl>&RunId=<RunId>&StepNumber=<StepNumber>&GlobalKey=<GlobalKey>";// &StepId=<StepId>";
-
-            Dictionary<string, string> mergeFields = new Dictionary<string, string>();
-            // use 
-            mergeFields.Add("default_post_url", "https://reqbin.com/echo/post/json" + querystring);
-            // set the callout url to the new SleepTestOrchestrator http normal function url
-            //mergeFields.Add("default_post_url", baseUrl + "/SleepTestOrchestrator_HttpStart" + querystring);
-            //mergeFields.Add("default_post_url", baseUrl + "/testpost" + querystring);
-
-            return mergeFields;
-        }
+        //    return mergeFields;
+        //}
     }
 }

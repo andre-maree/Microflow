@@ -37,8 +37,8 @@ namespace Microflow.Helpers
 
             await logTask;
             // done
-            log.LogError($"Workflow run {workflowRun.WorkflowName} completed successfully...");
-            log.LogError("<<<<<<<<<<<<<<<<<<<<<<<<<-----> !!! A GREAT SUCCESS  !!! <----->>>>>>>>>>>>>>>>>>>>>>>>>");
+            log.LogWarning($"Workflow run {workflowRun.WorkflowName} completed successfully...");
+            log.LogWarning("<<<<<<<<<<<<<<<<<<<<<<<<<-----> !!! A GREAT SUCCESS  !!! <----->>>>>>>>>>>>>>>>>>>>>>>>>");
         }
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace Microflow.Helpers
 
                 workflowRun.RunObject.RunId = guid;
 
-                log.LogError($"Started Run ID {workflowRun.RunObject.RunId}...");
+                log.LogCritical($"Started Run ID {workflowRun.RunObject.RunId}...");
 
                 // pass in the current loop count so it can be used downstream/passed to the micro-services
                 workflowRun.CurrentLoop = i;
@@ -87,7 +87,7 @@ namespace Microflow.Helpers
 
                 await Task.WhenAll(subTasks);
 
-                log.LogError($"Run ID {guid} completed successfully...");
+                log.LogCritical($"Run ID {guid} completed successfully...");
             }
         }
 

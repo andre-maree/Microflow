@@ -9,7 +9,7 @@ namespace MicroflowConsole
         public static List<Step> CreateTestWorkflow_SimpleSteps()
         {
             // create
-            List<Step> steps = ProjectManager.CreateSteps(4, 1,"{default_post_url}");
+            List<Step> steps = WorkflowManager.CreateSteps(4, 1,"{default_post_url}");
             //steps[0].IsHttpGet = true;
             //steps[0].CallbackTimeoutSeconds = 30;
             //steps[0].WebhookAction = "approve";
@@ -28,7 +28,7 @@ namespace MicroflowConsole
 
         public static List<Step> CreateTestWorkflow_10StepsParallel()
         {
-            List<Step> steps = ProjectManager.CreateSteps(14, 1, "{default_post_url}");
+            List<Step> steps = WorkflowManager.CreateSteps(14, 1, "{default_post_url}");
 
             steps[1].AddSubSteps(steps[2], steps[3]);
             steps[2].AddSubSteps(steps[4], steps[5], steps[6], steps[7], steps[8]);
@@ -43,7 +43,7 @@ namespace MicroflowConsole
 
         public static List<Step> CreateTestWorkflow_Complex1()
         {
-            List<Step> steps = ProjectManager.CreateSteps(8, 1, "{default_post_url}");
+            List<Step> steps = WorkflowManager.CreateSteps(8, 1, "{default_post_url}");
 
             steps[1].AddSubSteps(steps[2], steps[3], steps[4]);
             steps[2].AddSubSteps(steps[5], steps[6]);
@@ -61,7 +61,7 @@ namespace MicroflowConsole
 
         public static List<Step> CreateTestWorkflow_110Steps()
         {
-            List<Step> steps = ProjectManager.CreateSteps(110, 1, "{default_post_url}");
+            List<Step> steps = WorkflowManager.CreateSteps(110, 1, "{default_post_url}");
 
             steps[1].AddSubStepRange(steps, 3, 11);
             steps[11].AddSubStepRange(steps, 13, 22);

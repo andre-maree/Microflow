@@ -21,82 +21,53 @@ namespace MicroflowTest
         [TestMethod]
         public async Task CreateTestWebhooksWorkflow()
         {
-            string path = Path.GetDirectoryName(System.AppDomain.CurrentDomain.BaseDirectory);
-            string pathf = Directory.GetParent(Directory.GetParent(Directory.GetParent(path).FullName).FullName).FullName + "\\config.json";
+            var workflow = TestWorkflowHelper.CreateTestWorkflow_SimpleSteps();
 
-            StreamReader r = new StreamReader(pathf);
-
-            string jsonString = r.ReadToEnd();
-
-            var ff = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonString);
-
-            var workflow = TestWorkflows.CreateTestWorkflow_SimpleSteps();
-
-            var microFlow = new MicroflowModels.Microflow()
-            {
-                WorkflowName = "Myflow_ClientX2",
-                WorkflowVersion = "v2.1",
-                Steps = workflow,
-                MergeFields = TestWorkflows.CreateMergeFields(),
-                DefaultRetryOptions = new MicroflowRetryOptions()
-            };
-
-            string workflowName = string.IsNullOrWhiteSpace(microFlow.WorkflowVersion)
-                                ? microFlow.WorkflowName
-                                : $"{microFlow.WorkflowName}@{microFlow.WorkflowVersion}";
+            (MicroflowModels.Microflow workflow, string workflowName) microflow = TestWorkflowHelper.CreateMicroflow(workflow);
 
             var tasks = new List<Task<HttpResponseMessage>>();
 
             int loop = 1;
             string globalKey = Guid.NewGuid().ToString();
 
-            string webhookId = $"{microFlow.WorkflowName}@{microFlow.WorkflowVersion}@1@managerApproval@test";
-            microFlow.Step(1).SetWebhook("webhook", webhookId);
+            string webhookId = $"{microflow.workflowName}@1@managerApproval@test";
+            microflow.workflow.Step(1).SetWebhook("webhook", webhookId);
 
             // Upsert
-            var result = await HttpClient.PostAsJsonAsync(baseUrl + "/UpsertWorkflow/", microFlow, new JsonSerializerOptions(JsonSerializerDefaults.General));
+            bool successUpsert = await TestWorkflowHelper.UpsertWorkFlow(microflow.workflow);
 
-            for (int i = 0; i < 1; i++)
-            {
-                tasks.Add(HttpClient.GetAsync(baseUrl + $"/Start/{workflowName}?globalkey={globalKey}&loop={loop}"));
-            }
+            Assert.IsTrue(successUpsert);
 
-            var task = await Task.WhenAll(tasks);
+            // start the upserted Microflow
+            (string instanceId, string statusUrl) startResult = await TestWorkflowHelper.StartMicroflow(microflow, tasks, loop, globalKey, false);
 
-            string instanceId = "qwerty";
             bool donewebhook = false;
 
-            if (task[0].StatusCode == System.Net.HttpStatusCode.Accepted)
+            while (true)
             {
-                while (true)
+                await Task.Delay(2000);
+
+                if (!donewebhook)
                 {
-                    await Task.Delay(2000);
+                    var webhookcall = await HttpClient.GetAsync("http://localhost:7071/microflow/v1/webhook/Myflow_ClientX2@2.1@1@managerApproval@test");
 
-                    if (!donewebhook)
+                    if (webhookcall.StatusCode == System.Net.HttpStatusCode.OK)
                     {
-                        var webhookcall = await HttpClient.GetAsync("http://localhost:7071/microflow/v1/webhook/Myflow_ClientX2@v2.1@1@managerApproval@test");
-
-                        if (webhookcall.StatusCode == System.Net.HttpStatusCode.OK)
-                        {
-                            donewebhook = true;
-                        }
+                        donewebhook = true;
                     }
-
-                    string content = await task[0].Content.ReadAsStringAsync();
-                    var res = JsonSerializer.Deserialize<OrchResult>(content);
-                    var res2 = await HttpClient.GetAsync(res.statusQueryGetUri);
-                    instanceId = res.id;
-
-                    if (res2.StatusCode == System.Net.HttpStatusCode.OK)
-                        break;
                 }
+
+                var res = await HttpClient.GetAsync(startResult.statusUrl);
+
+                if (res.StatusCode == System.Net.HttpStatusCode.OK)
+                    break;
             }
 
-            var log = await LogReader.GetOrchLog(workflowName);
+            var log = await LogReader.GetOrchLog(microflow.workflowName);
 
-            Assert.IsTrue(log.FindIndex(i => i.OrchestrationId.Equals(instanceId)) >= 0);
+            Assert.IsTrue(log.FindIndex(i => i.OrchestrationId.Equals(startResult.instanceId)) >= 0);
 
-            var steps = await LogReader.GetStepsLog(workflowName, instanceId);
+            var steps = await LogReader.GetStepsLog(microflow.workflowName, startResult.instanceId);
 
             var s = steps.OrderBy(e => e.EndDate).ToList();
 

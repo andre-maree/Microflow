@@ -1,3 +1,4 @@
 {
-  "MicroflowStorage": "UseDevelopmentStorage=true"
+  "MicroflowStorage": "UseDevelopmentStorage=true",
+  "BaseUrl": "http://localhost:7071/microflow/v1"
 }
