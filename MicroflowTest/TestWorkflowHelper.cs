@@ -129,23 +129,16 @@ namespace MicroflowTest
             return (microflow, workflowName);
         }
 
-        public static async Task<(string, string)> StartMicroflow((MicroflowModels.Microflow workflow, string workflowName) microflow, List<Task<HttpResponseMessage>> tasks, int loop, string globalKey, bool waitForCompleted = true)
+        public static async Task<(string, string)> StartMicroflow((MicroflowModels.Microflow workflow, string workflowName) microflow, int loop, string globalKey, bool waitForCompleted = true)
         {
-            for (int i = 0; i < 1; i++)
-            {
-                //await Task.Delay(200);
-                tasks.Add(TestWorkflowHelper.HttpClient.GetAsync(TestWorkflowHelper.BaseUrl + $"/Start/{microflow.workflowName}?globalkey={globalKey}&loop={loop}"));
-                //tasks.Add(HttpClient.GetAsync(baseUrl + $"/MicroflowStart/{project.ProjectName}/33306875-9c81-4736-81c0-9be562dae777"));
-            }
-
-            HttpResponseMessage[] task = await Task.WhenAll(tasks);
+            var task = await TestWorkflowHelper.HttpClient.GetAsync(TestWorkflowHelper.BaseUrl + $"/Start/{microflow.workflowName}?globalkey={globalKey}&loop={loop}");
 
             string instanceId = "";
             string statusUrl = "";
 
-            if (task[0].StatusCode == System.Net.HttpStatusCode.Accepted)
+            if (task.StatusCode == System.Net.HttpStatusCode.Accepted)
             {
-                string content = await task[0].Content.ReadAsStringAsync();
+                string content = await task.Content.ReadAsStringAsync();
                     OrchResult? res = JsonSerializer.Deserialize<OrchResult>(content);
 
                 instanceId = res.id;
@@ -156,9 +149,9 @@ namespace MicroflowTest
                     await Task.Delay(2000);
 
                     HttpResponseMessage res2 = await HttpClient.GetAsync(res.statusQueryGetUri);
-                    instanceId = res.id;
+                    string res2result = await res2.Content.ReadAsStringAsync();
 
-                    if (res2.StatusCode == System.Net.HttpStatusCode.OK)
+                    if (res2result.Contains("\"runtimeStatus\":\"Completed\""))
                         break;
                 }
             }
