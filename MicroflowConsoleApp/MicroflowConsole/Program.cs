@@ -75,11 +75,12 @@ namespace MicroflowConsole
                 string webhook = microFlow.WorkflowName + "@1@managerApproval@test";
                 microFlow.Step(1).WebhookId = webhook;
                 microFlow.Step(1).WebhookBase = "webhook";
-                //microFlow.Step(1).Webhook.SubStepsMapping.Add(new()
-                //{
-                //    WebhookAction = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/decline",
-                //    SubStepsToRunForAction = new List<int>() { 2 }
-                //});
+                microFlow.Step(1).WebhookSubStepsMapping = new();
+                microFlow.Step(1).WebhookSubStepsMapping.Add(new()
+                {
+                    WebhookAction = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/decline",
+                    SubStepsToRunForAction = new List<int>() { 2 }
+                });
                 //microFlow.Step(1).Webhook.SubStepsMapping.Add(new()
                 //{
                 //    WebhookAction = microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/approve",
@@ -110,7 +111,7 @@ namespace MicroflowConsole
                 //}
 
                 //// set max count
-                var scaleres = await ScaleGroupsManager.SetMaxInstanceCountForScaleGroup("scalegroup", 5, baseUrl, HttpClient);
+                //var scaleres = await ScaleGroupsManager.SetMaxInstanceCountForScaleGroup("scalegroup", 5, baseUrl, HttpClient);
                 //// get max count for group
                 //var getScaleGroup = await GetScaleGroupsWithMaxInstanceCounts(scalegroup);
                 //// get max counts for all groups

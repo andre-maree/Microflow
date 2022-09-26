@@ -1,3 +1,4 @@
+using Microflow.MicroflowTableModels;
 using MicroflowModels;
 using MicroflowSDK;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -5,25 +6,24 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace MicroflowTest
 {
     [TestClass]
-    public class TestScaleGroups
+    public class Test4_ScaleGroups
     {
+        string scaleGroupId = "mytestgroup";
+
         [TestMethod]
-        public async Task SetMaxInstanceCountForScaleGroup()
+        public async Task SetMaxInstanceCountForScaleGroupTo10()
         {
             // create a simple workflow with parent step 1, subling children step 2 and 3, and child of 2 and 3 step 4
             // siblings steps 2 and 3 runs in parallel
-            List<Step> workflow = TestWorkflowHelper.CreateTestWorkflow_SimpleSteps();
+            List<Step> workflow = TestWorkflowHelper.CreateTestWorkflow_10StepsParallel();
 
             // create Microflow with the created workflow
             (MicroflowModels.Microflow workflow, string workflowName) microflow = TestWorkflowHelper.CreateMicroflow(workflow);
-
-            List<Task<HttpResponseMessage>> tasks = new();
 
             // set loop to 1, how many time the workflow will execute
             int loop = 1;
@@ -32,33 +32,111 @@ namespace MicroflowTest
             // the global key is needed to group related workflows and control the group
             string globalKey = Guid.NewGuid().ToString();
 
-            // set scale group
-            HttpResponseMessage scaleGroupSet = await ScaleGroupsManager.SetMaxInstanceCountForScaleGroup("mytestgroup", 1, TestWorkflowHelper.BaseUrl, TestWorkflowHelper.HttpClient);
+            microflow.workflow.Steps.Where(s => s.StepNumber > 3 && s.StepNumber < 14).ToList().ForEach(x => x.ScaleGroupId = scaleGroupId);
 
-            Assert.IsTrue(scaleGroupSet.StatusCode == System.Net.HttpStatusCode.OK);
+            await UpsertWorkflow(microflow);
 
-            Dictionary<string, int> scaleGroupGet = await ScaleGroupsManager.GetScaleGroupsWithMaxInstanceCounts("mytestgroup", TestWorkflowHelper.BaseUrl, TestWorkflowHelper.HttpClient);
-            Assert.IsTrue(scaleGroupGet["mytestgroup"]==1);
-            // upsert Microflow json
-            //string json = JsonSerializer.Serialize(microflow.workflow);
-            bool successUpsert = await TestWorkflowHelper.UpsertWorkFlow(microflow.workflow);
-
-            Assert.IsTrue(successUpsert);
+            await TestWorkflowHelper.SetScaleGroupMax(10, scaleGroupId);
 
             // start the upserted Microflow
-            (string instanceId, string statusUrl) startResult = await TestWorkflowHelper.StartMicroflow(microflow, loop, globalKey, true);
+            (string instanceId, string statusUrl) startResult = await TestWorkflowHelper.StartMicroflow(microflow, loop, globalKey);
 
+            await TestNoScaleGroupWithMax10(microflow, startResult);
+        }
+
+        [TestMethod]
+        public async Task SetMaxInstanceCountForScaleGroupTo1()
+        {
+            // create a simple workflow with parent step 1, subling children step 2 and 3, and child of 2 and 3 step 4
+            // siblings steps 2 and 3 runs in parallel
+            List<Step> workflow = TestWorkflowHelper.CreateTestWorkflow_10StepsParallel();
+
+            // create Microflow with the created workflow
+            (MicroflowModels.Microflow workflow, string workflowName) microflow = TestWorkflowHelper.CreateMicroflow(workflow);
+
+            // set loop to 1, how many time the workflow will execute
+            int loop = 1;
+
+            // set the global key if needed
+            // the global key is needed to group related workflows and control the group
+            string globalKey = Guid.NewGuid().ToString();
+
+            microflow.workflow.Steps.Where(s => s.StepNumber > 3 && s.StepNumber < 14).ToList().ForEach(x => x.ScaleGroupId = scaleGroupId);
+
+            await UpsertWorkflow(microflow);
+
+            await TestWorkflowHelper.SetScaleGroupMax(1, scaleGroupId);
+
+            // start the upserted Microflow
+            (string instanceId, string statusUrl) startResult = await TestWorkflowHelper.StartMicroflow(microflow, loop, globalKey);
+
+            await TestNoScaleGroupWithMax1(microflow, startResult);
+        }
+
+            private static async Task TestNoScaleGroupWithMax1((MicroflowModels.Microflow workflow, string workflowName) microflow, (string instanceId, string statusUrl) startResult)
+        {
             //// CHECK RESULTS ////
 
             // get the orchestration log to check the results
-            var log = await LogReader.GetOrchLog(microflow.workflowName);
+            List<LogOrchestrationEntity> log = await LogReader.GetOrchLog(microflow.workflowName);
 
             Assert.IsTrue(log.FindIndex(i => i.OrchestrationId.Equals(startResult.instanceId)) >= 0);
 
             // get the steps log to check the results
-            var steps = await LogReader.GetStepsLog(microflow.workflowName, startResult.instanceId);
+            List<LogStepEntity> steps = await LogReader.GetStepsLog(microflow.workflowName, startResult.instanceId);
 
-            var sortedSteps = steps.OrderBy(e => e.EndDate).ToList();
+            List<LogStepEntity> sortedSteps = TestBasicFlow(steps);
+
+            IEnumerable<LogStepEntity> parallelSteps = sortedSteps.Where(s => s.StepNumber > 3 && s.StepNumber < 14);
+            int count = 1;
+
+            foreach (LogStepEntity paraStep in parallelSteps)
+            {
+                // these are now in sequence since the the scalegroup max instance count is 1
+                // count the other step`s with start dates before this step`s end date
+                if (parallelSteps.Count(s => s.StartDate < paraStep.EndDate) != count)
+                {
+                    Assert.Fail();
+                    break;
+                }
+
+                // now 1 more other step has a start date before the next step`s end date
+                count++;
+            }
+        }
+
+        private static async Task TestNoScaleGroupWithMax10((MicroflowModels.Microflow workflow, string workflowName) microflow, (string instanceId, string statusUrl) startResult)
+        {
+            //// CHECK RESULTS ////
+
+            // get the orchestration log to check the results
+            List<LogOrchestrationEntity> log = await LogReader.GetOrchLog(microflow.workflowName);
+
+            Assert.IsTrue(log.FindIndex(i => i.OrchestrationId.Equals(startResult.instanceId)) >= 0);
+
+            // get the steps log to check the results
+            List<LogStepEntity> steps = await LogReader.GetStepsLog(microflow.workflowName, startResult.instanceId);
+
+            List<LogStepEntity> sortedSteps = TestBasicFlow(steps);
+
+            IEnumerable<LogStepEntity> parallelSteps = sortedSteps.Where(s => s.StepNumber > 3 && s.StepNumber < 14);
+            bool foundOverlap = false;
+
+            foreach (LogStepEntity paraStep in parallelSteps)
+            {
+                if (parallelSteps.Count(s => s.StartDate < paraStep.EndDate) > 0)
+                {
+                    foundOverlap = true;
+                    break;
+                }
+            }
+
+            Assert.IsTrue(foundOverlap);
+        }
+
+        private static List<LogStepEntity> TestBasicFlow(List<LogStepEntity> steps)
+        {
+            List<LogStepEntity> sortedSteps = steps.OrderBy(e => e.EndDate).ToList();
 
             Assert.IsTrue(sortedSteps[0].StepNumber == 1);
 
@@ -70,7 +148,19 @@ namespace MicroflowTest
                 Assert.IsTrue(sortedSteps[2].StepNumber == 2);
             }
 
-            Assert.IsTrue(sortedSteps[3].StepNumber == 4);
+            Assert.IsTrue(sortedSteps.Count == 14);
+            Assert.IsTrue(sortedSteps[13].StepNumber == 14);
+
+            return sortedSteps;
+        }
+
+        private static async Task UpsertWorkflow((MicroflowModels.Microflow workflow, string workflowName) microflow)
+        {
+            // upsert Microflow json
+            //string json = JsonSerializer.Serialize(microflow.workflow);
+            bool successUpsert = await TestWorkflowHelper.UpsertWorkFlow(microflow.workflow);
+
+            Assert.IsTrue(successUpsert);
         }
     }
 }

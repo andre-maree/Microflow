@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace MicroflowTest
 {
     [TestClass]
-    public class TestWorkflowExecution
+    public class Test1_WorkflowExecution
     {
         [TestMethod]
         public async Task GetStartedWorkflow()
@@ -21,8 +21,6 @@ namespace MicroflowTest
 
             // create Microflow with the created workflow
             (MicroflowModels.Microflow workflow, string workflowName) microflow = TestWorkflowHelper.CreateMicroflow(workflow);
-
-            List<Task<HttpResponseMessage>> tasks = new();
 
             // set loop to 1, how many time the workflow will execute
             int loop = 1;
@@ -41,16 +39,16 @@ namespace MicroflowTest
             (string instanceId, string statusUrl) startResult = await TestWorkflowHelper.StartMicroflow(microflow, loop, globalKey);
 
             //// CHECK RESULTS ////
-       
+
             // get the orchestration log to check the results
-            var log = await LogReader.GetOrchLog(microflow.workflowName);
+            List<Microflow.MicroflowTableModels.LogOrchestrationEntity> log = await LogReader.GetOrchLog(microflow.workflowName);
 
             Assert.IsTrue(log.FindIndex(i => i.OrchestrationId.Equals(startResult.instanceId)) >= 0);
 
             // get the steps log to check the results
-            var steps = await LogReader.GetStepsLog(microflow.workflowName, startResult.instanceId);
+            List<Microflow.MicroflowTableModels.LogStepEntity> steps = await LogReader.GetStepsLog(microflow.workflowName, startResult.instanceId);
 
-            var sortedSteps = steps.OrderBy(e => e.EndDate).ToList();
+            List<Microflow.MicroflowTableModels.LogStepEntity> sortedSteps = steps.OrderBy(e => e.EndDate).ToList();
 
             Assert.IsTrue(sortedSteps[0].StepNumber == 1);
 
@@ -93,14 +91,14 @@ namespace MicroflowTest
             //// CHECK RESULTS ////
 
             // get the orchestration log to check the results
-            var log = await LogReader.GetOrchLog(microflow.workflowName);
+            List<Microflow.MicroflowTableModels.LogOrchestrationEntity> log = await LogReader.GetOrchLog(microflow.workflowName);
 
             Assert.IsTrue(log.FindIndex(i => i.OrchestrationId.Equals(startResult.instanceId)) >= 0);
 
             // get the steps log to check the results
-            var steps = await LogReader.GetStepsLog(microflow.workflowName, startResult.instanceId);
+            List<Microflow.MicroflowTableModels.LogStepEntity> steps = await LogReader.GetStepsLog(microflow.workflowName, startResult.instanceId);
 
-            var sortedSteps = steps.OrderBy(e => e.EndDate).ToList();
+            List<Microflow.MicroflowTableModels.LogStepEntity> sortedSteps = steps.OrderBy(e => e.EndDate).ToList();
 
             Assert.IsTrue(sortedSteps[0].StepNumber == 1);
 

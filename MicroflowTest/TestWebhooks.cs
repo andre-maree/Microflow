@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 namespace MicroflowTest
 {
     [TestClass]
-    public class TestWebhooks
+    public class Test3_Webhooks
     {
         public static readonly HttpClient HttpClient = new HttpClient();
         private static string baseUrl = "http://localhost:7071/microflow/v1";
@@ -21,11 +21,9 @@ namespace MicroflowTest
         [TestMethod]
         public async Task CreateTestWebhooksWorkflow()
         {
-            var workflow = TestWorkflowHelper.CreateTestWorkflow_SimpleSteps();
+            List<Step> workflow = TestWorkflowHelper.CreateTestWorkflow_SimpleSteps();
 
             (MicroflowModels.Microflow workflow, string workflowName) microflow = TestWorkflowHelper.CreateMicroflow(workflow);
-
-            var tasks = new List<Task<HttpResponseMessage>>();
 
             int loop = 1;
             string globalKey = Guid.NewGuid().ToString();
@@ -49,7 +47,7 @@ namespace MicroflowTest
 
                 if (!donewebhook)
                 {
-                    var webhookcall = await HttpClient.GetAsync("http://localhost:7071/microflow/v1/webhook/Myflow_ClientX2@2.1@1@managerApproval@test");
+                    HttpResponseMessage webhookcall = await HttpClient.GetAsync("http://localhost:7071/microflow/v1/webhook/Myflow_ClientX2@2.1@1@managerApproval@test");
 
                     if (webhookcall.StatusCode == System.Net.HttpStatusCode.OK)
                     {
@@ -57,19 +55,19 @@ namespace MicroflowTest
                     }
                 }
 
-                var res = await HttpClient.GetAsync(startResult.statusUrl);
+                HttpResponseMessage res = await HttpClient.GetAsync(startResult.statusUrl);
 
                 if (res.StatusCode == System.Net.HttpStatusCode.OK)
                     break;
             }
 
-            var log = await LogReader.GetOrchLog(microflow.workflowName);
+            List<Microflow.MicroflowTableModels.LogOrchestrationEntity> log = await LogReader.GetOrchLog(microflow.workflowName);
 
             Assert.IsTrue(log.FindIndex(i => i.OrchestrationId.Equals(startResult.instanceId)) >= 0);
 
-            var steps = await LogReader.GetStepsLog(microflow.workflowName, startResult.instanceId);
+            List<Microflow.MicroflowTableModels.LogStepEntity> steps = await LogReader.GetStepsLog(microflow.workflowName, startResult.instanceId);
 
-            var s = steps.OrderBy(e => e.EndDate).ToList();
+            List<Microflow.MicroflowTableModels.LogStepEntity> s = steps.OrderBy(e => e.EndDate).ToList();
 
             Assert.IsTrue(s[0].StepNumber == 1);
 

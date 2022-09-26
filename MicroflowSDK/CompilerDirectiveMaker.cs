@@ -8,10 +8,10 @@ namespace MicroflowSDK
     {
         public static string MakeCompilerDirectiveString(string largestCombo)
         {
-            var arr = largestCombo.Split('_');
+            string[] arr = largestCombo.Split('_');
 
-            var combinations = CreateCombinations(0, "", arr);
-            var list = new List<string>();
+            List<string> combinations = CreateCombinations(0, "", arr);
+            List<string> list = new List<string>();
 
 
             for (int i1 = 1; i1 < arr.Length; i1++)
@@ -24,7 +24,7 @@ namespace MicroflowSDK
 
                     if (!j.StartsWith(i))
                     {
-                        var idx = j.IndexOf(i);
+                        int idx = j.IndexOf(i);
                         if (idx > -1)
                         {
                             combinations[yy] = j.Insert(idx, "_");
@@ -50,10 +50,10 @@ namespace MicroflowSDK
 
         private static List<string> CreateCombinations(int startIndex, string pair, string[] initialArray)
         {
-            var combinations = new List<string>();
+            List<string> combinations = new List<string>();
             for (int i = startIndex; i < initialArray.Length; i++)
             {
-                var value = $"{pair}{initialArray[i]}";
+                string value = $"{pair}{initialArray[i]}";
                 combinations.Add(value);
                 combinations.AddRange(CreateCombinations(i + 1, value, initialArray));
             }
@@ -63,7 +63,7 @@ namespace MicroflowSDK
 
         public static string GetCompilerDirectiveForOptionToExclude(bool IsDebug, string key, string config)
         {
-            var li = config.Split(';').ToList();
+            List<string> li = config.Split(';').ToList();
             
             string res = $"#if DEBUG || RELEASE || !{string.Join(" && !", li.FindAll(r => r.Contains(key)))}";
 

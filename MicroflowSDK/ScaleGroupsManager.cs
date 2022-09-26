@@ -10,9 +10,9 @@ namespace MicroflowSDK
 {
     public static class ScaleGroupsManager
     {
-        public static async Task<HttpResponseMessage> SetMaxInstanceCountForScaleGroup(string scaleGroupId, int maxInstanceCount, string baseUrl, HttpClient httpClient)
+        public static async Task<HttpResponseMessage> SetMaxInstanceCountForScaleGroup(string scaleGroupId, int maxInstanceCount, string baseUrl, HttpClient httpClient, int waitForResultSeconds = 30)
         {
-            return await httpClient.PostAsJsonAsync($"{baseUrl}/ScaleGroup/{scaleGroupId}/{maxInstanceCount}", new JsonSerializerOptions(JsonSerializerDefaults.General));
+            return await httpClient.PostAsJsonAsync($"{baseUrl}/ScaleGroup/{scaleGroupId}/{maxInstanceCount}/{waitForResultSeconds}", new JsonSerializerOptions(JsonSerializerDefaults.General));
         }
 
         public static async Task<Dictionary<string, int>> GetScaleGroupsWithMaxInstanceCounts(string scaleGroupId, string baseUrl, HttpClient httpClient)

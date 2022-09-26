@@ -1,5 +1,6 @@
 ﻿using MicroflowModels;
 using MicroflowSDK;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -131,7 +132,7 @@ namespace MicroflowTest
 
         public static async Task<(string, string)> StartMicroflow((MicroflowModels.Microflow workflow, string workflowName) microflow, int loop, string globalKey, bool waitForCompleted = true)
         {
-            var task = await TestWorkflowHelper.HttpClient.GetAsync(TestWorkflowHelper.BaseUrl + $"/Start/{microflow.workflowName}?globalkey={globalKey}&loop={loop}");
+            HttpResponseMessage task = await TestWorkflowHelper.HttpClient.GetAsync(TestWorkflowHelper.BaseUrl + $"/Start/{microflow.workflowName}?globalkey={globalKey}&loop={loop}");
 
             string instanceId = "";
             string statusUrl = "";
@@ -162,7 +163,7 @@ namespace MicroflowTest
         public static async Task<bool> UpsertWorkFlow(MicroflowModels.Microflow workflow)
         {
             // Upsert
-            var result = await TestWorkflowHelper.HttpClient.PostAsJsonAsync(TestWorkflowHelper.BaseUrl + "/UpsertWorkflow/", workflow, new JsonSerializerOptions(JsonSerializerDefaults.General));
+            HttpResponseMessage result = await TestWorkflowHelper.HttpClient.PostAsJsonAsync(TestWorkflowHelper.BaseUrl + "/UpsertWorkflow/", workflow, new JsonSerializerOptions(JsonSerializerDefaults.General));
 
             if(result.StatusCode == System.Net.HttpStatusCode.OK)
             {
@@ -170,6 +171,17 @@ namespace MicroflowTest
             }
 
             return false;
+        }
+
+        public static async Task SetScaleGroupMax(int maxConcurrentInstanceCount, string scaleGroupId)
+        {
+            // set scale group
+            HttpResponseMessage scaleGroupSet = await ScaleGroupsManager.SetMaxInstanceCountForScaleGroup(scaleGroupId, maxConcurrentInstanceCount, BaseUrl, HttpClient);
+
+            Assert.IsTrue(scaleGroupSet.StatusCode == System.Net.HttpStatusCode.OK);
+
+            Dictionary<string, int> scaleGroupGet = await ScaleGroupsManager.GetScaleGroupsWithMaxInstanceCounts(scaleGroupId, BaseUrl, HttpClient);
+            Assert.IsTrue(scaleGroupGet[scaleGroupId] == maxConcurrentInstanceCount);
         }
     }
 }

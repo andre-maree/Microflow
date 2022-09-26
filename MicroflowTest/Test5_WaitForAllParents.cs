@@ -10,25 +10,19 @@ using System.Threading.Tasks;
 namespace MicroflowTest
 {
     [TestClass]
-    public class Test2_Retries
+    public class Test5_WaitForAllParents
     {
         [TestMethod]
         public async Task CreateTestReties()
         {
-            List<Step> workflow = TestWorkflowHelper.CreateTestWorkflow_SimpleSteps();
+            List<Step> workflow = TestWorkflowHelper.CreateTestWorkflow_10StepsParallel();
 
             (MicroflowModels.Microflow workflow, string workflowName) microflow = TestWorkflowHelper.CreateMicroflow(workflow);
 
             int loop = 1;
             string globalKey = Guid.NewGuid().ToString();
 
-            string webhookId = $"{microflow.workflowName}@1@managerApproval@test";
-            microflow.workflow.Step(1).SetWebhook("webhook", webhookId);
-
-            microflow.workflow.Step(1).StopOnWebhookFailed = false;
-
-            microflow.workflow.Step(1).WebhookTimeoutSeconds = 3;
-            microflow.workflow.Step(1).RetryOptions = new MicroflowRetryOptions() { BackoffCoefficient = 1, DelaySeconds = 1, MaxDelaySeconds = 1, MaxRetries = 2, TimeOutSeconds = 300 };
+            microflow.workflow.Step(14).WaitForAllParents = false;
 
             // Upsert
             bool successUpsert = await TestWorkflowHelper.UpsertWorkFlow(microflow.workflow);
@@ -40,23 +34,25 @@ namespace MicroflowTest
 
             List<Microflow.MicroflowTableModels.LogOrchestrationEntity> log = await LogReader.GetOrchLog(microflow.workflowName);
 
-            Assert.IsTrue(log.FindIndex(i=>i.OrchestrationId.Equals(startResult.instanceId))>=0);
+            Assert.IsTrue(log.FindIndex(i => i.OrchestrationId.Equals(startResult.instanceId)) >= 0);
 
             List<Microflow.MicroflowTableModels.LogStepEntity> steps = await LogReader.GetStepsLog(microflow.workflowName, startResult.instanceId);
 
-            List<Microflow.MicroflowTableModels.LogStepEntity> s = steps.OrderBy(e => e.EndDate).ToList();
-            
-            Assert.IsTrue(s[0].StepNumber == 1);
-            
-            if(s[1].StepNumber==2)
-                Assert.IsTrue(s[2].StepNumber==3);
+            List<Microflow.MicroflowTableModels.LogStepEntity> sorted = steps.OrderBy(e => e.EndDate).ToList();
+
+            Assert.IsTrue(sorted[0].StepNumber == 1);
+
+            if (sorted[1].StepNumber == 2)
+                Assert.IsTrue(sorted[2].StepNumber == 3);
             else
             {
-                Assert.IsTrue(s[1].StepNumber == 3);
-                Assert.IsTrue(s[2].StepNumber == 2);
+                Assert.IsTrue(sorted[1].StepNumber == 3);
+                Assert.IsTrue(sorted[2].StepNumber == 2);
             }
 
-            Assert.IsTrue(s[3].StepNumber == 4);
+            // with WaitForAllParents = true, step 14 will execute once when all parents are completed
+            // with WaitForAllParents = false, step 14 will execute each time a parent completes
+            Assert.IsTrue(sorted.Count(n => n.StepNumber == 14) == 10);
         }
     }
 }

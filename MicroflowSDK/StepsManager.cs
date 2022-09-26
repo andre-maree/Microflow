@@ -14,7 +14,7 @@ namespace MicroflowSDK
 
         public static void AddParentSteps(this Step step, params Step[] parents)
         {
-            foreach (var parentStep in parents)
+            foreach (Step parentStep in parents)
             {
                 parentStep.SubSteps.Add(step.StepNumber);
             }
@@ -22,7 +22,7 @@ namespace MicroflowSDK
 
         public static void AddSubSteps(this Step step, params Step[] subSteps)
         {
-            foreach (var subStep in subSteps)
+            foreach (Step subStep in subSteps)
             {
                 step.SubSteps.Add(subStep.StepNumber);
             }
@@ -36,7 +36,7 @@ namespace MicroflowSDK
 
         public static void SetRetryForSteps(params Step[] steps)
         {
-            foreach (var step in steps)
+            foreach (Step step in steps)
             {
                 step.RetryOptions = new MicroflowRetryOptions();
             }
@@ -44,7 +44,7 @@ namespace MicroflowSDK
 
         public static void SetRetryForSteps(int delaySeconds, int maxDelaySeconds, int maxRetries, int timeOutSeconds, int backoffCoefficient, params Step[] steps)
         {
-            var retryOptions = new MicroflowRetryOptions()
+            MicroflowRetryOptions retryOptions = new MicroflowRetryOptions()
             {
                 DelaySeconds = delaySeconds,
                 MaxDelaySeconds = maxDelaySeconds,
@@ -53,7 +53,7 @@ namespace MicroflowSDK
                 BackoffCoefficient = backoffCoefficient
             };
 
-            foreach(var step in steps)
+            foreach(Step step in steps)
             {
                 step.RetryOptions = retryOptions;
             }
