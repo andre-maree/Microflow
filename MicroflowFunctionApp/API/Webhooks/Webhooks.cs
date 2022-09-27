@@ -49,6 +49,24 @@ namespace Microflow.Webhooks
         [DurableClient] IDurableOrchestrationClient orchClient,
         string webhook, string stepId, string action, string subaction)
             => await orchClient.GetWebhookResult(req, webhook, action, subaction, stepId);
+        
+        private static string GetWorkFlowNameAndVersion(string webhookAction)
+        {
+            bool found = false;
+            for (int i = 0; i < webhookAction.Length; i++)
+            {
+                char c = webhookAction[i];
+                if (c == '@')
+                {
+                    if(found)
+                        return webhookAction.Substring(0, i);
+
+                    found = true;
+                }
+            }
+
+            return string.Empty;
+        }
 
         private static async Task<HttpResponseMessage> GetWebhookResult(this IDurableOrchestrationClient client,
                                                                         HttpRequestMessage req,
@@ -57,17 +75,9 @@ namespace Microflow.Webhooks
                                                                         string webhookSubAction,
                                                                         string stepId)
         {
-            bool found = false;
-            for (int i = 0; i < webhookAction.Length; i++)
-            {
-                char c = webhookAction[i];
-                if (c == '@' && found==false)
-                {
-                    
-                }
-            }
+            
 
-            var webHooksTask = TableHelper.GetWebhookSubSteps(webhookSubAction., stepId);
+            var webHooksTask = TableHelper.GetWebhookSubSteps(GetWorkFlowNameAndVersion(webhookAction), stepId);
 
             MicroflowHttpResponse webhookResult = new()
             {
@@ -106,7 +116,9 @@ namespace Microflow.Webhooks
                 }
             }
 
-            await client.RaiseEventAsync(webhookAction, webhookAction, webhookResult);
+            string orchId = $"{webhookBase}@{webhookAction}@{stepId}";
+
+            await client.RaiseEventAsync(orchId, orchId, webhookResult);
 
             return new(HttpStatusCode.OK);
         }
