@@ -17,17 +17,16 @@ namespace Microflow.Webhooks
     /// </summary>
     public static class Webhooks
     {
-
         /// <summary>
         /// For a webhook defined as "{webhook}", this can be changed to a non-catch-all like "myWebhook"
         /// </summary>
         [FunctionName("Webhook")]
         public static async Task<HttpResponseMessage> Webhook(
         [HttpTrigger(AuthorizationLevel.Function, "get", "post",
-        Route = Constants.MicroflowPath + "/{webhook}/{orchestratorId}/{stepId}")] HttpRequestMessage req,
+        Route = Constants.MicroflowPath + "/{webhook}/{stepId}")] HttpRequestMessage req,
         [DurableClient] IDurableOrchestrationClient orchClient,
-        string webhook, string stepId, string orchestratorId)
-            => await orchClient.GetWebhookResult(req, webhook, string.Empty, string.Empty, orchestratorId, stepId);
+        string webhook, string stepId)
+            => await orchClient.GetWebhookResult(req, webhook, string.Empty, string.Empty, stepId);
 
         ///// <summary>
         ///// For a webhook defined as {name}/{action}, this can be changed to a non-catch-all like "myWebhook/myAction"
@@ -35,10 +34,10 @@ namespace Microflow.Webhooks
         [FunctionName("WebhookWithAction")]
         public static async Task<HttpResponseMessage> WebhookWithAction(
         [HttpTrigger(AuthorizationLevel.Function, "get", "post",
-        Route = Constants.MicroflowPath + "/{webhook}/{action}/{orchestratorId}/{stepId}")] HttpRequestMessage req,
+        Route = Constants.MicroflowPath + "/{webhook}/{action}/{stepId}")] HttpRequestMessage req,
         [DurableClient] IDurableOrchestrationClient orchClient,
-        string webhook, string stepId, string action, string orchestratorId)
-            => await orchClient.GetWebhookResult(req, webhook, $"{action}", string.Empty, orchestratorId, stepId);
+        string webhook, string stepId, string action)
+            => await orchClient.GetWebhookResult(req, webhook, $"{action}", string.Empty, stepId);
 
         /// <summary>
         /// For a webhook defined as {name}/{action}/{subaction}, this can be changed to a non-catch-all like "myWebhook/myAction/mySubAction"
@@ -46,20 +45,29 @@ namespace Microflow.Webhooks
         [FunctionName("WebhookWithActionAndSubAction")]
         public static async Task<HttpResponseMessage> WebhookWithActionAndSubAction(
         [HttpTrigger(AuthorizationLevel.Function, "get", "post",
-        Route = Constants.MicroflowPath + "/{webhook}/{action}/{subaction}/{orchestratorId}/{stepId}")] HttpRequestMessage req,
+        Route = Constants.MicroflowPath + "/{webhook}/{action}/{subaction}/{stepId}")] HttpRequestMessage req,
         [DurableClient] IDurableOrchestrationClient orchClient,
-        string webhook, string stepId, string action, string subaction, string orchestratorId)
-            => await orchClient.GetWebhookResult(req, webhook, action, subaction, orchestratorId, stepId);
+        string webhook, string stepId, string action, string subaction)
+            => await orchClient.GetWebhookResult(req, webhook, action, subaction, stepId);
 
         private static async Task<HttpResponseMessage> GetWebhookResult(this IDurableOrchestrationClient client,
                                                                         HttpRequestMessage req,
                                                                         string webhookBase,
                                                                         string webhookAction,
                                                                         string webhookSubAction,
-                                                                        string orchestratorId,
                                                                         string stepId)
         {
-            var webHooksTask = TableHelper.GetWebhookSubSteps(webhookBase, stepId);
+            bool found = false;
+            for (int i = 0; i < webhookAction.Length; i++)
+            {
+                char c = webhookAction[i];
+                if (c == '@' && found==false)
+                {
+                    
+                }
+            }
+
+            var webHooksTask = TableHelper.GetWebhookSubSteps(webhookSubAction., stepId);
 
             MicroflowHttpResponse webhookResult = new()
             {
@@ -67,26 +75,26 @@ namespace Microflow.Webhooks
                 HttpResponseStatusCode = 200
             };
 
-            string action;
+            //string action;
 
-            if (!string.IsNullOrEmpty(webhookSubAction))
-            {
-                action = $"{webhookBase}/{webhookAction}/{webhookSubAction}";
-            }
-            else if (!string.IsNullOrEmpty(webhookAction))
-            {
-                action = $"{webhookBase}/{webhookAction}";
-            }
-            else
-            {
-                action = $"{webhookBase}";
-            }
+            //if (!string.IsNullOrEmpty(webhookSubAction))
+            //{
+            //    action = $"{webhookBase}/{webhookAction}/{webhookSubAction}";
+            //}
+            //else if (!string.IsNullOrEmpty(webhookAction))
+            //{
+            //    action = $"{webhookBase}/{webhookAction}";
+            //}
+            //else
+            //{
+            //    action = $"{webhookBase}";
+            //}
 
             var subStepsMapping = await webHooksTask;
 
             if (subStepsMapping.Count > 0)
             {
-                var hook = subStepsMapping.Find(h => h.WebhookAction.Equals(action));
+                var hook = subStepsMapping.Find(h => h.WebhookAction.Equals(webhookSubAction));
 
                 if (hook != null)
                 {
@@ -98,7 +106,7 @@ namespace Microflow.Webhooks
                 }
             }
 
-            await client.RaiseEventAsync(orchestratorId, orchestratorId, webhookResult);
+            await client.RaiseEventAsync(webhookAction, webhookAction, webhookResult);
 
             return new(HttpStatusCode.OK);
         }
