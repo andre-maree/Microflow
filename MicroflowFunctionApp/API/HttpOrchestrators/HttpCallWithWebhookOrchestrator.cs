@@ -47,12 +47,25 @@ namespace Microflow.HttpOrchestrators
 #endif
                 #endregion
 
-                // TODO: always use https
+                MicroflowHttpResponse microflowWebhookResponse = null;
 
-                log.LogCritical($"Waiting for webhook: {CallNames.BaseUrl}/{httpCall.WebhookBase}/{httpCall.WebhookId}/action/{httpCall.RowKey}");
-                // wait for the external event, set the timeout
-                MicroflowHttpResponse microflowWebhookResponse = await context.WaitForExternalEvent<MicroflowHttpResponse>($"{httpCall.WebhookBase}@{httpCall.WebhookId}@{httpCall.RowKey}",
+                // TODO: always use https
+                if (httpCall.WebhookSubStepsMapping != null && httpCall.WebhookSubStepsMapping.Length > 0)
+                {
+                    log.LogCritical($"Waiting for webhook: {CallNames.BaseUrl}/{httpCall.WebhookId}/{httpCall.RowKey}/" + "{action}");
+
+                    // wait for the external event, set the timeout
+                    microflowWebhookResponse = await context.WaitForExternalEvent<MicroflowHttpResponse>($"{httpCall.WebhookId}@{httpCall.RowKey}",
                                                                                                            TimeSpan.FromSeconds(httpCall.WebhookTimeoutSeconds));
+                }
+                else
+                {
+                    log.LogCritical($"Waiting for webhook: {CallNames.BaseUrl}/{httpCall.WebhookId}/{httpCall.RowKey}");
+
+                    // wait for the external event, set the timeout
+                    microflowWebhookResponse = await context.WaitForExternalEvent<MicroflowHttpResponse>($"{httpCall.WebhookId}@{httpCall.RowKey}",
+                                                                                                           TimeSpan.FromSeconds(httpCall.WebhookTimeoutSeconds));
+                }
 
                 #region Optional: no stepcount
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_STEPCOUNT

@@ -7,7 +7,6 @@ namespace MicroflowModels
         int WebhookTimeoutSeconds { get; set; }
         bool AsynchronousPollingEnabled { get; set; }
         public string WebhookId { get; set; }
-        public string WebhookBase { get; set; }
         public string WebhookSubStepsMapping { get; set; }
         string CalloutUrl { get; set; }
         string GlobalKey { get; set; }

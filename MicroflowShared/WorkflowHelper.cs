@@ -215,12 +215,10 @@ namespace MicroflowShared
                 {
                     HttpCallWithRetries httpCallRetriesEntity = new(workflowRun.WorkflowName, step.StepNumber.ToString(), step.StepId, sb.ToString())
                     {
-                        WebhookId= step.WebhookId,
-                        WebhookBase = step.WebhookBase,
+                        WebhookId = step.WebhookId,
                         WebhookTimeoutSeconds = step.WebhookTimeoutSeconds,
-                        SubStepsToRunForWebhookTimeout = JsonSerializer.Serialize(step.SubStepsToRunForWebhookTimeout),
-                        WebhookSubStepsMapping = JsonSerializer.Serialize(step.WebhookSubStepsMapping),
-
+                        SubStepsToRunForWebhookTimeout = (step.SubStepsToRunForWebhookTimeout == null || step.SubStepsToRunForWebhookTimeout.Count < 1) ? null : JsonSerializer.Serialize(step.WebhookSubStepsMapping),
+                        WebhookSubStepsMapping = (step.WebhookSubStepsMapping == null || step.WebhookSubStepsMapping.Count < 1) ? null : JsonSerializer.Serialize(step.WebhookSubStepsMapping),
                         StopOnWebhookFailed = step.StopOnWebhookFailed,
                         CalloutUrl = step.CalloutUrl,
                         CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
@@ -244,11 +242,9 @@ namespace MicroflowShared
                     HttpCall httpCallEntity = new(workflowRun.WorkflowName, step.StepNumber.ToString(), step.StepId, sb.ToString())
                     {
                         WebhookId = step.WebhookId,
-                        WebhookBase = step.WebhookBase,
                         WebhookTimeoutSeconds = step.WebhookTimeoutSeconds,
-                        SubStepsToRunForWebhookTimeout = JsonSerializer.Serialize(step.SubStepsToRunForWebhookTimeout),
-                        WebhookSubStepsMapping = JsonSerializer.Serialize(step.WebhookSubStepsMapping),
-
+                        SubStepsToRunForWebhookTimeout = (step.SubStepsToRunForWebhookTimeout == null || step.SubStepsToRunForWebhookTimeout.Count < 1) ? null : JsonSerializer.Serialize(step.WebhookSubStepsMapping),
+                        WebhookSubStepsMapping = (step.WebhookSubStepsMapping == null || step.WebhookSubStepsMapping.Count < 1) ? null : JsonSerializer.Serialize(step.WebhookSubStepsMapping),
                         StopOnWebhookFailed = step.StopOnWebhookFailed,
                         CalloutUrl = step.CalloutUrl,
                         CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
@@ -325,7 +321,6 @@ namespace MicroflowShared
                         CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
                         StopOnWebhookFailed = step.StopOnWebhookFailed,
                         WebhookSubStepsMapping = JsonSerializer.Deserialize<List<SubStepsMappingForActions>>(step.WebhookSubStepsMapping),
-                        WebhookBase = step.WebhookBase,
                         WebhookId = step.WebhookId,
                         //SubSteps = step.SubSteps,
                         //WaitForAllParents = step.

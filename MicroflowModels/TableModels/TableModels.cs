@@ -92,7 +92,6 @@ namespace MicroflowModels
         public string CalloutUrl { get; set; }
 
         public string WebhookId { get; set; }
-        public string WebhookBase { get; set; }
         public int WebhookTimeoutSeconds { get; set; } = 1000;
         public string WebhookSubStepsMapping { get; set; }
         public bool StopOnWebhookFailed { get; set; }
