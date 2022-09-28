@@ -17,10 +17,10 @@ namespace MicroflowTest
         {
             // create a simple workflow with parent step 1, subling children step 2 and 3, and child of 2 and 3 step 4
             // siblings steps 2 and 3 runs in parallel
-            List<Step> workflow = TestWorkflowHelper.CreateTestWorkflow_SimpleSteps();
+            List<Step> stepsList = TestWorkflowHelper.CreateTestWorkflow_SimpleSteps();
 
             // create Microflow with the created workflow
-            (MicroflowModels.Microflow workflow, string workflowName) microflow = TestWorkflowHelper.CreateMicroflow(workflow);
+            (MicroflowModels.Microflow workflow, string workflowName) microflow = TestWorkflowHelper.CreateMicroflow(stepsList);
 
             // set loop to 1, how many time the workflow will execute
             int loop = 1;
@@ -43,6 +43,7 @@ namespace MicroflowTest
             // get the orchestration log to check the results
             List<Microflow.MicroflowTableModels.LogOrchestrationEntity> log = await LogReader.GetOrchLog(microflow.workflowName);
 
+            // check that the orchestraion id is logged
             Assert.IsTrue(log.FindIndex(i => i.OrchestrationId.Equals(startResult.instanceId)) >= 0);
 
             // get the steps log to check the results
@@ -61,6 +62,8 @@ namespace MicroflowTest
             }
 
             Assert.IsTrue(sortedSteps[3].StepNumber == 4);
+
+            Assert.IsTrue(sortedSteps.Count == 4);
         }
 
         [TestMethod]

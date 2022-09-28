@@ -37,24 +37,13 @@ namespace MicroflowTest
         {
             // create 4 steps from 1 to 4, each with a post url merge field
             List<Step> steps = WorkflowManager.CreateSteps(4, 1,"{default_post_url}");
-            
-            // some settings to explore
-            //steps[0].IsHttpGet = true;
-            //steps[0].CallbackTimeoutSeconds = 30;
-            //steps[0].WebhookAction = "approve";
-            //steps[0].CalloutUrl = "http://localhost:7071/SleepTestOrchestrator_HttpStart";
-            //steps[0].SetRetryForStep(1, 2, 1);
-            //steps[0].StopOnActionFailed = true;
-            //steps[0].CalloutTimeoutSeconds = 190;
 
             // add child steps 2 and 3 to 1, steps 2 and 3 executes in parallel
-            steps[1].AddSubSteps(steps[2], steps[3]);
+            steps.StepNumber(1).AddSubSteps(steps.StepNumber(2), steps.StepNumber(3));
+
             // add steps 2 and 3 as parents of step 4
             // step 4 will wait for both 2 and 3
-            steps[4].AddParentSteps(steps[2], steps[3]);
-
-            // remove the top placeholder
-            steps.Remove(steps[0]);
+            steps.StepNumber(4).AddParentSteps(steps.StepNumber(2), steps.StepNumber(3));
 
             return steps;
         }
@@ -63,13 +52,11 @@ namespace MicroflowTest
         {
             List<Step> steps = WorkflowManager.CreateSteps(14, 1, "{default_post_url}");
 
-            steps[1].AddSubSteps(steps[2], steps[3]);
-            steps[2].AddSubSteps(steps[4], steps[5], steps[6], steps[7], steps[8]);
-            steps[3].AddSubSteps(steps[9], steps[10], steps[11], steps[12], steps[13]);
+            steps.StepNumber(1).AddSubSteps(steps.StepNumber(2), steps.StepNumber(3));
+            steps.StepNumber(2).AddSubSteps(steps.StepNumber(4), steps.StepNumber(5), steps.StepNumber(6), steps.StepNumber(7), steps.StepNumber(8));
+            steps.StepNumber(3).AddSubSteps(steps.StepNumber(9), steps.StepNumber(10), steps.StepNumber(11), steps.StepNumber(12), steps.StepNumber(13));
             // 2 groups of 5 parallel steps = 10 parallel steps
-            steps[14].AddParentSteps(steps[4], steps[5], steps[6], steps[7], steps[8], steps[9], steps[10], steps[11], steps[12], steps[13]);
-
-            steps.Remove(steps[0]);
+            steps.StepNumber(14).AddParentSteps(steps.StepNumber(4), steps.StepNumber(5), steps.StepNumber(6), steps.StepNumber(7), steps.StepNumber(8), steps.StepNumber(9), steps.StepNumber(10), steps.StepNumber(11), steps.StepNumber(12), steps.StepNumber(13));
 
             return steps;
         }
@@ -78,15 +65,13 @@ namespace MicroflowTest
         {
             List<Step> steps = WorkflowManager.CreateSteps(8, 1, "{default_post_url}");
 
-            steps[1].AddSubSteps(steps[2], steps[3], steps[4]);
-            steps[2].AddSubSteps(steps[5], steps[6]);
-            steps[3].AddSubSteps(steps[6], steps[7]);
-            steps[4].AddSubSteps(steps[6], steps[8]);
-            steps[5].AddSubSteps(steps[3], steps[6]);
-            steps[6].AddSubSteps(steps[8]);
-            steps[7].AddSubSteps(steps[8]);
-
-            steps.Remove(steps[0]);
+            steps.StepNumber(1).AddSubSteps(steps.StepNumber(2), steps.StepNumber(3), steps.StepNumber(4));
+            steps.StepNumber(2).AddSubSteps(steps.StepNumber(5), steps.StepNumber(6));
+            steps.StepNumber(3).AddSubSteps(steps.StepNumber(6), steps.StepNumber(7));
+            steps.StepNumber(4).AddSubSteps(steps.StepNumber(6), steps.StepNumber(8));
+            steps.StepNumber(5).AddSubSteps(steps.StepNumber(3), steps.StepNumber(6));
+            steps.StepNumber(6).AddSubSteps(steps.StepNumber(8));
+            steps.StepNumber(7).AddSubSteps(steps.StepNumber(8));
 
             return steps;
         }
@@ -96,18 +81,16 @@ namespace MicroflowTest
         {
             List<Step> steps = WorkflowManager.CreateSteps(110, 1, "{default_post_url}");
 
-            steps[1].AddSubStepRange(steps, 3, 11);
-            steps[11].AddSubStepRange(steps, 13, 22);
-            steps[22].AddSubStepRange(steps, 24, 33);
-            steps[33].AddSubStepRange(steps, 35, 44);
-            steps[44].AddSubStepRange(steps, 46, 55);
-            steps[55].AddSubStepRange(steps, 57, 66);
-            steps[66].AddSubStepRange(steps, 68, 77);
-            steps[77].AddSubStepRange(steps, 79, 88);
-            steps[88].AddSubStepRange(steps, 90, 99);
-            steps[99].AddSubStepRange(steps, 101, 110);
-
-            steps.Remove(steps[0]);
+            steps.StepNumber(1).AddSubStepRange(steps, 3, 11);
+            steps.StepNumber(11).AddSubStepRange(steps, 13, 22);
+            steps.StepNumber(22).AddSubStepRange(steps, 24, 33);
+            steps.StepNumber(33).AddSubStepRange(steps, 35, 44);
+            steps.StepNumber(44).AddSubStepRange(steps, 46, 55);
+            steps.StepNumber(55).AddSubStepRange(steps, 57, 66);
+            steps.StepNumber(66).AddSubStepRange(steps, 68, 77);
+            steps.StepNumber(77).AddSubStepRange(steps, 79, 88);
+            steps.StepNumber(88).AddSubStepRange(steps, 90, 99);
+            steps.StepNumber(99).AddSubStepRange(steps, 101, 110);
 
             return steps;
         }

@@ -7,10 +7,12 @@ namespace MicroflowSDK
     public static class WorkflowManager
     {
         public static Step Step(this Microflow microFlow, int stepNumber) => microFlow.Steps.First(s=>s.StepNumber == stepNumber);
-        public static List<Step>  CreateSteps(int count, int fromId, string defaultCalloutURI = "")
+
+        public static Step StepNumber(this List<Step> steps, int stepNumber) => steps.First(s => s.StepNumber == stepNumber);
+
+        public static List<Step> CreateSteps(int count, int fromId, string defaultCalloutURI = "")
         {
             List<Step> stepsList = new();
-            stepsList.Add(new Step()); // placeholder, to make the index and step number the same
 
             for (; fromId <= count; fromId++)
             {
