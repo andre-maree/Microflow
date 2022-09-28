@@ -161,7 +161,7 @@ namespace Microflow.Helpers
                     catch (TimeoutException)
                     {
                         LogErrorEntity errorEntity = new(workflowName, -1,
-                                                                "MicroflowCheckAndWaitForReadyToRun timed out before it could find s ready state",
+                                                                "MicroflowCheckAndWaitForReadyToRun timed out before it could find a ready state",
                                                                 globalKey);
 
                         await context.CallActivityAsync(CallNames.LogError, errorEntity);

@@ -10,6 +10,9 @@ using static MicroflowModels.Constants;
 
 namespace Microflow.FlowControl
 {
+    /// <summary>
+    /// Check if the step can execute taking into account the max concurrent steps in the scale group
+    /// </summary>
     public static class CanStepExecuteNowForScalingGroup
     {
         [FunctionName(ScaleGroupCalls.CanExecuteNowInScaleGroup)]

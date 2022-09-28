@@ -11,7 +11,7 @@ namespace Microflow.FlowControl
     public static class CanStepExecuteNow
     {
         /// <summary>
-        /// Calculate if a step is ready to execute by locking and counting the completed parents - for each run and each step in the run
+        /// Calculate if a step is ready to execute by locking and counting the completed parents
         /// </summary>
         /// <returns>Bool to indicate if this step request can be executed or not</returns>
         [Deterministic]
