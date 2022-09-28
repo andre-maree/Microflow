@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace MicroflowModels
+﻿namespace MicroflowModels
 {
     public interface IHttpCall : IStepEntity
     {

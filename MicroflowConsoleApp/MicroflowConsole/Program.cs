@@ -73,17 +73,17 @@ namespace MicroflowConsole
                 //string webhook = "myhook/myaction/mysub";
                 //// callback by step number
                 microFlow.Step(1).WebhookId = "managerApproval";
-                microFlow.Step(1).WebhookSubStepsMapping = new();
-                microFlow.Step(1).WebhookSubStepsMapping.Add(new()
-                {
-                    WebhookAction = "decline",//microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/decline",
-                    SubStepsToRunForAction = new List<int>() { 2 }
-                });
-                microFlow.Step(1).WebhookSubStepsMapping.Add(new()
-                {
-                    WebhookAction = "approve",
-                    SubStepsToRunForAction = new List<int>() { 3 }
-                });
+                //microFlow.Step(1).WebhookSubStepsMapping = new();
+                //microFlow.Step(1).WebhookSubStepsMapping.Add(new()
+                //{
+                //    WebhookAction = "decline",//microFlow.WorkflowName + "@" + microFlow.WorkflowVersion + "/managerApproval/decline",
+                //    SubStepsToRunForAction = new List<int>() { 2 }
+                //});
+                //microFlow.Step(1).WebhookSubStepsMapping.Add(new()
+                //{
+                //    WebhookAction = "approve",
+                //    SubStepsToRunForAction = new List<int>() { 3 }
+                //});
                 microFlow.Step(4).WaitForAllParents = false;
 
                 //microFlow.Step(1).WebhookTimeoutSeconds = 3;

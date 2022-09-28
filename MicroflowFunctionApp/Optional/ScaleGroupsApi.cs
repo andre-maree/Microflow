@@ -1,6 +1,5 @@
 ﻿#define INCLUDE_scalegroups
 #if INCLUDE_scalegroups
-using Google.Protobuf.WellKnownTypes;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;

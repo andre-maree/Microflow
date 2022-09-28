@@ -8,7 +8,6 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using static MicroflowModels.Constants;
 
 namespace MicroflowShared

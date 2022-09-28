@@ -1,12 +1,10 @@
-﻿using Microflow.Models;
-using MicroflowModels;
+﻿using MicroflowModels;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Primitives;
 using System;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
-using static MicroflowModels.Constants;
 
 namespace Microflow.Helpers
 {
