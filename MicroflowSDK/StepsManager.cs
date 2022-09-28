@@ -6,12 +6,6 @@ namespace MicroflowSDK
 {
     public static class StepsManager
     {
-        public static void SetWebhook(this Step step, string webhookBase, string webhookId)
-        {
-            step.WebhookId = webhookId;
-            step.WebhookBase = webhookBase;
-        }
-
         public static void AddParentSteps(this Step step, params Step[] parents)
         {
             foreach (Step parentStep in parents)
