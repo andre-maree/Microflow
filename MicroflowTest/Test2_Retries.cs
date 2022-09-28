@@ -13,7 +13,7 @@ namespace MicroflowTest
     public class Test2_Retries
     {
         [TestMethod]
-        public async Task CreateTestReties()
+        public async Task Reties()
         {
             List<Step> workflow = TestWorkflowHelper.CreateTestWorkflow_SimpleSteps();
 

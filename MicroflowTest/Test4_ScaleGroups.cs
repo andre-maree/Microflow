@@ -16,7 +16,7 @@ namespace MicroflowTest
         string scaleGroupId = "mytestgroup";
 
         [TestMethod]
-        public async Task SetMaxInstanceCountForScaleGroupTo10()
+        public async Task MaxInstanceCountForScaleGroupTo10()
         {
             // create a simple workflow with parent step 1, subling children step 2 and 3, and child of 2 and 3 step 4
             // siblings steps 2 and 3 runs in parallel
@@ -45,7 +45,7 @@ namespace MicroflowTest
         }
 
         [TestMethod]
-        public async Task SetMaxInstanceCountForScaleGroupTo1()
+        public async Task MaxInstanceCountForScaleGroupTo1()
         {
             // create a simple workflow with parent step 1, subling children step 2 and 3, and child of 2 and 3 step 4
             // siblings steps 2 and 3 runs in parallel

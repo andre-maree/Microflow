@@ -16,7 +16,7 @@ namespace MicroflowTest
     public class Test3_Webhooks
     {
         [TestMethod]
-        public async Task TestBasicWebhook()
+        public async Task BasicWebhook()
         {
             List<Step> workflow = TestWorkflowHelper.CreateTestWorkflow_SimpleSteps();
 
@@ -81,7 +81,7 @@ namespace MicroflowTest
         }
 
         [TestMethod]
-        public async Task TestWebhookWithCallbackActionAndSubStepsIfElse()
+        public async Task WebhookWithCallbackActionAndSubStepsIfElse()
         {
             List<Step> workflow = TestWorkflowHelper.CreateTestWorkflow_SimpleSteps();
 

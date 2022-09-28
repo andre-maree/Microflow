@@ -13,7 +13,7 @@ namespace MicroflowTest
     public class Test5_WaitForAllParents
     {
         [TestMethod]
-        public async Task CreateTestReties()
+        public async Task WaitForAllParents()
         {
             List<Step> workflow = TestWorkflowHelper.CreateTestWorkflow_10StepsParallel();
 
