@@ -102,13 +102,13 @@ namespace MicroflowModels
         public bool ForwardResponseData { get; set; }
         public string SubStepsToRunForWebhookTimeout { get; set; }
 
-        [IgnoreDataMember]
+        //[IgnoreDataMember]
         public string GlobalKey { get; set; }
 
-        [IgnoreDataMember]
+        //[IgnoreDataMember]
         public string RunId { get; set; }
 
-        [IgnoreDataMember]
+        //[IgnoreDataMember]
         public string MainOrchestrationId { get; set; }
     }
 

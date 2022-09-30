@@ -231,7 +231,6 @@ namespace Microflow.FlowControl
                 }
             }
 
-            // call out to micro-service
             // wait for external event flow / webhook
             if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.WebhookId))
             {
@@ -241,7 +240,7 @@ namespace Microflow.FlowControl
 
                     if (HttpCallWithRetries.RetryDelaySeconds > 0)
                     {
-                        MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(CallNames.HttpCallWithWebhookOrchestrator,
+                        MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(CallNames.WebhookOrchestrator,
                                                                                                                                        HttpCallWithRetries.GetRetryOptions(),
                                                                                                                                        $"{HttpCallWithRetries.WebhookId}@{HttpCallWithRetries.RowKey}",
                                                                                                                                        (HttpCallWithRetries, runObjectResponseData, MicroflowHttpResponse));
@@ -249,7 +248,7 @@ namespace Microflow.FlowControl
                         return;
                     }
 
-                    MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallWithWebhookOrchestrator,
+                    MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.WebhookOrchestrator,
                                                                                                                           $"{HttpCallWithRetries.WebhookId}@{HttpCallWithRetries.RowKey}",
                                                                                                                           (HttpCallWithRetries, runObjectResponseData, MicroflowHttpResponse));
                 }

@@ -5,6 +5,8 @@ using System;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using static MicroflowModels.Constants;
+using System.Threading.Tasks;
 
 namespace Microflow.Helpers
 {
@@ -33,13 +35,13 @@ namespace Microflow.Helpers
         }
 
         [Deterministic]
-        public static DurableHttpRequest CreateMicroflowDurableHttpRequest(this HttpCall httpCall, string instanceId, MicroflowHttpResponse microflowHttpResponse, string webHook = null)
+        public static DurableHttpRequest CreateMicroflowDurableHttpRequest(this HttpCall httpCall, string instanceId, MicroflowHttpResponse microflowHttpResponse)
         {
             DurableHttpRequest newDurableHttpRequest;
 
-            string webhook = string.IsNullOrWhiteSpace(webHook)
+            string webhook = string.IsNullOrWhiteSpace(httpCall.WebhookId)
                     ? ""
-                    : $"{webHook}";
+                    : httpCall.WebhookId;
 
             httpCall.CalculateGlobalKey();
 
@@ -98,12 +100,12 @@ namespace Microflow.Helpers
             return newDurableHttpRequest;
         }
 
-        [Deterministic]
+    [Deterministic]
         public static string ParseUrlMicroflowData(this HttpCall httpCall, string instanceId, string webhook)
         {
             StringBuilder sb = new(httpCall.CalloutUrl);
 
-            sb.Replace("<workflowName>", httpCall.PartitionKey);
+            sb.Replace("<WorkflowName>", httpCall.PartitionKey);
             sb.Replace("<MainOrchestrationId>", httpCall.MainOrchestrationId);
             sb.Replace("<SubOrchestrationId>", instanceId);
             sb.Replace("<Webhook>", webhook);

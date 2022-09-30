@@ -5,7 +5,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using static MicroflowModels.Constants;
 
-namespace Microflow.TableLogging
+namespace Microflow.Logging
 {
     public static class TableLogOrchestrationActivity
     {

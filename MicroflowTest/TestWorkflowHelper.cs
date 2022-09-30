@@ -32,7 +32,6 @@ namespace MicroflowTest
 
             return JsonSerializer.Deserialize<Dictionary<string, string>>(jsonString);
         }
-
         public static List<Step> CreateTestWorkflow_SimpleSteps()
         {
             // create 4 steps from 1 to 4, each with a post url merge field
@@ -76,7 +75,6 @@ namespace MicroflowTest
             return steps;
         }
 
-
         public static List<Step> CreateTestWorkflow_110Steps()
         {
             List<Step> steps = WorkflowManager.CreateSteps(110, 1, "{default_post_url}");
@@ -102,7 +100,7 @@ namespace MicroflowTest
                 WorkflowName = "Myflow_ClientX2",
                 WorkflowVersion = "2.1",
                 Steps = workflow,
-                MergeFields = WorkflowManager.CreateMergeFields(),
+                MergeFields = WorkflowManager.CreateMergeFields(new PassThroughParams()),
                 DefaultRetryOptions = new MicroflowRetryOptions()
             };
 
