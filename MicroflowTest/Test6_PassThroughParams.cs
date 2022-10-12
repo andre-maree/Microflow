@@ -22,6 +22,7 @@ namespace MicroflowTest
             stepsList[0].IsHttpGet = false;
             stepsList[0].SubSteps.Clear();
             stepsList[0].WebhookId = "a";
+            //stepsList[3].WaitForAllParents = false;
 
             // create Microflow with the created workflow
             (MicroflowModels.Microflow workflow, string workflowName) microflow = TestWorkflowHelper.CreateMicroflow(stepsList);

@@ -77,6 +77,7 @@ namespace MicroflowModels
         public bool ForwardResponseData { get; set; }
         public List<int> SubStepsToRunForWebhookTimeout { get; set; }
         public string WebhookId { get; set; }
+        public bool EnableWebhook { get; set; }
         public int WebhookTimeoutSeconds { get; set; } = 1000;
         public List<SubStepsMappingForActions> WebhookSubStepsMapping { get; set; }
 

@@ -21,6 +21,13 @@ namespace MicroflowShared
             return tableClient.GetTableClient($"MicroflowLogSteps");
         }
 
+        public static TableClient GetLogWebhookTable()
+        {
+            TableServiceClient tableClient = TableHelper.GetTableClient();
+
+            return tableClient.GetTableClient($"MicroflowLogWebhooks");
+        }
+
         #endregion
     }
 }

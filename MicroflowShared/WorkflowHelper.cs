@@ -215,6 +215,7 @@ namespace MicroflowShared
                     HttpCallWithRetries httpCallRetriesEntity = new(workflowRun.WorkflowName, step.StepNumber.ToString(), step.StepId, sb.ToString())
                     {
                         WebhookId = step.WebhookId,
+                        EnableWebhook = step.EnableWebhook,
                         WebhookTimeoutSeconds = step.WebhookTimeoutSeconds,
                         SubStepsToRunForWebhookTimeout = (step.SubStepsToRunForWebhookTimeout == null || step.SubStepsToRunForWebhookTimeout.Count < 1) ? null : JsonSerializer.Serialize(step.WebhookSubStepsMapping),
                         WebhookSubStepsMapping = (step.WebhookSubStepsMapping == null || step.WebhookSubStepsMapping.Count < 1) ? null : JsonSerializer.Serialize(step.WebhookSubStepsMapping),
@@ -241,6 +242,7 @@ namespace MicroflowShared
                     HttpCall httpCallEntity = new(workflowRun.WorkflowName, step.StepNumber.ToString(), step.StepId, sb.ToString())
                     {
                         WebhookId = step.WebhookId,
+                        EnableWebhook = step.EnableWebhook,
                         WebhookTimeoutSeconds = step.WebhookTimeoutSeconds,
                         SubStepsToRunForWebhookTimeout = (step.SubStepsToRunForWebhookTimeout == null || step.SubStepsToRunForWebhookTimeout.Count < 1) ? null : JsonSerializer.Serialize(step.WebhookSubStepsMapping),
                         WebhookSubStepsMapping = (step.WebhookSubStepsMapping == null || step.WebhookSubStepsMapping.Count < 1) ? null : JsonSerializer.Serialize(step.WebhookSubStepsMapping),
@@ -373,8 +375,6 @@ namespace MicroflowShared
             return tableClient.QueryAsync<HttpCallWithRetries>(filter: $"PartitionKey eq '{workflowName}'");
         }
 
-
-
         public static AsyncPageable<TableEntity> GetStepEntities(string workflowName)
         {
             TableClient tableClient = TableHelper.GetStepsTable();
@@ -441,17 +441,21 @@ namespace MicroflowShared
             // workflow table
             TableClient workflowConfigsTable = GetWorkflowConfigsTable();
 
+            TableClient wwebhookLogTable = TableReferences.GetLogWebhookTable();    
+
             Task<Response<TableItem>> t1 = stepsTable.CreateIfNotExistsAsync();
             Task<Response<TableItem>> t2 = logOrchestrationTable.CreateIfNotExistsAsync();
             Task<Response<TableItem>> t3 = logStepsTable.CreateIfNotExistsAsync();
             Task<Response<TableItem>> t4 = errorsTable.CreateIfNotExistsAsync();
             Task<Response<TableItem>> t5 = workflowConfigsTable.CreateIfNotExistsAsync();
+            Task<Response<TableItem>> t6 = wwebhookLogTable.CreateIfNotExistsAsync();
 
             await t1;
             await t2;
             await t3;
             await t4;
             await t5;
+            await t6;
         }
 
         private static TableClient GetWorkflowConfigsTable()

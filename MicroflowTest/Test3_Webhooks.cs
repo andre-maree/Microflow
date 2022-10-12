@@ -25,7 +25,7 @@ namespace MicroflowTest
             int loop = 1;
             string globalKey = Guid.NewGuid().ToString();
 
-            microflow.workflow.Step(1).WebhookId = "mywebhook-" + Guid.NewGuid().ToString();
+            microflow.workflow.Step(2).WebhookId = "mywebhook";
 
             // Upsert
             bool successUpsert = await TestWorkflowHelper.UpsertWorkFlow(microflow.workflow);
@@ -43,7 +43,8 @@ namespace MicroflowTest
 
                 if (!donewebhook)
                 {
-                    HttpResponseMessage webhookcall = await TestWorkflowHelper.HttpClient.GetAsync($"{TestWorkflowHelper.BaseUrl}/webhooks/{microflow.workflowName}@{microflow.workflow.Step(1).WebhookId}/1");
+                    HttpResponseMessage webhookcall = await TestWorkflowHelper.HttpClient.GetAsync(
+                        $"{TestWorkflowHelper.BaseUrl}/getwebhooks/{microflow.workflowName}/{microflow.workflow.Step(2).WebhookId}/{microflow.workflow.Step(2).StepNumber}");
 
                     if (webhookcall.StatusCode == System.Net.HttpStatusCode.OK)
                     {
@@ -90,7 +91,7 @@ namespace MicroflowTest
             int loop = 1;
             string globalKey = Guid.NewGuid().ToString();
 
-            string webhookId = "mywebhook-" + Guid.NewGuid().ToString();
+            string webhookId = "mywebhook";
 
             microflow.workflow.Step(1).WebhookId = webhookId;
             microflow.workflow.Step(1).WebhookSubStepsMapping = new();
