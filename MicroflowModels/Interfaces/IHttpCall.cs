@@ -6,7 +6,6 @@
         bool AsynchronousPollingEnabled { get; set; }
         public string WebhookId { get; set; }
         public bool EnableWebhook { get; set; }
-        public string WebhookSubStepsMapping { get; set; }
         string CalloutUrl { get; set; }
         string GlobalKey { get; set; }
         bool IsHttpGet { get; set; }

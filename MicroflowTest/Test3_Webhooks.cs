@@ -93,7 +93,7 @@ namespace MicroflowTest
 
             string webhookId = "mywebhook";
 
-            microflow.workflow.Step(1).WebhookId = webhookId;
+            microflow.workflow.Step(1).EnableWebhook = true;
             microflow.workflow.Step(1).WebhookSubStepsMapping = new();
             microflow.workflow.Step(1).WebhookSubStepsMapping.Add(new()
             {
@@ -105,7 +105,7 @@ namespace MicroflowTest
                 WebhookAction = "approve",
                 SubStepsToRunForAction = new List<int>() { 3 }
             });
-            microflow.workflow.Step(4).WaitForAllParents = false;
+            //microflow.workflow.Step(4).WaitForAllParents = false;
 
             // Upsert
             bool successUpsert = await TestWorkflowHelper.UpsertWorkFlow(microflow.workflow);

@@ -6,6 +6,24 @@ namespace Microflow.MicroflowTableModels
 {
     #region TableEntity
 
+    public class WebhookEntity : ITableEntity
+    {
+        public WebhookEntity() { }
+
+        public WebhookEntity(string webhookId, string webhookSubStepsMapping)
+        {
+            PartitionKey = webhookId;
+            RowKey = "0";
+            WebhookSubStepsMapping = webhookSubStepsMapping;
+        }
+
+        public string WebhookSubStepsMapping { get; set; }
+        public string PartitionKey { get; set; }
+        public string RowKey { get; set; }
+        public DateTimeOffset? Timestamp { get; set; }
+        public ETag ETag { get; set; }
+    }
+
     public class LogWebhookEntity : ITableEntity
     {
         public LogWebhookEntity() { }

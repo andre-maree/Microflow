@@ -254,19 +254,19 @@ namespace Microflow.FlowControl
                 }
             }
 
-            //if (HttpCallWithRetries.EnableWebhook)
-            //{
-            //    if (string.IsNullOrWhiteSpace(HttpCallWithRetries.WebhookId))
-            //    {
-            //        HttpCallWithRetries.WebhookId
-            //    }
-            //}
-            // wait for external event flow / webhook
-            if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.WebhookId))
+            if (HttpCallWithRetries.EnableWebhook)
             {
+                if (string.IsNullOrWhiteSpace(HttpCallWithRetries.WebhookId))
+                {
+                    HttpCallWithRetries.WebhookId = SubInstanceId;
+                }
+                //}
+                // wait for external event flow / webhook
+                //if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.WebhookId))
+                //{
                 string webhookRowKey = $"{HttpCallWithRetries.RowKey}~{SubInstanceId}";
 
-                string subInstanceId = $"{MicroflowRun.WorkflowName}~{HttpCallWithRetries.WebhookId}~{webhookRowKey}";
+                //string subInstanceId = $"{MicroflowRun.WorkflowName}~{HttpCallWithRetries.WebhookId}~{webhookRowKey}";
 
                 try
                 {
@@ -274,14 +274,14 @@ namespace Microflow.FlowControl
                     {
                         MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(CallNames.WebhookOrchestrator,
                                                                                                                                        HttpCallWithRetries.GetRetryOptions(),
-                                                                                                                                       subInstanceId,
+                                                                                                                                       HttpCallWithRetries.WebhookId,
                                                                                                                                        (HttpCallWithRetries, runObjectResponseData, MicroflowHttpResponse, webhookRowKey));
 
                         return;
                     }
 
                     MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.WebhookOrchestrator,
-                                                                                                                          subInstanceId,
+                                                                                                                          HttpCallWithRetries.WebhookId,
                                                                                                                           (HttpCallWithRetries, runObjectResponseData, MicroflowHttpResponse, webhookRowKey));
                 }
                 catch (FunctionFailedException fex)

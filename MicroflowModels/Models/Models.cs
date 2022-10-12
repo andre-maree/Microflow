@@ -79,6 +79,8 @@ namespace MicroflowModels
         public string WebhookId { get; set; }
         public bool EnableWebhook { get; set; }
         public int WebhookTimeoutSeconds { get; set; } = 1000;
+
+        [DataMember(Name = "RetryOptions", EmitDefaultValue = false)]
         public List<SubStepsMappingForActions> WebhookSubStepsMapping { get; set; }
 
         [DataMember(Name = "WaitForAllParents", EmitDefaultValue = false)]
