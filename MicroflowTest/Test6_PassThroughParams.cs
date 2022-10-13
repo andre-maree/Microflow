@@ -1,4 +1,5 @@
 using MicroflowModels;
+using MicroflowSDK;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -13,7 +14,7 @@ namespace MicroflowTest
     public class Test6_PassThroughParams
     {
         [TestMethod]
-        public async Task PassAllParams()
+        public async Task HttpGet_PassAllParams()
         {
             // create a simple workflow with parent step 1, subling children step 2 and 3, and child of 2 and 3 step 4
             // siblings steps 2 and 3 runs in parallel
@@ -44,6 +45,9 @@ namespace MicroflowTest
             (string instanceId, string statusUrl) startResult = await TestWorkflowHelper.StartMicroflow(microflow, loop, globalKey);
 
             //// CHECK RESULTS ////
+            ///
+            // get the steps log to check the results
+            List<Microflow.MicroflowTableModels.LogStepEntity> steps = await LogReader.GetStepsLog(microflow.workflowName, startResult.instanceId);
 
             // get the orchestration log to check the results
             List<Microflow.MicroflowTableModels.LogOrchestrationEntity> log = await LogReader.GetOrchLog(microflow.workflowName);
@@ -51,24 +55,19 @@ namespace MicroflowTest
             // check that the orchestraion id is logged
             Assert.IsTrue(log.FindIndex(i => i.OrchestrationId.Equals(startResult.instanceId)) >= 0);
 
-            // get the steps log to check the results
-            List<Microflow.MicroflowTableModels.LogStepEntity> steps = await LogReader.GetStepsLog(microflow.workflowName, startResult.instanceId);
-
             List<Microflow.MicroflowTableModels.LogStepEntity> sortedSteps = steps.OrderBy(e => e.EndDate).ToList();
 
             Assert.IsTrue(sortedSteps[0].StepNumber == 1);
 
-            //if (sortedSteps[1].StepNumber == 2)
-            //    Assert.IsTrue(sortedSteps[2].StepNumber == 3);
-            //else
-            //{
-            //    Assert.IsTrue(sortedSteps[1].StepNumber == 3);
-            //    Assert.IsTrue(sortedSteps[2].StepNumber == 2);
-            //}
+            string blobHttpRosponse = await HttpBlobDataManager.GetHttpBlob(microflow.workflowName, sortedSteps[0].StepNumber, sortedSteps[0].RunId, sortedSteps[0].SubOrchestrationId);
 
-            //Assert.IsTrue(sortedSteps[3].StepNumber == 4);
+            Assert.IsTrue(blobHttpRosponse.Equals("{\"success\":\"true\"}\n"));
 
-            //Assert.IsTrue(sortedSteps.Count == 4);
+            var arr = sortedSteps[0].PartitionKey.Split("__");
+
+            var s = $"https://reqbin.com/echo/get/json?WorkflowName=Myflow_ClientX2@2.1&MainOrchestrationId={arr[1]}&SubOrchestrationId={sortedSteps[0].SubOrchestrationId}&WebhookId=a&RunId={sortedSteps[0].RunId}&StepNumber=1&GlobalKey={sortedSteps[0].GlobalKey}&StepId={stepsList[0].StepId}";
+
+            Assert.IsTrue(s.Equals(sortedSteps[0].CalloutUrl));
         }
     }
 }

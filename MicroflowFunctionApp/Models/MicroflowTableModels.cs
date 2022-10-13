@@ -94,7 +94,19 @@ namespace Microflow.MicroflowTableModels
     {
         public LogStepEntity() { }
 
-        public LogStepEntity(bool isStart, string workflowName, string rowKey, int stepNumber, string mainOrchestrationId, string runId, string globalKey, string? calloutUrl = null, bool? success = null, int? httpStatusCode = null, string message = null, string? webhook = null)
+        public LogStepEntity(bool isStart,
+                             string workflowName,
+                             string rowKey,
+                             int stepNumber,
+                             string mainOrchestrationId,
+                             string runId,
+                             string globalKey,
+                             string? calloutUrl = null,
+                             bool? success = null,
+                             int? httpStatusCode = null,
+                             string message = null,
+                             string? subOrchestrationId = null,
+                             string? webhookId = null)
         {
             PartitionKey = workflowName + "__" + mainOrchestrationId;
             RowKey = rowKey;
@@ -102,6 +114,7 @@ namespace Microflow.MicroflowTableModels
             GlobalKey = globalKey;
             RunId = runId;
             CalloutUrl = calloutUrl;
+            SubOrchestrationId = subOrchestrationId;
 
             if (isStart)
                 StartDate = DateTime.UtcNow;
@@ -121,6 +134,7 @@ namespace Microflow.MicroflowTableModels
         public string RunId { get; set; }
         public string GlobalKey { get; set; }
         public string CalloutUrl { get; set; }
+        public string SubOrchestrationId { get; set; }
         public string WebhookId { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }

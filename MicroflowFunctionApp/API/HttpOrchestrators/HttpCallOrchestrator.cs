@@ -123,7 +123,7 @@ namespace Microflow.HttpOrchestrators
         {
             await context.CallActivityAsync(
                 CallNames.LogMicroflowHttpData,
-                    ($"{workflowName}@{stepNumber}@{runId}${context.InstanceId}", data, isRequest)
+                    ($"{workflowName}@{stepNumber}@{runId}@{context.InstanceId}", data, isRequest)
             );
         }
     }

@@ -179,7 +179,7 @@ namespace MicroflowTest
                     querystring += $"{param.Name}=<{param.Name}>&";
                 }
             }
-            querystring.Remove(querystring.Length - 1);
+            querystring = querystring.Remove(querystring.Length - 1);
             //string querystring2 = "?WorkflowName=<WorkflowName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&Webhook=<Webhook>&RunId=<RunId>&StepNumber=<StepNumber>&GlobalKey=<GlobalKey>&StepId=<StepId>";
 
             Dictionary<string, string> mergeFields = new();
