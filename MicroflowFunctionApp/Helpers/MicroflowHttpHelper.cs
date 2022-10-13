@@ -99,5 +99,23 @@ namespace Microflow.Helpers
 
             return newDurableHttpRequest;
         }
+
+
+        [Deterministic]
+        public static void ParseUrlMicroflowData(IHttpCallWithRetries httpCall, string instanceId)
+        {
+            StringBuilder sb = new(httpCall.CalloutUrl);
+
+            sb.Replace("<WorkflowName>", httpCall.PartitionKey);
+            sb.Replace("<MainOrchestrationId>", httpCall.MainOrchestrationId);
+            sb.Replace("<SubOrchestrationId>", instanceId);
+            sb.Replace("<WebhookId>", httpCall.WebhookId);
+            sb.Replace("<RunId>", httpCall.RunId);
+            sb.Replace("<StepId>", httpCall.StepId);
+            sb.Replace("<StepNumber>", httpCall.RowKey);
+            sb.Replace("<GlobalKey>", httpCall.GlobalKey);
+
+            httpCall.CalloutUrl = sb.ToString();
+        }
     }
 }

@@ -10,7 +10,7 @@ namespace MicroflowSDK
         public bool WorkflowName { get; set; } = true;
         public bool MainOrchestrationId { get; set; } = true;
         public bool SubOrchestrationId { get; set; } = true;
-        public bool Webhook { get; set; } = true;
+        public bool WebhookId { get; set; } = true;
         public bool RunId { get; set; } = true;
         public bool StepNumber { get; set; } = true;
         public bool GlobalKey { get; set; } = true;
@@ -34,31 +34,6 @@ namespace MicroflowSDK
             }
 
             return stepsList;
-        }
-
-        public static Dictionary<string, string> CreateMergeFields(PassThroughParams passThroughParams)
-        {
-            PropertyInfo[] props = passThroughParams.GetType().GetProperties();
-            string querystring = "?";
-            foreach (var param in props)
-            {
-                var val = param.GetValue(passThroughParams);
-                if ((bool)val == true)
-                {
-                    querystring += $"{param.Name}=<{param.Name}>&";
-                }
-            }
-            querystring = querystring.Remove(querystring.Length - 1);
-            //string querystring2 = "?WorkflowName=<WorkflowName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&Webhook=<Webhook>&RunId=<RunId>&StepNumber=<StepNumber>&GlobalKey=<GlobalKey>&StepId=<StepId>";
-
-            Dictionary<string, string> mergeFields = new();
-            // use 
-            mergeFields.Add("default_post_url", "https://reqbin.com/echo/post/json");// + querystring);
-            // set the callout url to the new SleepTestOrchestrator http normal function url
-            //mergeFields.Add("default_post_url", baseUrl + "/SleepTestOrchestrator_HttpStart" + querystring);
-            //mergeFields.Add("default_post_url", baseUrl + "/testpost" + querystring);
-
-            return mergeFields;
         }
     }
 }

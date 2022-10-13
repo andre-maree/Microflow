@@ -20,16 +20,11 @@ namespace Microflow.Logging
         {
             string prefix = input.isRequest ? "request-" : "response-";
 
-            BlobContainerClient blobContainerClient = new BlobContainerClient("UseDevelopmentStorage=true", "microflow-httpdata");
+            BlobContainerClient blobContainerClient = new("UseDevelopmentStorage=true", "microflow-httpdata");
 
             try
             {
-
-                //blobContainerClient.CreateIfNotExists();
-
                 await blobContainerClient.UploadBlobAsync(prefix + input.blobName, BinaryData.FromString(input.data));
-                //var blobServiceClient = new BlobServiceClient("AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;DefaultEndpointsProtocol=http;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;TableEndpoint=http://127.0.0.1:10002/devstoreaccount1;");
-                //await logEntity.LogStep();
             }
             catch (RequestFailedException ex) when (ex.Status == 404)
             {
@@ -37,11 +32,6 @@ namespace Microflow.Logging
 
                 await BlobLogResponse(input);
             }
-        }
-
-        private static async Task CreateContainer(BlobContainerClient blobContainerClient)
-        {
-            await blobContainerClient.CreateIfNotExistsAsync();
         }
     }
 }

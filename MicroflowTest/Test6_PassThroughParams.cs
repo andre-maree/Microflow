@@ -19,13 +19,13 @@ namespace MicroflowTest
             // siblings steps 2 and 3 runs in parallel
             List<Step> stepsList = TestWorkflowHelper.CreateTestWorkflow_SimpleSteps();
             stepsList.RemoveRange(1, 3);
-            stepsList[0].IsHttpGet = false;
+            stepsList[0].IsHttpGet = true;
             stepsList[0].SubSteps.Clear();
             stepsList[0].WebhookId = "a";
             //stepsList[3].WaitForAllParents = false;
 
             // create Microflow with the created workflow
-            (MicroflowModels.Microflow workflow, string workflowName) microflow = TestWorkflowHelper.CreateMicroflow(stepsList);
+            (MicroflowModels.Microflow workflow, string workflowName) microflow = TestWorkflowHelper.CreateMicroflow(stepsList, true);
 
             // set loop to 1, how many time the workflow will execute
             int loop = 1;

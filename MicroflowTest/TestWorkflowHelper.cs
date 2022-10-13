@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -93,14 +94,14 @@ namespace MicroflowTest
             return steps;
         }
 
-        public static (MicroflowModels.Microflow microflow, string workflowName) CreateMicroflow(List<Step> workflow)
+        public static (MicroflowModels.Microflow microflow, string workflowName) CreateMicroflow(List<Step> workflow, bool? isHttpGet = false)
         {
             MicroflowModels.Microflow microflow = new()
             {
                 WorkflowName = "Myflow_ClientX2",
                 WorkflowVersion = "2.1",
                 Steps = workflow,
-                MergeFields = WorkflowManager.CreateMergeFields(new PassThroughParams()),
+                MergeFields = CreateMergeFields(new PassThroughParams(), isHttpGet.Value),
                 DefaultRetryOptions = new MicroflowRetryOptions()
             };
 
@@ -163,6 +164,32 @@ namespace MicroflowTest
 
             Dictionary<string, int> scaleGroupGet = await ScaleGroupsManager.GetScaleGroupsWithMaxInstanceCounts(scaleGroupId, BaseUrl, HttpClient);
             Assert.IsTrue(scaleGroupGet[scaleGroupId] == maxConcurrentInstanceCount);
+        }
+
+        public static Dictionary<string, string> CreateMergeFields(PassThroughParams passThroughParams, bool IsGet)
+        {
+            string method = IsGet ? "get" : "post";
+            PropertyInfo[] props = passThroughParams.GetType().GetProperties();
+            string querystring = "?";
+            foreach (var param in props)
+            {
+                var val = param.GetValue(passThroughParams);
+                if ((bool)val == true)
+                {
+                    querystring += $"{param.Name}=<{param.Name}>&";
+                }
+            }
+            querystring.Remove(querystring.Length - 1);
+            //string querystring2 = "?WorkflowName=<WorkflowName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&Webhook=<Webhook>&RunId=<RunId>&StepNumber=<StepNumber>&GlobalKey=<GlobalKey>&StepId=<StepId>";
+
+            Dictionary<string, string> mergeFields = new();
+            // use 
+            mergeFields.Add("default_post_url", $"https://reqbin.com/echo/{method}/json" + querystring);
+                                                                                     // set the callout url to the new SleepTestOrchestrator http normal function url
+                                                                                     //mergeFields.Add("default_post_url", baseUrl + "/SleepTestOrchestrator_HttpStart" + querystring);
+                                                                                     //mergeFields.Add("default_post_url", baseUrl + "/testpost" + querystring);
+
+            return mergeFields;
         }
     }
 }

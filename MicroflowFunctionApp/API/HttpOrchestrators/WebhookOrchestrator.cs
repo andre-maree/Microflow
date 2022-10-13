@@ -22,7 +22,7 @@ namespace Microflow.HttpOrchestrators
         {
             ILogger log = context.CreateReplaySafeLogger(inLog);
 
-            (HttpCall httpCall, MicroflowHttpResponse callOutResponse, MicroflowHttpResponse runObjectResponse, string webhookRowKey) = context.GetInput<(HttpCall, MicroflowHttpResponse, MicroflowHttpResponse, string)>();
+            (HttpCall httpCall, MicroflowHttpResponse callOutResponse, MicroflowHttpResponse runObjectResponse) = context.GetInput<(HttpCall, MicroflowHttpResponse, MicroflowHttpResponse)>();
 
             #region Optional: no stepcount
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_STEPCOUNT
@@ -45,6 +45,8 @@ namespace Microflow.HttpOrchestrators
                 ////////////////////////////////////////////////
 #endif
                 #endregion
+
+                string webhookRowKey = $"{httpCall.RowKey}~{httpCall.WebhookId}~{context.InstanceId}";
 
                 await LogWebhookCreate(context, httpCall.PartitionKey, webhookRowKey, httpCall.RunId);
 

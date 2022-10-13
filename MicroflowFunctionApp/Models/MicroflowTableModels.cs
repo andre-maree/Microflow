@@ -121,7 +121,7 @@ namespace Microflow.MicroflowTableModels
         public string RunId { get; set; }
         public string GlobalKey { get; set; }
         public string CalloutUrl { get; set; }
-        public string Webhook { get; set; }
+        public string WebhookId { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public string PartitionKey { get; set; }
