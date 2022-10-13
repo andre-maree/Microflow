@@ -119,7 +119,11 @@ namespace MicroflowTest
             string instanceId = "";
             string statusUrl = "";
 
-            if (task.StatusCode == System.Net.HttpStatusCode.Accepted)
+            if (task.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                instanceId = await task.Content.ReadAsStringAsync();
+            }
+            else if (task.StatusCode == System.Net.HttpStatusCode.Accepted)
             {
                 string content = await task.Content.ReadAsStringAsync();
                     OrchResult? res = JsonSerializer.Deserialize<OrchResult>(content);
