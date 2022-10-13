@@ -195,7 +195,7 @@ namespace MicroflowShared
             List<TableTransactionAction> batch = new();
             List<Task> batchTasks = new();
             TableClient stepsTable = TableHelper.GetStepsTable();
-            TableClient webhooksTable = TableReferences.GetWebhookTable();
+            TableClient webhooksTable = TableHelper.GetWebhooksTable();
             Step stepContainer = new(-1, null);
             StringBuilder sb = new();
             List<Step> steps = workflow.Steps;
@@ -209,11 +209,14 @@ namespace MicroflowShared
 
             for (int i = 0; i < steps.Count; i++)
             {
-                Step step = steps.ElementAt(i);
+                Step step = steps[i];
 
-                if (step.EnableWebhook && step.SubStepsToRunForWebhookTimeout != null && step.SubStepsToRunForWebhookTimeout.Count < 1)
+                if (step.EnableWebhook && step.WebhookSubStepsMapping != null && step.WebhookSubStepsMapping.Count > 0)
                 {
-                    Webhook webhookEntity = new(step.WebhookId, JsonSerializer.Serialize(step.SubStepsToRunForWebhookTimeout));
+                    step.WebhookId = string.IsNullOrWhiteSpace(step.WebhookId) ? Guid.NewGuid().ToString() : step.WebhookId;
+
+                    Webhook webhookEntity = new(step.WebhookId, JsonSerializer.Serialize(step.WebhookSubStepsMapping));
+
                     webhookTasks.Add(UpsertWebhook(webhookTasks, webhookEntity, webhooksTable));
                 }
 
@@ -453,10 +456,10 @@ namespace MicroflowShared
             TableClient stepsTable = TableHelper.GetStepsTable();
 
             // MicroflowLog table
-            TableClient logOrchestrationTable = TableReferences.GetLogOrchestrationTable();
+            TableClient logOrchestrationTable = TableHelper.GetLogOrchestrationTable();
 
             // MicroflowLog table
-            TableClient logStepsTable = TableReferences.GetLogStepsTable();
+            TableClient logStepsTable = TableHelper.GetLogStepsTable();
 
             // Error table
             TableClient errorsTable = TableHelper.GetErrorsTable();
@@ -464,9 +467,9 @@ namespace MicroflowShared
             // workflow table
             TableClient workflowConfigsTable = GetWorkflowConfigsTable();
 
-            TableClient webhookLogTable = TableReferences.GetLogWebhookTable();
+            TableClient webhookLogTable = TableHelper.GetLogWebhookTable();
 
-            TableClient webhookTable = TableReferences.GetWebhookTable();
+            TableClient webhookTable = TableHelper.GetWebhooksTable();
 
             Task<Response<TableItem>> t1 = stepsTable.CreateIfNotExistsAsync();
             Task<Response<TableItem>> t2 = logOrchestrationTable.CreateIfNotExistsAsync();

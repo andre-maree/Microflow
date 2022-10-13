@@ -48,6 +48,7 @@ namespace Microflow.HttpOrchestrators
 #endif
                 #endregion
 
+                // log start
                 Task logTask = LogMicroflowHttpData(context, durableHttpRequest.Content, httpCall.PartitionKey, httpCall.RowKey, httpCall.RunId, true);
 
                 Task<DurableHttpResponse> durableHttpResponseTask = context.CallHttpAsync(durableHttpRequest);
@@ -65,6 +66,7 @@ namespace Microflow.HttpOrchestrators
 #endif
                 #endregion
 
+                // log end
                 await LogMicroflowHttpData(context, durableHttpResponseTask.Result.Content, httpCall.PartitionKey, httpCall.RowKey, httpCall.RunId, false);
 
                 return durableHttpResponseTask.Result.GetMicroflowResponse(httpCall.ForwardResponseData);

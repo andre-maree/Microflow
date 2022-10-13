@@ -8,6 +8,7 @@ using Microflow.MicroflowTableModels;
 using MicroflowShared;
 using System.Collections.Generic;
 using System.Linq;
+using MicroflowModels.Helpers;
 
 namespace Microflow.Helpers
 {
@@ -17,28 +18,28 @@ namespace Microflow.Helpers
 
         public static async Task LogStep(this LogStepEntity logEntity)
         {
-            TableClient tableClient = TableReferences.GetLogStepsTable();
+            TableClient tableClient = TableHelper.GetLogStepsTable();
 
             await tableClient.UpsertEntityAsync(logEntity);
         }
 
         public static async Task LogOrchestration(this LogOrchestrationEntity logEntity)
         {
-            TableClient tableClient = TableReferences.GetLogOrchestrationTable();
+            TableClient tableClient = TableHelper.GetLogOrchestrationTable();
 
             await tableClient.UpsertEntityAsync(logEntity);
         }
 
         public static async Task LogWebhook(this LogWebhookEntity logEntity)
         {
-            TableClient tableClient = TableReferences.GetLogWebhookTable();
+            TableClient tableClient = TableHelper.GetLogWebhookTable();
 
             await tableClient.UpsertEntityAsync(logEntity);
         }
 
         public static async Task<List<LogWebhookEntity>> GetWebhooks(string workflowName, string webhookId, int stepNumber, string instanceGuid = "")
         {
-            TableClient tableClient = TableReferences.GetLogWebhookTable();
+            TableClient tableClient = TableHelper.GetLogWebhookTable();
 
             string query = $"(PartitionKey eq '{workflowName}' or PartitionKey >= '{workflowName}~' and PartitionKey < '{workflowName}~~') and RowKey lt '{stepNumber + 1}' and RowKey gt '{stepNumber}~";
 

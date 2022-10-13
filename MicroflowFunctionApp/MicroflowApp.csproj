@@ -124,7 +124,9 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MicroFlowModels\MicroflowModels.csproj" />
-    <ProjectReference Include="..\MicroflowShared\MicroflowShared.csproj" />
+    <ProjectReference Include="..\MicroflowShared\MicroflowShared.csproj">
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">

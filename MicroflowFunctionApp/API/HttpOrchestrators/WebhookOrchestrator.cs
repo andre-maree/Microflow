@@ -46,9 +46,7 @@ namespace Microflow.HttpOrchestrators
 #endif
                 #endregion
 
-                string partitionKey = $"{httpCall.PartitionKey}~{httpCall.WebhookId}";
-
-                await LogWebhookCreate(context, partitionKey, webhookRowKey, httpCall.RunId);
+                await LogWebhookCreate(context, httpCall.PartitionKey, webhookRowKey, httpCall.RunId);
 
                 MicroflowHttpResponse microflowWebhookResponse = null;
 
@@ -83,7 +81,7 @@ namespace Microflow.HttpOrchestrators
                 // check for action failed
                 if (microflowWebhookResponse.HttpResponseStatusCode >= 200 && microflowWebhookResponse.HttpResponseStatusCode < 300)
                 {
-                    await LogWebhookAction(context, partitionKey, webhookRowKey, microflowWebhookResponse.Action);
+                    await LogWebhookAction(context, httpCall.PartitionKey, webhookRowKey, microflowWebhookResponse.Action);
 
                     log.LogWarning($"Step {httpCall.RowKey} webhook {context.InstanceId} successful at {context.CurrentUtcDateTime:HH:mm:ss}");
 

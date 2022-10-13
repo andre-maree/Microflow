@@ -1,3 +1,4 @@
+using Microflow.Webhooks;
 using MicroflowModels;
 using MicroflowSDK;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -25,7 +26,8 @@ namespace MicroflowTest
             int loop = 1;
             string globalKey = Guid.NewGuid().ToString();
 
-            microflow.workflow.Step(2).WebhookId = "mywebhook";
+            microflow.workflow.Step(2).WebhookId = Guid.NewGuid().ToString();
+            microflow.workflow.Step(2).EnableWebhook = true;
 
             // Upsert
             bool successUpsert = await TestWorkflowHelper.UpsertWorkFlow(microflow.workflow);
@@ -43,8 +45,9 @@ namespace MicroflowTest
 
                 if (!donewebhook)
                 {
-                    HttpResponseMessage webhookcall = await TestWorkflowHelper.HttpClient.GetAsync(
-                        $"{TestWorkflowHelper.BaseUrl}/getwebhooks/{microflow.workflowName}/{microflow.workflow.Step(2).WebhookId}/{microflow.workflow.Step(2).StepNumber}");
+                    //HttpResponseMessage webhookcall = await TestWorkflowHelper.HttpClient.GetAsync(
+                    //    $"{TestWorkflowHelper.BaseUrl}/getwebhooks/{microflow.workflowName}/{microflow.workflow.Step(2).WebhookId}/{microflow.workflow.Step(2).StepNumber}");
+                    HttpResponseMessage webhookcall = await TestWorkflowHelper.HttpClient.GetAsync($"{TestWorkflowHelper.BaseUrl}/webhooks/{microflow.workflow.Step(2).WebhookId}");
 
                     if (webhookcall.StatusCode == System.Net.HttpStatusCode.OK)
                     {
@@ -91,8 +94,9 @@ namespace MicroflowTest
             int loop = 1;
             string globalKey = Guid.NewGuid().ToString();
 
-            string webhookId = "mywebhook";
+            string webhookId = Guid.NewGuid().ToString();// "mywebhook";
 
+            microflow.workflow.Step(1).WebhookId = webhookId;
             microflow.workflow.Step(1).EnableWebhook = true;
             microflow.workflow.Step(1).WebhookSubStepsMapping = new();
             microflow.workflow.Step(1).WebhookSubStepsMapping.Add(new()
@@ -105,7 +109,7 @@ namespace MicroflowTest
                 WebhookAction = "approve",
                 SubStepsToRunForAction = new List<int>() { 3 }
             });
-            //microflow.workflow.Step(4).WaitForAllParents = false;
+            microflow.workflow.Step(4).WaitForAllParents = false;
 
             // Upsert
             bool successUpsert = await TestWorkflowHelper.UpsertWorkFlow(microflow.workflow);
@@ -123,7 +127,7 @@ namespace MicroflowTest
 
                 if (!donewebhook)
                 {
-                    HttpResponseMessage webhookcall = await TestWorkflowHelper.HttpClient.GetAsync($"{TestWorkflowHelper.BaseUrl}/webhooks/{microflow.workflowName}@{webhookId}/1/approve");
+                    HttpResponseMessage webhookcall = await TestWorkflowHelper.HttpClient.GetAsync($"{TestWorkflowHelper.BaseUrl}/webhooks/{webhookId}/approve");
 
                     if (webhookcall.StatusCode == System.Net.HttpStatusCode.OK)
                     {

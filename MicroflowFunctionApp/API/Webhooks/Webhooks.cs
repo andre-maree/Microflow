@@ -10,7 +10,7 @@ using MicroflowModels;
 namespace Microflow.Webhooks
 {
     /// <summary>
-    /// This is a generic webhooks implementation with /webhooks/{webhookId}/{stepId}/{action}
+    /// This is a generic webhooks implementation with /webhooks/{webhookId}/{action}
     /// Substeps to execute can be set with the step`s WebhookSubStepsMapping property, accociated to the action
     /// </summary>
     public static class Webhooks
@@ -24,7 +24,7 @@ namespace Microflow.Webhooks
             => await orchClient.ProcessWebhook(webhookId, string.Empty);
 
         ///// <summary>
-        ///// For a webhook defined as {webhookId}/{stepId}/{action}
+        ///// For a webhook defined as {webhookId}/{action}
         ///// </summary>
         [FunctionName("WebhookWithAction")]
         public static async Task<HttpResponseMessage> WebhookWithAction(
@@ -44,16 +44,14 @@ namespace Microflow.Webhooks
                 HttpResponseStatusCode = 200
             };
 
-            if(string.IsNullOrEmpty(action))
+            if (string.IsNullOrEmpty(action))
             {
                 await client.RaiseEventAsync(webhookId, webhookId, webhookResult);
 
                 return new(HttpStatusCode.OK);
             }
 
-            string[] arr = webhookId.Split('~');
-
-            var webHooksTask = TableHelper.GetWebhookSubSteps(arr[0], arr[2]);
+            var webHooksTask = TableHelper.GetWebhookSubSteps(webhookId);
 
             var subStepsMapping = await webHooksTask;
 

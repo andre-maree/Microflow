@@ -256,17 +256,7 @@ namespace Microflow.FlowControl
 
             if (HttpCallWithRetries.EnableWebhook)
             {
-                if (string.IsNullOrWhiteSpace(HttpCallWithRetries.WebhookId))
-                {
-                    HttpCallWithRetries.WebhookId = SubInstanceId;
-                }
-                //}
-                // wait for external event flow / webhook
-                //if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.WebhookId))
-                //{
-                string webhookRowKey = $"{HttpCallWithRetries.RowKey}~{SubInstanceId}";
-
-                //string subInstanceId = $"{MicroflowRun.WorkflowName}~{HttpCallWithRetries.WebhookId}~{webhookRowKey}";
+                string webhookRowKey = $"{HttpCallWithRetries.RowKey}~{HttpCallWithRetries.WebhookId}~{SubInstanceId}";
 
                 try
                 {

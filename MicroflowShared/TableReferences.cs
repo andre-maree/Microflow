@@ -7,33 +7,6 @@ namespace MicroflowShared
     {
         #region Get table references
 
-        public static TableClient GetLogOrchestrationTable()
-        {
-            TableServiceClient tableClient = TableHelper.GetTableClient();
-
-            return tableClient.GetTableClient($"MicroflowLogOrchestrations");
-        }
-
-        public static TableClient GetLogStepsTable()
-        {
-            TableServiceClient tableClient = TableHelper.GetTableClient();
-
-            return tableClient.GetTableClient($"MicroflowLogSteps");
-        }
-
-        public static TableClient GetLogWebhookTable()
-        {
-            TableServiceClient tableClient = TableHelper.GetTableClient();
-
-            return tableClient.GetTableClient($"MicroflowLogWebhooks");
-        }
-
-        public static TableClient GetWebhookTable()
-        {
-            TableServiceClient tableClient = TableHelper.GetTableClient();
-
-            return tableClient.GetTableClient($"MicroflowWebhooks");
-        }
 
         #endregion
     }
