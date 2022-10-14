@@ -29,7 +29,7 @@ During the workflow creation phase, a step can be set to call out to an endpoint
         WorkflowControl: [GET] http://localhost:7071/microflow/v1/WorkflowControl/{cmd}/{workflowName}/{workflowVersion}
 
 ### Getting Started:
-Visual Stodio 2022 with C# is needed. Clone the repo locally and open the two solutions: Microflow.sln and MicroflowTest.sln. To get started with Microflow, only these two api calls are needed: UpsertWorkflow and MicroflowStart. This can be done by simply running included unit test in the Microflow.sln. First start running the MicroflowApp in the Microflow.sln, and then run the GetStartedWorkflow test in the MicroflowTest.sln.
+Visual Stodio 2022 with C# is needed. Clone the repo locally and open the two solutions: Microflow.sln and MicroflowTest.sln. To get started with Microflow, only these two api calls are needed: UpsertWorkflow and MicroflowStart. This can be done by simply running included unit test in the MicroflowTest.sln. First start running the MicroflowApp in the Microflow.sln, and then run the GetStartedWorkflow test in the MicroflowTest.sln.
    
 ```csharp
 
