@@ -30,8 +30,12 @@ During the workflow creation phase, a step can be set to call out to an endpoint
 
 ### Getting Started:
 Visual Stodio 2022 with C# is needed. Clone the repo locally and open the two solutions: Microflow.sln and MicroflowTest.sln. To get started with Microflow, only these two api calls are needed: UpsertWorkflow and MicroflowStart. This can be done by simply running included unit test in the MicroflowTest.sln:
-    
-    public class Test1_WorkflowExecution
-    {
-        [TestMethod]
-        public async Task GetStartedWorkflow()
+   
+```csharp
+
+public class Test1_WorkflowExecution
+{
+    [TestMethod]
+    public async Task GetStartedWorkflow()
+
+```
