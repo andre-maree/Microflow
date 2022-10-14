@@ -1,10 +1,10 @@
+using Microflow.MicroflowTableModels;
 using MicroflowModels;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace MicroflowTest
@@ -41,15 +41,15 @@ namespace MicroflowTest
             //// CHECK RESULTS ////
 
             // get the orchestration log to check the results
-            List<Microflow.MicroflowTableModels.LogOrchestrationEntity> log = await LogReader.GetOrchLog(microflow.workflowName);
+            List<LogOrchestrationEntity> log = await LogReader.GetOrchLog(microflow.workflowName);
 
             // check that the orchestraion id is logged
             Assert.IsTrue(log.FindIndex(i => i.OrchestrationId.Equals(startResult.instanceId)) >= 0);
 
             // get the steps log to check the results
-            List<Microflow.MicroflowTableModels.LogStepEntity> steps = await LogReader.GetStepsLog(microflow.workflowName, startResult.instanceId);
+            List<LogStepEntity> steps = await LogReader.GetStepsLog(microflow.workflowName, startResult.instanceId);
 
-            List<Microflow.MicroflowTableModels.LogStepEntity> sortedSteps = steps.OrderBy(e => e.EndDate).ToList();
+            List<LogStepEntity> sortedSteps = steps.OrderBy(e => e.EndDate).ToList();
 
             Assert.IsTrue(sortedSteps[0].StepNumber == 1);
 
@@ -96,14 +96,14 @@ namespace MicroflowTest
                 //// CHECK RESULTS ////
 
                 // get the orchestration log to check the results
-                List<Microflow.MicroflowTableModels.LogOrchestrationEntity> log = await LogReader.GetOrchLog(microflow.workflowName);
+                List<LogOrchestrationEntity> log = await LogReader.GetOrchLog(microflow.workflowName);
 
                 Assert.IsTrue(log.FindIndex(i => i.OrchestrationId.Equals(startResult.instanceId)) >= 0);
 
                 // get the steps log to check the results
-                List<Microflow.MicroflowTableModels.LogStepEntity> steps = await LogReader.GetStepsLog(microflow.workflowName, startResult.instanceId);
+                List<LogStepEntity> steps = await LogReader.GetStepsLog(microflow.workflowName, startResult.instanceId);
 
-                List<Microflow.MicroflowTableModels.LogStepEntity> sortedSteps = steps.OrderBy(e => e.EndDate).ToList();
+                List<LogStepEntity> sortedSteps = steps.OrderBy(e => e.EndDate).ToList();
 
                 Assert.IsTrue(sortedSteps[0].StepNumber == 1);
 
@@ -137,6 +137,111 @@ namespace MicroflowTest
 
                 Assert.IsTrue(sortedSteps.Count == 8);
             }
+        }
+
+        [TestMethod]
+        public async Task GetStartedWorkflowWithParallelRunnibgWorkflows()
+        {
+            // create a simple workflow with parent step 1, subling children step 2 and 3, and child of 2 and 3 step 4
+            // siblings steps 2 and 3 runs in parallel
+            List<Step> stepsList = TestWorkflowHelper.CreateTestWorkflow_SimpleSteps();
+
+            // create Microflow with the created workflow
+            (MicroflowModels.Microflow workflow, string workflowName) microflow = TestWorkflowHelper.CreateMicroflow(stepsList);
+
+            // set loop to 1, how many time the workflow will execute
+            int loop = 1;
+
+            // set the global key if needed
+            // the global key is needed to group related workflows and control the group
+            string globalKey = Guid.NewGuid().ToString();
+
+            // upsert Microflow json
+            //string json = JsonSerializer.Serialize(microflow.workflow);
+            bool successUpsert = await TestWorkflowHelper.UpsertWorkFlow(microflow.workflow);
+
+            Assert.IsTrue(successUpsert);
+
+            // start the upserted workflow in parallel x2 instances
+            var startResult1Task = TestWorkflowHelper.StartMicroflow(microflow, loop, globalKey);
+            var startResult2Task = TestWorkflowHelper.StartMicroflow(microflow, loop, globalKey);
+            (string instanceId, string statusUrl) startResult1 = await startResult1Task;
+            (string instanceId, string statusUrl) startResult2 = await startResult2Task;
+
+            //// CHECK RESULTS ////
+
+            Assert.IsTrue(!startResult1.instanceId.Equals(startResult2.instanceId));
+
+            // get the orchestration log to check the results
+            List<LogOrchestrationEntity> log = await LogReader.GetOrchLog(microflow.workflowName);
+
+
+            //////////////////// run 1`s checks ////////////////////////////
+            ///
+            List<LogStepEntity> sortedSteps1 = await WorkflowInstance1Checks(microflow, startResult1, log);
+
+            //////////////////// run 2`s checks ////////////////////////////
+            ///
+            List<LogStepEntity> sortedSteps2 = await WorkflowInstance2Checks(microflow, startResult2, log);
+
+
+            /////////////////// check that these 2 actually ran in parallel ////////////////////////////
+            /// run 1 step 4 ended after run 2 step 1 started
+            /// run 2 step 4 ended after run 1 step 1 started
+            Assert.IsTrue(sortedSteps1[3].EndDate > sortedSteps2[0].StartDate);
+            Assert.IsTrue(sortedSteps2[3].EndDate > sortedSteps1[0].StartDate);
+        }
+
+        private static async Task<List<LogStepEntity>> WorkflowInstance1Checks((MicroflowModels.Microflow workflow, string workflowName) microflow, (string instanceId, string statusUrl) startResult1, List<LogOrchestrationEntity> log)
+        {
+            // check that the orchestraion id is logged
+            Assert.IsTrue(log.FindIndex(i => i.OrchestrationId.Equals(startResult1.instanceId)) >= 0);
+
+            // get the steps log to check the results
+            List<LogStepEntity> steps1 = await LogReader.GetStepsLog(microflow.workflowName, startResult1.instanceId);
+
+            List<LogStepEntity> sortedSteps1 = steps1.OrderBy(e => e.EndDate).ToList();
+
+            Assert.IsTrue(sortedSteps1[0].StepNumber == 1);
+
+            if (sortedSteps1[1].StepNumber == 2)
+                Assert.IsTrue(sortedSteps1[2].StepNumber == 3);
+            else
+            {
+                Assert.IsTrue(sortedSteps1[1].StepNumber == 3);
+                Assert.IsTrue(sortedSteps1[2].StepNumber == 2);
+            }
+
+            Assert.IsTrue(sortedSteps1[3].StepNumber == 4);
+
+            Assert.IsTrue(sortedSteps1.Count == 4);
+            return sortedSteps1;
+        }
+
+        private static async Task<List<LogStepEntity>> WorkflowInstance2Checks((MicroflowModels.Microflow workflow, string workflowName) microflow, (string instanceId, string statusUrl) startResult2, List<LogOrchestrationEntity> log)
+        {
+            // check that the orchestraion id is logged for other run
+            Assert.IsTrue(log.FindIndex(i => i.OrchestrationId.Equals(startResult2.instanceId)) >= 0);
+
+            // get the steps log to check the results
+            List<LogStepEntity> steps2 = await LogReader.GetStepsLog(microflow.workflowName, startResult2.instanceId);
+
+            List<LogStepEntity> sortedSteps2 = steps2.OrderBy(e => e.EndDate).ToList();
+
+            Assert.IsTrue(sortedSteps2[0].StepNumber == 1);
+
+            if (sortedSteps2[1].StepNumber == 2)
+                Assert.IsTrue(sortedSteps2[2].StepNumber == 3);
+            else
+            {
+                Assert.IsTrue(sortedSteps2[1].StepNumber == 3);
+                Assert.IsTrue(sortedSteps2[2].StepNumber == 2);
+            }
+
+            Assert.IsTrue(sortedSteps2[3].StepNumber == 4);
+
+            Assert.IsTrue(sortedSteps2.Count == 4);
+            return sortedSteps2;
         }
     }
 }
