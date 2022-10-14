@@ -1,21 +1,21 @@
 # Microflow
 
-Microflow is a serverless capable micro-service orchestrator built on top of the Microsoft Durable Functions framework. It can execute complex workflows that will auto scale out, and back, with pay-as-you-go billing when running serverlessly. It is also possible to run it in the Azure App Service or in Docker or Kubernetes.
+Microflow is a serverless-capable micro-service orchestrator built on top of the Microsoft Durable Functions framework. It can execute complex workflows that will automatically scale out and back, with pay-as-you-go billing when running serverlessly. It is also possible to run it on the Azure App Service or on Docker or Kubernetes.
 
 Microflow is more than just an "if-else" based workflow engine. Very complex workflows can be executed. The major benefit Microflow provides over Durable Functions, is that workflows can be created and modified externally and then be upserted as JSON - all aspects of workflow editing can be done and then executed without any code deployments.
 
-One instance of Microflow can store many JSON defined workflows, and execute these workflows in parallel without impacting each other. Every workflow can also run as a singleton or as many parallel instances. Auto-scaling will ensure that there is always enough resources.
+One instance of Microflow can store many JSON defined workflows, and execute these workflows in parallel without impacting each other. Every workflow can also run as a singleton or as many parallel instances. Auto-scaling will ensure that there are always enough resources.
 
-A Microflow workflow is a list of steps, with each step having children steps. Each step can call an http endpoint via get or post. Children steps will wait for all its parents to complete before executing. Each step has a Callout property to be set as the external micro-service call url.
+A Microflow workflow is a list of steps, with each step having child steps. Each step can call an http endpoint via get or post. Child steps will wait for all its parents to complete before executing. Each step has a Callout property to be set as the external micro-service call url.
 
-During the workflow creation/editing phase, a step can be set to call out to an endpoint, and then to also spawn a webhook to wait for a reply:
+During the workflow creation and editing phases, a step can be set to call out to an endpoint, and then to also spawn a webhook to wait for a reply:
 
 > Microflow is a dynamic and powerful micro-service orchestrator with webhook functionality.
 
 
 
 ## Api Overview:
-The url base for all calls is "microflow/v1". The full url will look like this: http://localhost:7071/microflow/v1/UpsertWorkflow/{globalKey?} 
+The base URL for all calls is "microflow/v1". The full url will look like this: http://localhost:7071/microflow/v1/UpsertWorkflow/{globalKey?} 
 
 - Workflow:
 ```r
@@ -59,7 +59,7 @@ public class Test1_WorkflowExecution
 
 ## Example Workflow JSON of Test1_WorkflowExecution -> GetStartedWorkflow():
 
-Four steps 1 to 4. Step 1 has children steps 2 and 3, and step 4 has steps 2 and 3 as parents. Steps 2 and 3 will wait for step 1 to complete and then execute in parallel (siblings). Step 4 will wait for both steps 2 and 3 to complete. Every step in this example will do an http post call to https://reqbin.com/echo/post, as specified by "default_post_url" in the MergeFields collection. There is no webhooks enabled on any steps, this is just a simplistic example to start with:
+Four steps 1 to 4. Step 1 has child steps 2 and 3, and step 4 has steps 2 and 3 as parents. Steps 2 and 3 will wait for step 1 to complete and then execute in parallel (siblings). Step 4 will wait for both steps 2 and 3 to complete. Every step in this example will do an http post call to https://reqbin.com/echo/post, as specified by "default_post_url" in the MergeFields collection. There is no webhooks enabled on any steps, this is just a simplistic example to start with:
 ```json
 {
   "WorkflowName": "Myflow_ClientX2",
