@@ -10,11 +10,13 @@ namespace MicroflowSDK
 {
     public static class HttpBlobDataManager
     {
-        public static async Task<string> GetHttpBlob(string workflowName, int stepNumber, string runId, string subinstanceId)
+        public static async Task<string> GetHttpBlob(bool isRequest, string workflowName, int stepNumber, string runId, string subinstanceId)
         {
+            string prefix = isRequest ? "request-" : "response-";
+
             BlobContainerClient blobContainerClient = new("UseDevelopmentStorage=true", "microflow-httpdata");
 
-            var blobClient = blobContainerClient.GetBlobClient($"response-{workflowName}@{stepNumber}@{runId}@{subinstanceId}");
+            var blobClient = blobContainerClient.GetBlobClient($"{prefix}{workflowName}@{stepNumber}@{runId}@{subinstanceId}");
 
             BlobDownloadResult downloadResult = await blobClient.DownloadContentAsync();
 

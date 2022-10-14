@@ -59,7 +59,7 @@ namespace MicroflowTest
 
             Assert.IsTrue(sortedSteps[0].StepNumber == 1);
 
-            string blobHttpRosponse = await HttpBlobDataManager.GetHttpBlob(microflow.workflowName, sortedSteps[0].StepNumber, sortedSteps[0].RunId, sortedSteps[0].SubOrchestrationId);
+            string blobHttpRosponse = await HttpBlobDataManager.GetHttpBlob(false, microflow.workflowName, sortedSteps[0].StepNumber, sortedSteps[0].RunId, sortedSteps[0].SubOrchestrationId);
 
             Assert.IsTrue(blobHttpRosponse.Equals("{\"success\":\"true\"}\n"));
 
@@ -116,13 +116,21 @@ namespace MicroflowTest
 
             Assert.IsTrue(sortedSteps[0].StepNumber == 1);
 
-            string blobHttpRosponse = await HttpBlobDataManager.GetHttpBlob(microflow.workflowName, sortedSteps[0].StepNumber, sortedSteps[0].RunId, sortedSteps[0].SubOrchestrationId);
-
-            Assert.IsTrue(blobHttpRosponse.Equals("{\"success\":\"true\"}\n"));
-
             var arr = sortedSteps[0].PartitionKey.Split("__");
 
-            var s = $"https://reqbin.com/echo/post/json?WorkflowName=Myflow_ClientX2@2.1&MainOrchestrationId={arr[1]}&SubOrchestrationId={sortedSteps[0].SubOrchestrationId}&WebhookId=a&RunId={sortedSteps[0].RunId}&StepNumber=1&GlobalKey={sortedSteps[0].GlobalKey}&StepId={stepsList[0].StepId}";
+            var blobHttpRosponseTask = HttpBlobDataManager.GetHttpBlob(false, microflow.workflowName, sortedSteps[0].StepNumber, sortedSteps[0].RunId, sortedSteps[0].SubOrchestrationId);
+            var blobHttpRequestTask = HttpBlobDataManager.GetHttpBlob(true, microflow.workflowName, sortedSteps[0].StepNumber, sortedSteps[0].RunId, sortedSteps[0].SubOrchestrationId);
+
+            await Task.WhenAll(blobHttpRequestTask, blobHttpRosponseTask);
+
+            var blobHttpRequest = blobHttpRequestTask.Result;
+            var blobHttpRosponse = blobHttpRosponseTask.Result;
+
+            Assert.IsTrue(blobHttpRequest.Equals("{\"WorkflowName\":\"" + microflow.workflowName + "\",\"MainOrchestrationId\":\"" + arr[1] + "\",\"SubOrchestrationId\":\"" + sortedSteps[0].SubOrchestrationId +  "\",\"Webhook\":\"a\",\"RunId\":\"" + sortedSteps[0].RunId + "\",\"StepNumber\":1,\"StepId\":\"myStep 1\",\"GlobalKey\":\"" + sortedSteps[0].GlobalKey + "\",\"PostData\":null}"));
+            
+            Assert.IsTrue(blobHttpRosponse.Equals("{\"success\":\"true\"}\n"));
+
+            var s = $"https://reqbin.com/echo/post/json?WorkflowName={microflow.workflowName}&MainOrchestrationId={arr[1]}&SubOrchestrationId={sortedSteps[0].SubOrchestrationId}&WebhookId=a&RunId={sortedSteps[0].RunId}&StepNumber=1&GlobalKey={sortedSteps[0].GlobalKey}&StepId={stepsList[0].StepId}";
 
             Assert.IsTrue(s.Equals(sortedSteps[0].CalloutUrl));
         }
