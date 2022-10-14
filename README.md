@@ -45,3 +45,106 @@ public class Test1_WorkflowExecution
     public async Task GetStartedWorkflow()
 
 ```
+
+### Example Json Worklow of Test1_WorkflowExecution.GetStartedWorkflow():
+```json
+{
+  "Steps": [
+    {
+      "StepId": "myStep 1",
+      "StepNumber": 1,
+      "CalloutUrl": "{default_post_url}",
+      "ScaleGroupId": null,
+      "StopOnWebhookFailed": true,
+      "IsHttpGet": false,
+      "CalloutTimeoutSeconds": 1000,
+      "AsynchronousPollingEnabled": true,
+      "ForwardResponseData": false,
+      "SubStepsToRunForWebhookTimeout": null,
+      "WebhookId": null,
+      "EnableWebhook": false,
+      "WebhookTimeoutSeconds": 1000,
+      "WebhookSubStepsMapping": null,
+      "WaitForAllParents": true,
+      "SubSteps": [
+        2,
+        3
+      ],
+      "RetryOptions": null
+    },
+    {
+      "StepId": "myStep 2",
+      "StepNumber": 2,
+      "CalloutUrl": "{default_post_url}",
+      "ScaleGroupId": null,
+      "StopOnWebhookFailed": true,
+      "IsHttpGet": false,
+      "CalloutTimeoutSeconds": 1000,
+      "AsynchronousPollingEnabled": true,
+      "ForwardResponseData": false,
+      "SubStepsToRunForWebhookTimeout": null,
+      "WebhookId": null,
+      "EnableWebhook": false,
+      "WebhookTimeoutSeconds": 1000,
+      "WebhookSubStepsMapping": null,
+      "WaitForAllParents": true,
+      "SubSteps": [
+        4
+      ],
+      "RetryOptions": null
+    },
+    {
+      "StepId": "myStep 3",
+      "StepNumber": 3,
+      "CalloutUrl": "{default_post_url}",
+      "ScaleGroupId": null,
+      "StopOnWebhookFailed": true,
+      "IsHttpGet": false,
+      "CalloutTimeoutSeconds": 1000,
+      "AsynchronousPollingEnabled": true,
+      "ForwardResponseData": false,
+      "SubStepsToRunForWebhookTimeout": null,
+      "WebhookId": null,
+      "EnableWebhook": false,
+      "WebhookTimeoutSeconds": 1000,
+      "WebhookSubStepsMapping": null,
+      "WaitForAllParents": true,
+      "SubSteps": [
+        4
+      ],
+      "RetryOptions": null
+    },
+    {
+      "StepId": "myStep 4",
+      "StepNumber": 4,
+      "CalloutUrl": "{default_post_url}",
+      "ScaleGroupId": null,
+      "StopOnWebhookFailed": true,
+      "IsHttpGet": false,
+      "CalloutTimeoutSeconds": 1000,
+      "AsynchronousPollingEnabled": true,
+      "ForwardResponseData": false,
+      "SubStepsToRunForWebhookTimeout": null,
+      "WebhookId": null,
+      "EnableWebhook": false,
+      "WebhookTimeoutSeconds": 1000,
+      "WebhookSubStepsMapping": null,
+      "WaitForAllParents": true,
+      "SubSteps": [],
+      "RetryOptions": null
+    }
+  ],
+  "MergeFields": {
+    "default_post_url": "https://reqbin.com/echo/post/json?WorkflowName=<WorkflowName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&WebhookId=<WebhookId>&RunId=<RunId>&StepNumber=<StepNumber>&GlobalKey=<GlobalKey>&StepId=<StepId>"
+  },
+  "DefaultRetryOptions": {
+    "DelaySeconds": 5,
+    "MaxDelaySeconds": 120,
+    "MaxRetries": 15,
+    "BackoffCoefficient": 5,
+    "TimeOutSeconds": 300
+  },
+  "WorkflowVersion": "2.1",
+  "WorkflowName": "Myflow_ClientX2"
+}
+```
