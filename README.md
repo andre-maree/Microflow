@@ -35,7 +35,7 @@ Webhook: [GET,POST] webhooks/{webhookId}
 WebhookWithAction: [GET,POST] webhooks/{webhookId}/{action}
 GetWebhooks: [GET,POST] GetWebhooks/{workflowName}/{webhookId}/{stepNumber}/{instanceGuid?}
 ```
-- Workflow control:
+- Workflow control (pause, continue and stop):
 ```r
 GlobalControl: [GET] GlobalControl/{cmd}/{globalKey}
 WorkflowControl: [GET] WorkflowControl/{cmd}/{workflowName}/{workflowVersion}
