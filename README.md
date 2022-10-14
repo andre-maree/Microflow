@@ -17,19 +17,29 @@ The url base for all calls is "microflow/v1". The full url will look like this:
 
 http://localhost:7071/microflow/v1/UpsertWorkflow/{globalKey?} 
 ```r
+Workflow:
 UpsertWorkflow: [POST] UpsertWorkflow/{globalKey?}
 MicroflowStart: [GET,POST] Start/{workflowName}/{instanceId?}
-GetWebhooks: [GET,POST] GetWebhooks/{workflowName}/{webhookId}/{stepNumber}/{instanceGuid?}
 GetWorkflow: [GET] GetWorkflow/{workflowName}
-GlobalControl: [GET] GlobalControl/{cmd}/{globalKey}
+
+Step:
 GetStep: [GET] GetStep/{workflowName}/{stepNumber}
-SetScaleGroup: [GET,POST] ScaleGroup/{scaleGroupId}/{maxInstanceCount}/{maxWaitSeconds:int?}
-SetStepProperties: [PUT] SetStepProperties/{workflowName}/{stepNumber}
 UpsertStep: [PUT] UpsertStep
-GetScaleGroup: [GET] ScaleGroup/{scaleGroupId}
+SetStepProperties: [PUT] SetStepProperties/{workflowName}/{stepNumber}
+
+Webhook:
 Webhook: [GET,POST] webhooks/{webhookId}
 WebhookWithAction: [GET,POST] webhooks/{webhookId}/{action}
+GetWebhooks: [GET,POST] GetWebhooks/{workflowName}/{webhookId}/{stepNumber}/{instanceGuid?}
+
+Workflow control:
+GlobalControl: [GET] GlobalControl/{cmd}/{globalKey}
 WorkflowControl: [GET] WorkflowControl/{cmd}/{workflowName}/{workflowVersion}
+
+Scalegroup:
+SetScaleGroup: [GET,POST] ScaleGroup/{scaleGroupId}/{maxInstanceCount}/{maxWaitSeconds:int?}
+GetScaleGroup: [GET] ScaleGroup/{scaleGroupId}
+
 ```
 ### Getting Started:
 Visual Stodio 2022 with C# is needed. Clone the repo locally and open the two solutions: Microflow.sln and MicroflowTest.sln. To get started with Microflow, only these two api calls are needed: UpsertWorkflow and MicroflowStart. This can be done by running the included unit test in the MicroflowTest.sln. First start running the MicroflowApp in Microflow.sln, and then run the GetStartedWorkflow test in MicroflowTest.sln:
