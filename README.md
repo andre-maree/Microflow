@@ -35,7 +35,7 @@ WorkflowControl: [GET] WorkflowControl/{cmd}/{workflowName}/{workflowVersion}
 ```
 
 ### Getting Started:
-Visual Stodio 2022 with C# is needed. Clone the repo locally and open the two solutions: Microflow.sln and MicroflowTest.sln. To get started with Microflow, only these two api calls are needed: UpsertWorkflow and MicroflowStart. This can be done by simply running included unit test in the MicroflowTest.sln. First start running the MicroflowApp in the Microflow.sln, and then run the GetStartedWorkflow test in the MicroflowTest.sln.
+Visual Stodio 2022 with C# is needed. Clone the repo locally and open the two solutions: Microflow.sln and MicroflowTest.sln. To get started with Microflow, only these two api calls are needed: UpsertWorkflow and MicroflowStart. This can be done by running the included unit test in the MicroflowTest.sln. First start running the MicroflowApp in Microflow.sln, and then run the GetStartedWorkflow test in MicroflowTest.sln.
    
 ```csharp
 
