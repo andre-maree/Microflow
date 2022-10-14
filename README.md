@@ -15,9 +15,7 @@ During the workflow creation/editing phase, a step can be set to call out to an 
 ### Api Overview:
 The url base for all calls is "microflow/v1". The full url will look like this:
 
-http://localhost:7071/microflow/v1/UpsertWorkflow/{globalKey?}
-
-
+http://localhost:7071/microflow/v1/UpsertWorkflow/{globalKey?} 
 ```r
 UpsertWorkflow: [POST] UpsertWorkflow/{globalKey?}
 MicroflowStart: [GET,POST] Start/{workflowName}/{instanceId?}
@@ -33,10 +31,8 @@ Webhook: [GET,POST] webhooks/{webhookId}
 WebhookWithAction: [GET,POST] webhooks/{webhookId}/{action}
 WorkflowControl: [GET] WorkflowControl/{cmd}/{workflowName}/{workflowVersion}
 ```
-
 ### Getting Started:
 Visual Stodio 2022 with C# is needed. Clone the repo locally and open the two solutions: Microflow.sln and MicroflowTest.sln. To get started with Microflow, only these two api calls are needed: UpsertWorkflow and MicroflowStart. This can be done by running the included unit test in the MicroflowTest.sln. First start running the MicroflowApp in Microflow.sln, and then run the GetStartedWorkflow test in MicroflowTest.sln:
-   
 ```csharp
 
 public class Test1_WorkflowExecution
@@ -45,8 +41,9 @@ public class Test1_WorkflowExecution
     public async Task GetStartedWorkflow()
 
 ```
-
 ### Example Worklow JSON of Test1_WorkflowExecution -> GetStartedWorkflow():
+
+Four steps 1 to 4. Step 1 has children steps 2 and 3, and step 4 has steps 2 and 3 as parents. Steps 2 and 3 will wait for step 1 and execute in parallel. Step 4 will wait for both steps 2 and 3 to complete. Every step in this example will do an http post call to https://reqbin.com/echo/post, as specified in the MergeFields collection. There is no webhooks enabled on any steps, this is just a simpkstic example to start with:
 ```json
 {
   "WorkflowName": "Myflow_ClientX2",
