@@ -46,7 +46,7 @@ public class Test1_WorkflowExecution
 
 ```
 
-### Example JSON Worklow of Test1_WorkflowExecution.GetStartedWorkflow():
+### Example Worklow JSON of Test1_WorkflowExecution -> GetStartedWorkflow():
 ```json
 {
   "Steps": [
