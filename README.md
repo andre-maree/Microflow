@@ -22,7 +22,7 @@ The url base for all calls is "microflow/v1". The full url will look like this: 
 UpsertWorkflow: [POST] UpsertWorkflow/{globalKey?}
 GetWorkflow: [GET] GetWorkflow/{workflowName}
 ```
-- Workflow control ({cmd} = start, pause, continue or stop):
+- Workflow control ({cmd} = pause, ready or stop):
 ```r
 MicroflowStart: [GET,POST] Start/{workflowName}/{instanceId?}
 GlobalControl: [GET] GlobalControl/{cmd}/{globalKey}
