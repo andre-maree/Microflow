@@ -13,33 +13,35 @@ During the workflow creation/editing phase, a step can be set to call out to an 
 > Microflow is a dynamic and powerful micro-service orchestrator with webhook functionality.
 
 ### Api Overview:
-The url base for all calls is "microflow/v1". The full url will look like this:
+The url base for all calls is "microflow/v1". The full url will look like this: http://localhost:7071/microflow/v1/UpsertWorkflow/{globalKey?} 
 
-http://localhost:7071/microflow/v1/UpsertWorkflow/{globalKey?} 
+- Workflow:
 ```r
-Workflow:
 UpsertWorkflow: [POST] UpsertWorkflow/{globalKey?}
 MicroflowStart: [GET,POST] Start/{workflowName}/{instanceId?}
 GetWorkflow: [GET] GetWorkflow/{workflowName}
-
-Step:
+```
+- Step:
+```r
 GetStep: [GET] GetStep/{workflowName}/{stepNumber}
 UpsertStep: [PUT] UpsertStep
 SetStepProperties: [PUT] SetStepProperties/{workflowName}/{stepNumber}
-
-Webhook:
+```
+- Webhook:
+```r
 Webhook: [GET,POST] webhooks/{webhookId}
 WebhookWithAction: [GET,POST] webhooks/{webhookId}/{action}
 GetWebhooks: [GET,POST] GetWebhooks/{workflowName}/{webhookId}/{stepNumber}/{instanceGuid?}
-
-Workflow control:
+```
+- Workflow control:
+```r
 GlobalControl: [GET] GlobalControl/{cmd}/{globalKey}
 WorkflowControl: [GET] WorkflowControl/{cmd}/{workflowName}/{workflowVersion}
-
-Scalegroup:
+```
+- Scalegroup:
+```r
 SetScaleGroup: [GET,POST] ScaleGroup/{scaleGroupId}/{maxInstanceCount}/{maxWaitSeconds:int?}
 GetScaleGroup: [GET] ScaleGroup/{scaleGroupId}
-
 ```
 ### Getting Started:
 Visual Stodio 2022 with C# is needed. Clone the repo locally and open the two solutions: Microflow.sln and MicroflowTest.sln. To get started with Microflow, only these two api calls are needed: UpsertWorkflow and MicroflowStart. This can be done by running the included unit test in the MicroflowTest.sln. First start running the MicroflowApp in Microflow.sln, and then run the GetStartedWorkflow test in MicroflowTest.sln:
