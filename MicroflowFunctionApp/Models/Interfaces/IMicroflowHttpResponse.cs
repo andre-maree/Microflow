@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Microflow.Models
+﻿namespace Microflow.Models
 {
     //public interface IMicroflowHttpResponse
     //{

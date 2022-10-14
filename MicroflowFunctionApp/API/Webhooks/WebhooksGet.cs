@@ -1,10 +1,8 @@
-using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using System.Net.Http;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using MicroflowModels.Helpers;
 using MicroflowModels;
 using Microflow.Helpers;
 
