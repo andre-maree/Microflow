@@ -22,6 +22,8 @@ namespace MicroflowTest
             int loop = 1;
             string globalKey = Guid.NewGuid().ToString();
 
+            microflow.workflow.Step(1).EnableWebhook = true;
+
             microflow.workflow.Step(1).WebhookId = "mywebhook123-" + Guid.NewGuid().ToString();
 
             microflow.workflow.Step(1).StopOnWebhookFailed = false;
