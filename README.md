@@ -49,6 +49,18 @@ public class Test1_WorkflowExecution
 ### Example Worklow JSON of Test1_WorkflowExecution -> GetStartedWorkflow():
 ```json
 {
+  "WorkflowName": "Myflow_ClientX2",
+  "WorkflowVersion": "2.1",
+  "MergeFields": {
+    "default_post_url": "https://reqbin.com/echo/post/json?WorkflowName=<WorkflowName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&WebhookId=<WebhookId>&RunId=<RunId>&StepNumber=<StepNumber>&GlobalKey=<GlobalKey>&StepId=<StepId>"
+  },
+  "DefaultRetryOptions": {
+    "DelaySeconds": 5,
+    "MaxDelaySeconds": 120,
+    "MaxRetries": 15,
+    "BackoffCoefficient": 5,
+    "TimeOutSeconds": 300
+  },
   "Steps": [
     {
       "StepId": "myStep 1",
@@ -133,18 +145,6 @@ public class Test1_WorkflowExecution
       "SubSteps": [],
       "RetryOptions": null
     }
-  ],
-  "MergeFields": {
-    "default_post_url": "https://reqbin.com/echo/post/json?WorkflowName=<WorkflowName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&WebhookId=<WebhookId>&RunId=<RunId>&StepNumber=<StepNumber>&GlobalKey=<GlobalKey>&StepId=<StepId>"
-  },
-  "DefaultRetryOptions": {
-    "DelaySeconds": 5,
-    "MaxDelaySeconds": 120,
-    "MaxRetries": 15,
-    "BackoffCoefficient": 5,
-    "TimeOutSeconds": 300
-  },
-  "WorkflowVersion": "2.1",
-  "WorkflowName": "Myflow_ClientX2"
+  ]
 }
 ```
