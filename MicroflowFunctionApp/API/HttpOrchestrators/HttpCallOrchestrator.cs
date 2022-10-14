@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Net.Http;
 using System.Threading.Tasks;
-using Azure.Core;
 using Microflow.Helpers;
 using MicroflowModels;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Newtonsoft.Json.Linq;
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_STEPCOUNT
 using static MicroflowModels.Constants;
 #endif
@@ -48,21 +45,22 @@ namespace Microflow.HttpOrchestrators
 #endif
                 #endregion
 
-                Task logTask = null;
+                Task<DurableHttpResponse> durableHttpResponseTask = null;
 
                 // log start
                 if (!httpCall.IsHttpGet)
                 {
-                    logTask = LogMicroflowHttpData(context, durableHttpRequest.Content, httpCall.PartitionKey, httpCall.RowKey, httpCall.RunId, true);
-                }
+                    Task logTask = LogMicroflowHttpData(context, durableHttpRequest.Content, httpCall.PartitionKey, httpCall.RowKey, httpCall.RunId, true);
 
-                Task<DurableHttpResponse> durableHttpResponseTask = context.CallHttpAsync(durableHttpRequest);
+                    durableHttpResponseTask = context.CallHttpAsync(durableHttpRequest);
 
-                if (!httpCall.IsHttpGet)
-                {
                     await logTask;
                 }
-
+                else
+                {
+                    durableHttpResponseTask = context.CallHttpAsync(durableHttpRequest);
+                }
+                    
                 await durableHttpResponseTask;
 
                 #region Optional: no stepcount

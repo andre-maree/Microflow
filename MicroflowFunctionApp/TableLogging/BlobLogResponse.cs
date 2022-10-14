@@ -1,14 +1,9 @@
 using System;
-using System.Collections.Generic;
-using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Azure;
 using Azure.Storage.Blobs;
-using MicroflowModels;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Microsoft.WindowsAzure.Storage;
-using Newtonsoft.Json.Linq;
 using static MicroflowModels.Constants;
 
 namespace Microflow.Logging

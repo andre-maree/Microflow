@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
 using Azure;
 using Azure.Data.Tables;
 using MicroflowModels.Helpers;
