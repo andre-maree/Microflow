@@ -20,8 +20,13 @@ The url base for all calls is "microflow/v1". The full url will look like this: 
 - Workflow:
 ```r
 UpsertWorkflow: [POST] UpsertWorkflow/{globalKey?}
-MicroflowStart: [GET,POST] Start/{workflowName}/{instanceId?}
 GetWorkflow: [GET] GetWorkflow/{workflowName}
+```
+- Workflow control (cmd = start, pause, continue or stop):
+```r
+MicroflowStart: [GET,POST] Start/{workflowName}/{instanceId?}
+GlobalControl: [GET] GlobalControl/{cmd}/{globalKey}
+WorkflowControl: [GET] WorkflowControl/{cmd}/{workflowName}/{workflowVersion}
 ```
 - Step:
 ```r
@@ -34,11 +39,6 @@ SetStepProperties: [PUT] SetStepProperties/{workflowName}/{stepNumber}
 Webhook: [GET,POST] webhooks/{webhookId}
 WebhookWithAction: [GET,POST] webhooks/{webhookId}/{action}
 GetWebhooks: [GET,POST] GetWebhooks/{workflowName}/{webhookId}/{stepNumber}/{instanceGuid?}
-```
-- Workflow control (pause, continue and stop):
-```r
-GlobalControl: [GET] GlobalControl/{cmd}/{globalKey}
-WorkflowControl: [GET] WorkflowControl/{cmd}/{workflowName}/{workflowVersion}
 ```
 - Scalegroup:
 ```r
