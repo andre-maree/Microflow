@@ -6,7 +6,7 @@ Microflow is more than just an "if-else" based workflow engine. Very complex wor
 
 One instance of Microflow can store many Json defined workflows, and execute these workflows in parallel without impacting each other. Every workflow can also run as a singleton or as many parallel instances. Auto scaling will ensure that there is always enough resources.
 
-> A Microflow workflow is a list of steps, with each step having children steps. Each step can call an http endpoint via get or post. Children steps will wait for all its parents to complete before executing. A step can be seen as a call to a micro-service.
+> A Microflow workflow is a list of steps, with each step having children steps. Each step can call an http endpoint via get or post. Children steps will wait for all its parents to complete before executing. Each step has a Callout property to be set as the external micro-service call url.
 
 During the workflow creation phase, a step can be set to call out to an endpoint, and then to also spawn a webhook to wait for a reply. 
 
