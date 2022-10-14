@@ -13,21 +13,23 @@ During the workflow creation phase, a step can be set to call out to an endpoint
 > Microflow is a dynamic and powerful micro-service orchestrator with webhook functionality.
 
 ### Api Overview:
+The url base for all calls is "microflow/v1". The full url will look like this:
+http://localhost:7071/microflow/v1/UpsertWorkflow/{globalKey?}
 
-```scala
-UpsertWorkflow: [POST] http://localhost:7071/microflow/v1/UpsertWorkflow/{globalKey?}
-MicroflowStart: [GET,POST] http://localhost:7071/microflow/v1/Start/{workflowName}/{instanceId?}
-GetWebhooks: [GET,POST] http://localhost:7071/microflow/v1/GetWebhooks/{workflowName}/{webhookId}/{stepNumber}/{instanceGuid?}
-GetWorkflow: [GET] http://localhost:7071/microflow/v1/GetWorkflow/{workflowName}
-GlobalControl: [GET] http://localhost:7071/microflow/v1/GlobalControl/{cmd}/{globalKey}
-GetStep: [GET] http://localhost:7071/microflow/v1/GetStep/{workflowName}/{stepNumber}
-SetScaleGroup: [GET,POST] http://localhost:7071/microflow/v1/ScaleGroup/{scaleGroupId}/{maxInstanceCount}/{maxWaitSeconds:int?}
-SetStepProperties: [PUT] http://localhost:7071/microflow/v1/SetStepProperties/{workflowName}/{stepNumber}
-UpsertStep: [PUT] http://localhost:7071/microflow/v1/UpsertStep
-GetScaleGroup: [GET] http://localhost:7071/microflow/v1/ScaleGroup/{scaleGroupId}
-Webhook: [GET,POST] http://localhost:7071/microflow/v1/webhooks/{webhookId}
-WebhookWithAction: [GET,POST] http://localhost:7071/microflow/v1/webhooks/{webhookId}/{action}
-WorkflowControl: [GET] http://localhost:7071/microflow/v1/WorkflowControl/{cmd}/{workflowName}/{workflowVersion}
+```csharp
+UpsertWorkflow: [POST] UpsertWorkflow/{globalKey?}
+MicroflowStart: [GET,POST] Start/{workflowName}/{instanceId?}
+GetWebhooks: [GET,POST] GetWebhooks/{workflowName}/{webhookId}/{stepNumber}/{instanceGuid?}
+GetWorkflow: [GET] GetWorkflow/{workflowName}
+GlobalControl: [GET] GlobalControl/{cmd}/{globalKey}
+GetStep: [GET] GetStep/{workflowName}/{stepNumber}
+SetScaleGroup: [GET,POST] ScaleGroup/{scaleGroupId}/{maxInstanceCount}/{maxWaitSeconds:int?}
+SetStepProperties: [PUT] SetStepProperties/{workflowName}/{stepNumber}
+UpsertStep: [PUT] UpsertStep
+GetScaleGroup: [GET] ScaleGroup/{scaleGroupId}
+Webhook: [GET,POST] webhooks/{webhookId}
+WebhookWithAction: [GET,POST] webhooks/{webhookId}/{action}
+WorkflowControl: [GET] WorkflowControl/{cmd}/{workflowName}/{workflowVersion}
 ```
 ### Getting Started:
 Visual Stodio 2022 with C# is needed. Clone the repo locally and open the two solutions: Microflow.sln and MicroflowTest.sln. To get started with Microflow, only these two api calls are needed: UpsertWorkflow and MicroflowStart. This can be done by simply running included unit test in the MicroflowTest.sln. First start running the MicroflowApp in the Microflow.sln, and then run the GetStartedWorkflow test in the MicroflowTest.sln.
