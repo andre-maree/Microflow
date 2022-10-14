@@ -8,7 +8,7 @@ One instance of Microflow can store many Json defined workflows, and execute the
 
 A Microflow workflow is a list of steps, with each step having children steps. Each step can call an http endpoint via get or post. Children steps will wait for all its parents to complete before executing. Each step has a Callout property to be set as the external micro-service call url.
 
-During the workflow creation phase, a step can be set to call out to an endpoint, and then to also spawn a webhook to wait for a reply. 
+During the workflow creation/editing phase, a step can be set to call out to an endpoint, and then to also spawn a webhook to wait for a reply. 
 
 > Microflow is a dynamic and powerful micro-service orchestrator with webhook functionality.
 
