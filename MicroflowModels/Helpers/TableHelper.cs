@@ -57,11 +57,11 @@ namespace MicroflowModels.Helpers
             return await tableClient.GetEntityAsync<HttpCallWithRetries>(workflowRun.WorkflowName, workflowRun.RunObject.StepNumber);
         }
 
-        public static async Task<List<SubStepsMappingForActions>> GetWebhookSubSteps(string workflowName, string stepId)
+        public static async Task<List<SubStepsMappingForActions>> GetWebhookSubSteps(string webhookId)
         {
-            TableClient tableClient = GetStepsTable();
+            TableClient tableClient = GetWebhooksTable();
 
-            Azure.Response<WebhookSubStepsMappingEntity> mapping = await tableClient.GetEntityAsync<WebhookSubStepsMappingEntity>(workflowName, stepId, new string[] { "WebhookSubStepsMapping" });
+            Azure.Response<Webhook> mapping = await tableClient.GetEntityAsync<Webhook>(webhookId, "0", new string[] { "WebhookSubStepsMapping" });
 
             return mapping.Value.WebhookSubStepsMapping == null ? null : JsonSerializer.Deserialize<List<SubStepsMappingForActions>>(mapping.Value.WebhookSubStepsMapping);
         }
@@ -75,7 +75,7 @@ namespace MicroflowModels.Helpers
 
         public static TableClient GetStepsTable()
         {
-            TableServiceClient tableClient = TableHelper.GetTableClient();
+            TableServiceClient tableClient = GetTableClient();
 
             return tableClient.GetTableClient($"MicroflowStepConfigs");
         }
@@ -83,6 +83,33 @@ namespace MicroflowModels.Helpers
         public static TableServiceClient GetTableClient()
         {
             return new TableServiceClient(Environment.GetEnvironmentVariable("MicroflowStorage"));
+        }
+
+        public static TableClient GetLogWebhookTable()
+        {
+            TableServiceClient tableClient = GetTableClient();
+
+            return tableClient.GetTableClient($"MicroflowLogWebhooks");
+        }
+
+        public static TableClient GetWebhooksTable()
+        {
+            TableServiceClient tableClient = GetTableClient();
+
+            return tableClient.GetTableClient($"MicroflowWebhookConfigs");
+        }
+        public static TableClient GetLogOrchestrationTable()
+        {
+            TableServiceClient tableClient = GetTableClient();
+
+            return tableClient.GetTableClient($"MicroflowLogOrchestrations");
+        }
+
+        public static TableClient GetLogStepsTable()
+        {
+            TableServiceClient tableClient = GetTableClient();
+
+            return tableClient.GetTableClient($"MicroflowLogSteps");
         }
     }
 }

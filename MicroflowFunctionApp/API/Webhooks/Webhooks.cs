@@ -10,46 +10,48 @@ using MicroflowModels;
 namespace Microflow.Webhooks
 {
     /// <summary>
-    /// This is a generic webhooks implementation with /webhooks/{webhookId}/{stepId}/{action}
+    /// This is a generic webhooks implementation with /webhooks/{webhookId}/{action}
     /// Substeps to execute can be set with the step`s WebhookSubStepsMapping property, accociated to the action
     /// </summary>
     public static class Webhooks
     {
-        /// <summary>
-        /// For a webhook defined as "{webhookId}/{stepId}"
-        /// </summary>
         [FunctionName("Webhook")]
         public static async Task<HttpResponseMessage> Webhook(
         [HttpTrigger(AuthorizationLevel.Function, "get", "post",
-        Route = Constants.MicroflowPath + "/webhooks/{webhookId}/{stepNumber}")] HttpRequestMessage req,
+        Route = Constants.MicroflowPath + "/webhooks/{webhookId}")] HttpRequestMessage req,
         [DurableClient] IDurableOrchestrationClient orchClient,
-        string webhookId, int stepNumber)
-            => await orchClient.ProcessWebhook(req, webhookId, string.Empty, stepNumber.ToString());
+        string webhookId)
+            => await orchClient.ProcessWebhook(webhookId, string.Empty);
 
         ///// <summary>
-        ///// For a webhook defined as {webhookId}/{stepId}/{action}
+        ///// For a webhook defined as {webhookId}/{action}
         ///// </summary>
         [FunctionName("WebhookWithAction")]
         public static async Task<HttpResponseMessage> WebhookWithAction(
         [HttpTrigger(AuthorizationLevel.Function, "get", "post",
-        Route = Constants.MicroflowPath + "/webhooks/{webhookId}/{stepNumber}/{action}")] HttpRequestMessage req,
+        Route = Constants.MicroflowPath + "/webhooks/{webhookId}/{action}")] HttpRequestMessage req,
         [DurableClient] IDurableOrchestrationClient orchClient,
-        int stepNumber, string webhookId, string action)
-            => await orchClient.ProcessWebhook(req, webhookId, action, stepNumber.ToString());
+        string webhookId, string action)
+            => await orchClient.ProcessWebhook(webhookId, action);
 
         private static async Task<HttpResponseMessage> ProcessWebhook(this IDurableOrchestrationClient client,
-                                                                        HttpRequestMessage req,
                                                                         string webhookId,
-                                                                        string action,
-                                                                        string stepNumber)
+                                                                        string action)
         {
-            var webHooksTask = TableHelper.GetWebhookSubSteps(GetWorkFlowNameAndVersion(webhookId), stepNumber);
-
             MicroflowHttpResponse webhookResult = new()
             {
                 Success = true,
                 HttpResponseStatusCode = 200
             };
+
+            if (string.IsNullOrEmpty(action))
+            {
+                await client.RaiseEventAsync(webhookId, webhookId, webhookResult);
+
+                return new(HttpStatusCode.OK);
+            }
+
+            var webHooksTask = TableHelper.GetWebhookSubSteps(webhookId);
 
             var subStepsMapping = await webHooksTask;
 
@@ -60,6 +62,7 @@ namespace Microflow.Webhooks
                 if (hook != null)
                 {
                     webhookResult.SubStepsToRun = hook.SubStepsToRunForAction;
+                    webhookResult.Action = action;
                 }
                 else
                 {
@@ -67,31 +70,9 @@ namespace Microflow.Webhooks
                 }
             }
 
-            string orchId = $"{webhookId}@{stepNumber}";
-
-            await client.RaiseEventAsync(orchId, orchId, webhookResult);
+            await client.RaiseEventAsync(webhookId, webhookId, webhookResult);
 
             return new(HttpStatusCode.OK);
-        }
-
-        private static string GetWorkFlowNameAndVersion(string webhookAction)
-        {
-            bool found = false;
-
-            for (int i = 0; i < webhookAction.Length; i++)
-            {
-                char c = webhookAction[i];
-
-                if (c == '@')
-                {
-                    if (found)
-                        return webhookAction.Substring(0, i);
-
-                    found = true;
-                }
-            }
-
-            return string.Empty;
         }
     }
 }

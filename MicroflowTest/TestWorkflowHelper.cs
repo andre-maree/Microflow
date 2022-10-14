@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -32,7 +33,6 @@ namespace MicroflowTest
 
             return JsonSerializer.Deserialize<Dictionary<string, string>>(jsonString);
         }
-
         public static List<Step> CreateTestWorkflow_SimpleSteps()
         {
             // create 4 steps from 1 to 4, each with a post url merge field
@@ -76,7 +76,6 @@ namespace MicroflowTest
             return steps;
         }
 
-
         public static List<Step> CreateTestWorkflow_110Steps()
         {
             List<Step> steps = WorkflowManager.CreateSteps(110, 1, "{default_post_url}");
@@ -95,14 +94,14 @@ namespace MicroflowTest
             return steps;
         }
 
-        public static (MicroflowModels.Microflow microflow, string workflowName) CreateMicroflow(List<Step> workflow)
+        public static (MicroflowModels.Microflow microflow, string workflowName) CreateMicroflow(List<Step> workflow, bool? isHttpGet = false)
         {
             MicroflowModels.Microflow microflow = new()
             {
                 WorkflowName = "Myflow_ClientX2",
                 WorkflowVersion = "2.1",
                 Steps = workflow,
-                MergeFields = WorkflowManager.CreateMergeFields(),
+                MergeFields = CreateMergeFields(new PassThroughParams(), isHttpGet.Value),
                 DefaultRetryOptions = new MicroflowRetryOptions()
             };
 
@@ -120,7 +119,11 @@ namespace MicroflowTest
             string instanceId = "";
             string statusUrl = "";
 
-            if (task.StatusCode == System.Net.HttpStatusCode.Accepted)
+            if (task.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                instanceId = await task.Content.ReadAsStringAsync();
+            }
+            else if (task.StatusCode == System.Net.HttpStatusCode.Accepted)
             {
                 string content = await task.Content.ReadAsStringAsync();
                     OrchResult? res = JsonSerializer.Deserialize<OrchResult>(content);
@@ -165,6 +168,32 @@ namespace MicroflowTest
 
             Dictionary<string, int> scaleGroupGet = await ScaleGroupsManager.GetScaleGroupsWithMaxInstanceCounts(scaleGroupId, BaseUrl, HttpClient);
             Assert.IsTrue(scaleGroupGet[scaleGroupId] == maxConcurrentInstanceCount);
+        }
+
+        public static Dictionary<string, string> CreateMergeFields(PassThroughParams passThroughParams, bool IsGet)
+        {
+            string method = IsGet ? "get" : "post";
+            PropertyInfo[] props = passThroughParams.GetType().GetProperties();
+            string querystring = "?";
+            foreach (var param in props)
+            {
+                var val = param.GetValue(passThroughParams);
+                if ((bool)val == true)
+                {
+                    querystring += $"{param.Name}=<{param.Name}>&";
+                }
+            }
+            querystring = querystring.Remove(querystring.Length - 1);
+            //string querystring2 = "?WorkflowName=<WorkflowName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&Webhook=<Webhook>&RunId=<RunId>&StepNumber=<StepNumber>&GlobalKey=<GlobalKey>&StepId=<StepId>";
+
+            Dictionary<string, string> mergeFields = new();
+            // use 
+            mergeFields.Add("default_post_url", $"https://reqbin.com/echo/{method}/json" + querystring);
+                                                                                     // set the callout url to the new SleepTestOrchestrator http normal function url
+                                                                                     //mergeFields.Add("default_post_url", baseUrl + "/SleepTestOrchestrator_HttpStart" + querystring);
+                                                                                     //mergeFields.Add("default_post_url", baseUrl + "/testpost" + querystring);
+
+            return mergeFields;
         }
     }
 }

@@ -5,9 +5,9 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using static MicroflowModels.Constants;
 
-namespace Microflow.TableLogging
+namespace Microflow.Logging
 {
-    public static class TableLogStepActivity
+    public static class BlobLogRequest
     {
         [FunctionName(CallNames.LogStep)]
         public static async Task TableLogActivity([ActivityTrigger] LogStepEntity logEntity)

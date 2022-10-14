@@ -9,11 +9,26 @@ namespace MicroflowModels
 {
     #region TableEntity
 
-    //public class Webhook : ITableEntity
+    public class Webhook : ITableEntity
+    {
+        public Webhook() { }
+
+        public Webhook(string webhookId, string webhookSubStepsMapping)
+        {
+            PartitionKey = webhookId;
+            RowKey = "0";
+            WebhookSubStepsMapping = webhookSubStepsMapping;
+        }
+
+        public string WebhookSubStepsMapping { get; set; }
+        public string PartitionKey { get; set; }
+        public string RowKey { get; set; }
+        public DateTimeOffset? Timestamp { get; set; }
+        public ETag ETag { get; set; }
+    }
+
+    //public class WebhookSubStepsMappingEntity : ITableEntity
     //{
-    //    public string WebhookId { get; set; }
-    //    public string WebhookPath { get; set; }
-    //    public int WebhookTimeoutSeconds { get; set; } = 1000;
     //    public string WebhookSubStepsMapping { get; set; }
 
     //    public string PartitionKey { get; set; }
@@ -21,16 +36,6 @@ namespace MicroflowModels
     //    public DateTimeOffset? Timestamp { get; set; }
     //    public ETag ETag { get; set; }
     //}
-
-    public class WebhookSubStepsMappingEntity : ITableEntity
-    {
-        public string WebhookSubStepsMapping { get; set; }
-
-        public string PartitionKey { get; set; }
-        public string RowKey { get; set; }
-        public DateTimeOffset? Timestamp { get; set; }
-        public ETag ETag { get; set; }
-    }
 
     /// <summary>
     /// Used for step level logging
@@ -92,8 +97,8 @@ namespace MicroflowModels
         public string CalloutUrl { get; set; }
 
         public string WebhookId { get; set; }
+        public bool EnableWebhook { get; set; }
         public int WebhookTimeoutSeconds { get; set; } = 1000;
-        public string WebhookSubStepsMapping { get; set; }
         public bool StopOnWebhookFailed { get; set; }
         public int CalloutTimeoutSeconds { get; set; }
         public bool IsHttpGet { get; set; }
@@ -102,13 +107,13 @@ namespace MicroflowModels
         public bool ForwardResponseData { get; set; }
         public string SubStepsToRunForWebhookTimeout { get; set; }
 
-        [IgnoreDataMember]
+        //[IgnoreDataMember]
         public string GlobalKey { get; set; }
 
-        [IgnoreDataMember]
+        //[IgnoreDataMember]
         public string RunId { get; set; }
 
-        [IgnoreDataMember]
+        //[IgnoreDataMember]
         public string MainOrchestrationId { get; set; }
     }
 

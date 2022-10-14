@@ -8,6 +8,7 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,6 +26,7 @@ namespace Microflow.FlowControl
         private IList<Task> MicroflowTasks { get; set; }
         private ILogger Logger { get; set; }
         private string LogRowKey { get; }
+        //private string SubInstanceId { get; set; }
 
         /// <summary>
         /// MicroflowContext contructor creates all needed class properties used in step execution
@@ -38,6 +40,7 @@ namespace Microflow.FlowControl
             LogRowKey = TableHelper.GetTableLogRowKeyDescendingByDate(MicroflowDurableContext.CurrentUtcDateTime, MicroflowDurableContext.NewGuid().ToString());
             MicroflowTasks = new List<Task>();
             Logger = MicroflowDurableContext.CreateReplaySafeLogger(logger);
+            //SubInstanceId = MicroflowDurableContext.NewGuid().ToString();
         }
 
         /// <summary>
@@ -157,8 +160,12 @@ namespace Microflow.FlowControl
         {
             try
             {
+                string subInstanceId = MicroflowDurableContext.NewGuid().ToString();
+
+                MicroflowHttpHelper.ParseUrlMicroflowData(HttpCallWithRetries, subInstanceId);
+
                 // log start of step
-                LogStepStart();
+                LogStepStart(subInstanceId);
 
                 // if the callout url is empty then no http call is done, use this for an empty container step
                 if (string.IsNullOrWhiteSpace(HttpCallWithRetries.CalloutUrl))
@@ -171,7 +178,7 @@ namespace Microflow.FlowControl
                 }
                 else
                 {
-                    await HttpCallout();
+                    await HttpCallout(subInstanceId);
                 }
 
                 #region Region optional: no scale groups
@@ -209,9 +216,10 @@ namespace Microflow.FlowControl
         /// <summary>
         /// Do the http callout
         /// </summary>
-        private async Task HttpCallout()
+        private async Task HttpCallout(string subInstanceId)
         {
             MicroflowHttpResponse runObjectResponseData = MicroflowRun.RunObject.MicroflowStepResponseData ?? null;
+
 
             // send and receive inline flow
             if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.CalloutUrl))
@@ -220,37 +228,33 @@ namespace Microflow.FlowControl
                 {
                     MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(CallNames.HttpCallOrchestrator,
                                                                                                                                    HttpCallWithRetries.GetRetryOptions(),
-                                                                                                                                   MicroflowDurableContext.NewGuid().ToString(),
+                                                                                                                                   subInstanceId,
                                                                                                                                    (HttpCallWithRetries, runObjectResponseData));
                 }
                 else
                 {
                     MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallOrchestrator,
-                                                                                                                          MicroflowDurableContext.NewGuid().ToString(),
+                                                                                                                          subInstanceId,
                                                                                                                           (HttpCallWithRetries, runObjectResponseData));
                 }
             }
 
-            // call out to micro-service
-            // wait for external event flow / webhook
-            if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.WebhookId))
+            if (HttpCallWithRetries.EnableWebhook)
             {
                 try
                 {
-                    HttpCallWithRetries.WebhookId = $"{MicroflowRun.WorkflowName}@{HttpCallWithRetries.WebhookId}";
-
                     if (HttpCallWithRetries.RetryDelaySeconds > 0)
                     {
-                        MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(CallNames.HttpCallWithWebhookOrchestrator,
+                        MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(CallNames.WebhookOrchestrator,
                                                                                                                                        HttpCallWithRetries.GetRetryOptions(),
-                                                                                                                                       $"{HttpCallWithRetries.WebhookId}@{HttpCallWithRetries.RowKey}",
+                                                                                                                                       HttpCallWithRetries.WebhookId,
                                                                                                                                        (HttpCallWithRetries, runObjectResponseData, MicroflowHttpResponse));
 
                         return;
                     }
 
-                    MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallWithWebhookOrchestrator,
-                                                                                                                          $"{HttpCallWithRetries.WebhookId}@{HttpCallWithRetries.RowKey}",
+                    MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.WebhookOrchestrator,
+                                                                                                                          HttpCallWithRetries.WebhookId,
                                                                                                                           (HttpCallWithRetries, runObjectResponseData, MicroflowHttpResponse));
                 }
                 catch (FunctionFailedException fex)
@@ -446,7 +450,7 @@ namespace Microflow.FlowControl
         /// Log the start of the step
         /// </summary>
         [Deterministic]
-        private void LogStepStart()
+        private void LogStepStart(string subInstanceId)
         {
             MicroflowTasks.Add(MicroflowDurableContext.CallActivityAsync(
                 CallNames.LogStep,
@@ -456,7 +460,10 @@ namespace Microflow.FlowControl
                                   Convert.ToInt32(HttpCallWithRetries.RowKey),
                                   MicroflowRun.OrchestratorInstanceId,
                                   MicroflowRun.RunObject.RunId,
-                                  MicroflowRun.RunObject.GlobalKey)
+                                  MicroflowRun.RunObject.GlobalKey,
+                                  HttpCallWithRetries.CalloutUrl,
+                                  subOrchestrationId: subInstanceId,
+                                  webhookId: HttpCallWithRetries.WebhookId)
             ));
         }
 
@@ -475,6 +482,7 @@ namespace Microflow.FlowControl
                                   MicroflowRun.OrchestratorInstanceId,
                                   MicroflowRun.RunObject.RunId,
                                   MicroflowRun.RunObject.GlobalKey,
+                                  null,
                                   MicroflowHttpResponse.Success,
                                   MicroflowHttpResponse.HttpResponseStatusCode,
                                   string.IsNullOrWhiteSpace(MicroflowHttpResponse.Content) ? null : MicroflowHttpResponse.Content)
@@ -500,6 +508,7 @@ namespace Microflow.FlowControl
                                   MicroflowRun.OrchestratorInstanceId,
                                   MicroflowRun.RunObject.RunId,
                                   MicroflowRun.RunObject.GlobalKey,
+                                  null,
                                   false,
                                   MicroflowHttpResponse.HttpResponseStatusCode,
                                   string.IsNullOrWhiteSpace(MicroflowHttpResponse.Content) ? null : MicroflowHttpResponse.Content)
@@ -530,6 +539,7 @@ namespace Microflow.FlowControl
                                       MicroflowRun.OrchestratorInstanceId,
                                       MicroflowRun.RunObject.RunId,
                                       MicroflowRun.RunObject.GlobalKey,
+                                      null,
                                       false,
                                       -408,
                                       string.IsNullOrWhiteSpace(HttpCallWithRetries.WebhookId)
@@ -548,6 +558,7 @@ namespace Microflow.FlowControl
                                       MicroflowRun.OrchestratorInstanceId,
                                       MicroflowRun.RunObject.RunId,
                                       MicroflowRun.RunObject.GlobalKey,
+                                      null,
                                       false,
                                       -500,
                                       ex.Message)

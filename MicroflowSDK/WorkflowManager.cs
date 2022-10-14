@@ -1,9 +1,22 @@
 ﻿using MicroflowModels;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace MicroflowSDK
 {
+    public class PassThroughParams
+    {
+        public bool WorkflowName { get; set; } = true;
+        public bool MainOrchestrationId { get; set; } = true;
+        public bool SubOrchestrationId { get; set; } = true;
+        public bool WebhookId { get; set; } = true;
+        public bool RunId { get; set; } = true;
+        public bool StepNumber { get; set; } = true;
+        public bool GlobalKey { get; set; } = true;
+        public bool StepId { get; set; } = true;
+    }
+
     public static class WorkflowManager
     {
         public static Step Step(this Microflow microFlow, int stepNumber) => microFlow.Steps.First(s=>s.StepNumber == stepNumber);
@@ -21,20 +34,6 @@ namespace MicroflowSDK
             }
 
             return stepsList;
-        }
-
-        public static Dictionary<string, string> CreateMergeFields()
-        {
-            string querystring = "?ProjectName=<ProjectName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&CallbackUrl=<CallbackUrl>&RunId=<RunId>&StepNumber=<StepNumber>&GlobalKey=<GlobalKey>";// &StepId=<StepId>";
-
-            Dictionary<string, string> mergeFields = new();
-            // use 
-            mergeFields.Add("default_post_url", "https://reqbin.com/echo/post/json" + querystring);
-            // set the callout url to the new SleepTestOrchestrator http normal function url
-            //mergeFields.Add("default_post_url", baseUrl + "/SleepTestOrchestrator_HttpStart" + querystring);
-            //mergeFields.Add("default_post_url", baseUrl + "/testpost" + querystring);
-
-            return mergeFields;
         }
     }
 }

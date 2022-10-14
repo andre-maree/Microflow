@@ -32,9 +32,11 @@ namespace MicroflowModels
             public const string GetStepInternal = "GetStepInternal";
             public const string LogError = "LogError";
             public const string LogStep = "LogStep";
+            public const string LogWebhook = "TableLogWebhook";
+            public const string LogMicroflowHttpData = "BlobLogRequest";
             public const string LogOrchestration = "LogOrchestration";
             public const string HttpCallOrchestrator = "HttpCallOrchestrator";
-            public const string HttpCallWithWebhookOrchestrator = "HttpCallWithCallbackOrchestrator";
+            public const string WebhookOrchestrator = "WebhookOrchestrator";
             public const string MicroflowStart = "MicroflowStart";
             public const string MicroflowStartOrchestration = "MicroflowStartOrchestration";
             public const string StepFlowControl = "StepFlowControl";

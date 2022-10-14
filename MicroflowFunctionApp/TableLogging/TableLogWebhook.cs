@@ -7,12 +7,12 @@ using static MicroflowModels.Constants;
 
 namespace Microflow.Logging
 {
-    public static class TableLogOrchestrationActivity
+    public static class TableLogWebhook
     {
-        [FunctionName(CallNames.LogOrchestration)]
-        public static async Task TableLogOrchestration([ActivityTrigger] LogOrchestrationEntity logEntity)
+        [FunctionName(CallNames.LogWebhook)]
+        public static async Task TableLogWebhookActivity([ActivityTrigger] LogWebhookEntity logEntity)
         {
-            await logEntity.LogOrchestration();
+            await logEntity.LogWebhook();
         }
     }
 }

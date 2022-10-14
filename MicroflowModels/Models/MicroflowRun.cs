@@ -39,6 +39,7 @@ namespace MicroflowModels
     public class MicroflowHttpResponse : MicroflowHttpResponseBase//, IMicroflowHttpResponse
     {
         public List<int> SubStepsToRun { get; set; }
+        public string Action { get; set; }
     }
     //public interface IMicroflowHttpResponse
     //{

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
+using Microflow.MicroflowTableModels;
 using MicroflowModels;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
@@ -14,15 +16,13 @@ namespace Microflow.HttpOrchestrators
         /// Does the call out and then waits for the webhook
         /// </summary>
         [Deterministic]
-        [FunctionName(CallNames.HttpCallWithWebhookOrchestrator)]
-        public static async Task<MicroflowHttpResponse> HttpCallWithCallback([OrchestrationTrigger] IDurableOrchestrationContext context,
+        [FunctionName(CallNames.WebhookOrchestrator)]
+        public static async Task<MicroflowHttpResponse> WebhookOrchestrator([OrchestrationTrigger] IDurableOrchestrationContext context,
                                                                              ILogger inLog)
         {
             ILogger log = context.CreateReplaySafeLogger(inLog);
 
             (HttpCall httpCall, MicroflowHttpResponse callOutResponse, MicroflowHttpResponse runObjectResponse) = context.GetInput<(HttpCall, MicroflowHttpResponse, MicroflowHttpResponse)>();
-
-            //Webhook webHook = JsonSerializer.Deserialize<Webhook>(httpCall.Webhook);
 
             #region Optional: no stepcount
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_STEPCOUNT
@@ -46,25 +46,29 @@ namespace Microflow.HttpOrchestrators
 #endif
                 #endregion
 
+                string webhookRowKey = $"{httpCall.RowKey}~{httpCall.WebhookId}~{context.InstanceId}";
+
+                await LogWebhookCreate(context, httpCall.PartitionKey, webhookRowKey, httpCall.RunId);
+
                 MicroflowHttpResponse microflowWebhookResponse = null;
 
                 // TODO: always use https
-                if (httpCall.WebhookSubStepsMapping != null && httpCall.WebhookSubStepsMapping.Length > 0)
-                {
-                    log.LogCritical($"Waiting for webhook: {CallNames.BaseUrl}/webhooks/{httpCall.WebhookId}/{httpCall.RowKey}/" + "{action}");
+                //if (httpCall.WebhookSubStepsMapping != null && httpCall.WebhookSubStepsMapping.Length > 0)
+                //{
+                log.LogCritical($"Waiting for webhook: {CallNames.BaseUrl}/webhooks/{context.InstanceId}/" + "{action}");
 
-                    // wait for the external event, set the timeout
-                    microflowWebhookResponse = await context.WaitForExternalEvent<MicroflowHttpResponse>($"{httpCall.WebhookId}@{httpCall.RowKey}",
-                                                                                                           TimeSpan.FromSeconds(httpCall.WebhookTimeoutSeconds));
-                }
-                else
-                {
-                    log.LogCritical($"Waiting for webhook: {CallNames.BaseUrl}/webhooks/{httpCall.WebhookId}/{httpCall.RowKey}");
+                // wait for the external event, set the timeout
+                microflowWebhookResponse = await context.WaitForExternalEvent<MicroflowHttpResponse>(context.InstanceId,
+                                                                                                       TimeSpan.FromSeconds(httpCall.WebhookTimeoutSeconds));
+                //}
+                //else
+                //{
+                //    log.LogCritical($"Waiting for webhook: {CallNames.BaseUrl}/webhooks/{context.InstanceId}");
 
-                    // wait for the external event, set the timeout
-                    microflowWebhookResponse = await context.WaitForExternalEvent<MicroflowHttpResponse>($"{httpCall.WebhookId}@{httpCall.RowKey}",
-                                                                                                           TimeSpan.FromSeconds(httpCall.WebhookTimeoutSeconds));
-                }
+                //    // wait for the external event, set the timeout
+                //    microflowWebhookResponse = await context.WaitForExternalEvent<MicroflowHttpResponse>(context.InstanceId,
+                //                                                                                           TimeSpan.FromSeconds(httpCall.WebhookTimeoutSeconds));
+                //}
 
                 #region Optional: no stepcount
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_STEPCOUNT
@@ -79,7 +83,9 @@ namespace Microflow.HttpOrchestrators
                 // check for action failed
                 if (microflowWebhookResponse.HttpResponseStatusCode >= 200 && microflowWebhookResponse.HttpResponseStatusCode < 300)
                 {
-                    log.LogWarning($"Step {httpCall.RowKey} webhook {httpCall.WebhookId} successful at {context.CurrentUtcDateTime:HH:mm:ss}");
+                    await LogWebhookAction(context, httpCall.PartitionKey, webhookRowKey, microflowWebhookResponse.Action);
+
+                    log.LogWarning($"Step {httpCall.RowKey} webhook {context.InstanceId} successful at {context.CurrentUtcDateTime:HH:mm:ss}");
 
                     return microflowWebhookResponse;
                 }
@@ -89,7 +95,7 @@ namespace Microflow.HttpOrchestrators
                     {
                         Success = false,
                         HttpResponseStatusCode = microflowWebhookResponse.HttpResponseStatusCode,
-                        Content = $"webhook action {httpCall.WebhookId} falied, StopOnActionFailed is {httpCall.StopOnWebhookFailed}"
+                        Content = $"webhook action {context.InstanceId} falied, StopOnActionFailed is {httpCall.StopOnWebhookFailed}"
                     };
                 }
             }
@@ -126,6 +132,38 @@ namespace Microflow.HttpOrchestrators
             ////////////////////////////////////////////////
 #endif
             #endregion
+        }
+
+        /// <summary>
+        /// Log the start of the webhook
+        /// </summary>
+        [Deterministic]
+        private static async Task LogWebhookCreate(IDurableOrchestrationContext context, string partitionKey, string rowKey, string runId)
+        {
+            await context.CallActivityAsync(
+                CallNames.LogWebhook,
+                new LogWebhookEntity(true,
+                                  partitionKey,
+                                  rowKey,
+                                  context.CurrentUtcDateTime,
+                                  runId)
+            );
+        }
+
+        /// <summary>
+        /// Log the webhook action
+        /// </summary>
+        [Deterministic]
+        private static async Task LogWebhookAction(IDurableOrchestrationContext context, string partitionKey, string rowKey, string action)
+        {
+            await context.CallActivityAsync(
+                CallNames.LogWebhook,
+            new LogWebhookEntity(false,
+                                  partitionKey,
+                                  rowKey,
+                                  context.CurrentUtcDateTime,
+                                  action: action)
+            );
         }
     }
 }

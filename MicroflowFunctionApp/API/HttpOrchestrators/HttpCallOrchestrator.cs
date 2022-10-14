@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Net.Http;
 using System.Threading.Tasks;
+using Azure.Core;
 using Microflow.Helpers;
 using MicroflowModels;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Newtonsoft.Json.Linq;
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_STEPCOUNT
 using static MicroflowModels.Constants;
 #endif
@@ -45,7 +48,22 @@ namespace Microflow.HttpOrchestrators
 #endif
                 #endregion
 
-                DurableHttpResponse durableHttpResponse = await context.CallHttpAsync(durableHttpRequest);
+                Task logTask = null;
+
+                // log start
+                if (!httpCall.IsHttpGet)
+                {
+                    logTask = LogMicroflowHttpData(context, durableHttpRequest.Content, httpCall.PartitionKey, httpCall.RowKey, httpCall.RunId, true);
+                }
+
+                Task<DurableHttpResponse> durableHttpResponseTask = context.CallHttpAsync(durableHttpRequest);
+
+                if (!httpCall.IsHttpGet)
+                {
+                    await logTask;
+                }
+
+                await durableHttpResponseTask;
 
                 #region Optional: no stepcount
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_STEPCOUNT
@@ -58,7 +76,10 @@ namespace Microflow.HttpOrchestrators
 #endif
                 #endregion
 
-                return durableHttpResponse.GetMicroflowResponse(httpCall.ForwardResponseData);
+                // log end
+                await LogMicroflowHttpData(context, durableHttpResponseTask.Result.Content, httpCall.PartitionKey, httpCall.RowKey, httpCall.RunId, false);
+
+                return durableHttpResponseTask.Result.GetMicroflowResponse(httpCall.ForwardResponseData);
             }
             catch (TimeoutException)
             {
@@ -103,6 +124,17 @@ namespace Microflow.HttpOrchestrators
             ////////////////////////////////////////////////
 #endif
             #endregion
+        }
+
+        /// <summary>
+        /// Log response
+        /// </summary>
+        private async static Task LogMicroflowHttpData(IDurableOrchestrationContext context, string  data, string workflowName, string stepNumber, string runId, bool isRequest)
+        {
+            await context.CallActivityAsync(
+                CallNames.LogMicroflowHttpData,
+                    ($"{workflowName}@{stepNumber}@{runId}@{context.InstanceId}", data, isRequest)
+            );
         }
     }
 }

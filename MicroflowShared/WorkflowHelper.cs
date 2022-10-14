@@ -169,6 +169,20 @@ namespace MicroflowShared
             }
         }
 
+        private static async Task UpsertWebhook(List<Task> webhookTasks, Webhook webhookEntity, TableClient webhooksTable)
+        {
+            if (webhookTasks.Count < 40)
+            {
+                webhookTasks.Add(webhooksTable.UpsertEntityAsync(webhookEntity));
+            }
+            else
+            {
+                Task task = await Task.WhenAny(webhookTasks);
+                webhookTasks.Add(webhooksTable.UpsertEntityAsync(webhookEntity));
+                webhookTasks.Remove(task);
+            }
+        }
+
         /// <summary>
         /// Must be called at least once before a workflow creation or update,
         /// do not call this repeatedly when running multiple concurrent instances,
@@ -177,9 +191,11 @@ namespace MicroflowShared
         /// </summary>
         public static async Task PrepareWorkflow(this MicroflowRun workflowRun, Microflow workflow)
         {
+            List<Task> webhookTasks = new();
             List<TableTransactionAction> batch = new();
             List<Task> batchTasks = new();
             TableClient stepsTable = TableHelper.GetStepsTable();
+            TableClient webhooksTable = TableHelper.GetWebhooksTable();
             Step stepContainer = new(-1, null);
             StringBuilder sb = new();
             List<Step> steps = workflow.Steps;
@@ -193,7 +209,16 @@ namespace MicroflowShared
 
             for (int i = 0; i < steps.Count; i++)
             {
-                Step step = steps.ElementAt(i);
+                Step step = steps[i];
+
+                if (step.EnableWebhook && step.WebhookSubStepsMapping != null && step.WebhookSubStepsMapping.Count > 0)
+                {
+                    step.WebhookId = string.IsNullOrWhiteSpace(step.WebhookId) ? Guid.NewGuid().ToString() : step.WebhookId;
+
+                    Webhook webhookEntity = new(step.WebhookId, JsonSerializer.Serialize(step.WebhookSubStepsMapping));
+
+                    webhookTasks.Add(UpsertWebhook(webhookTasks, webhookEntity, webhooksTable));
+                }
 
                 (int StepNumber, int ParentCount, int WaitForAllParents) subInfo = liParentCounts.FirstOrDefault(s => s.StepNumber == step.StepNumber);
 
@@ -215,9 +240,9 @@ namespace MicroflowShared
                     HttpCallWithRetries httpCallRetriesEntity = new(workflowRun.WorkflowName, step.StepNumber.ToString(), step.StepId, sb.ToString())
                     {
                         WebhookId = step.WebhookId,
+                        EnableWebhook = step.EnableWebhook,
                         WebhookTimeoutSeconds = step.WebhookTimeoutSeconds,
-                        SubStepsToRunForWebhookTimeout = (step.SubStepsToRunForWebhookTimeout == null || step.SubStepsToRunForWebhookTimeout.Count < 1) ? null : JsonSerializer.Serialize(step.WebhookSubStepsMapping),
-                        WebhookSubStepsMapping = (step.WebhookSubStepsMapping == null || step.WebhookSubStepsMapping.Count < 1) ? null : JsonSerializer.Serialize(step.WebhookSubStepsMapping),
+                        SubStepsToRunForWebhookTimeout = (step.SubStepsToRunForWebhookTimeout == null || step.SubStepsToRunForWebhookTimeout.Count < 1) ? null : JsonSerializer.Serialize(step.SubStepsToRunForWebhookTimeout),
                         StopOnWebhookFailed = step.StopOnWebhookFailed,
                         CalloutUrl = step.CalloutUrl,
                         CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
@@ -241,9 +266,9 @@ namespace MicroflowShared
                     HttpCall httpCallEntity = new(workflowRun.WorkflowName, step.StepNumber.ToString(), step.StepId, sb.ToString())
                     {
                         WebhookId = step.WebhookId,
+                        EnableWebhook = step.EnableWebhook,
                         WebhookTimeoutSeconds = step.WebhookTimeoutSeconds,
-                        SubStepsToRunForWebhookTimeout = (step.SubStepsToRunForWebhookTimeout == null || step.SubStepsToRunForWebhookTimeout.Count < 1) ? null : JsonSerializer.Serialize(step.WebhookSubStepsMapping),
-                        WebhookSubStepsMapping = (step.WebhookSubStepsMapping == null || step.WebhookSubStepsMapping.Count < 1) ? null : JsonSerializer.Serialize(step.WebhookSubStepsMapping),
+                        SubStepsToRunForWebhookTimeout = (step.SubStepsToRunForWebhookTimeout == null || step.SubStepsToRunForWebhookTimeout.Count < 1) ? null : JsonSerializer.Serialize(step.SubStepsToRunForWebhookTimeout),
                         StopOnWebhookFailed = step.StopOnWebhookFailed,
                         CalloutUrl = step.CalloutUrl,
                         CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
@@ -278,6 +303,8 @@ namespace MicroflowShared
             batchTasks.Add(stepsTable.SubmitTransactionAsync(batch));
 
             await Task.WhenAll(batchTasks);
+
+            await Task.WhenAll(webhookTasks);
         }
 
         /// <summary>
@@ -319,7 +346,8 @@ namespace MicroflowShared
                         WebhookTimeoutSeconds = step.WebhookTimeoutSeconds,
                         CalloutTimeoutSeconds = step.CalloutTimeoutSeconds,
                         StopOnWebhookFailed = step.StopOnWebhookFailed,
-                        WebhookSubStepsMapping = JsonSerializer.Deserialize<List<SubStepsMappingForActions>>(step.WebhookSubStepsMapping),
+                        //TODO: get WebhookSubStepsMapping
+                        //WebhookSubStepsMapping = JsonSerializer.Deserialize<List<SubStepsMappingForActions>>(step.WebhookSubStepsMapping),
                         WebhookId = step.WebhookId,
                         //SubSteps = step.SubSteps,
                         //WaitForAllParents = step.
@@ -372,8 +400,6 @@ namespace MicroflowShared
 
             return tableClient.QueryAsync<HttpCallWithRetries>(filter: $"PartitionKey eq '{workflowName}'");
         }
-
-
 
         public static AsyncPageable<TableEntity> GetStepEntities(string workflowName)
         {
@@ -430,10 +456,10 @@ namespace MicroflowShared
             TableClient stepsTable = TableHelper.GetStepsTable();
 
             // MicroflowLog table
-            TableClient logOrchestrationTable = TableReferences.GetLogOrchestrationTable();
+            TableClient logOrchestrationTable = TableHelper.GetLogOrchestrationTable();
 
             // MicroflowLog table
-            TableClient logStepsTable = TableReferences.GetLogStepsTable();
+            TableClient logStepsTable = TableHelper.GetLogStepsTable();
 
             // Error table
             TableClient errorsTable = TableHelper.GetErrorsTable();
@@ -441,17 +467,25 @@ namespace MicroflowShared
             // workflow table
             TableClient workflowConfigsTable = GetWorkflowConfigsTable();
 
+            TableClient webhookLogTable = TableHelper.GetLogWebhookTable();
+
+            TableClient webhookTable = TableHelper.GetWebhooksTable();
+
             Task<Response<TableItem>> t1 = stepsTable.CreateIfNotExistsAsync();
             Task<Response<TableItem>> t2 = logOrchestrationTable.CreateIfNotExistsAsync();
             Task<Response<TableItem>> t3 = logStepsTable.CreateIfNotExistsAsync();
             Task<Response<TableItem>> t4 = errorsTable.CreateIfNotExistsAsync();
             Task<Response<TableItem>> t5 = workflowConfigsTable.CreateIfNotExistsAsync();
+            Task<Response<TableItem>> t6 = webhookLogTable.CreateIfNotExistsAsync();
+            Task<Response<TableItem>> t7 = webhookTable.CreateIfNotExistsAsync();
 
             await t1;
             await t2;
             await t3;
             await t4;
             await t5;
+            await t6;
+            await t7;
         }
 
         private static TableClient GetWorkflowConfigsTable()

@@ -17,7 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MicroflowModels\MicroflowModels.csproj" />
     <ProjectReference Include="..\MicroflowSDK\MicroflowSDK.csproj" />
   </ItemGroup>
 

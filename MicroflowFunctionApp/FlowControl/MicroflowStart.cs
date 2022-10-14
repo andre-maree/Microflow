@@ -37,7 +37,14 @@ namespace Microflow.FlowControl
                 // start
                 await client.StartNewAsync("MicroflowStartOrchestration", instanceId, workflowRun);
 
-                return await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromSeconds(1));
+                var response = await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromSeconds(1));
+
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    response.Content = new StringContent(instanceId);
+                }
+
+                return response;
 
             }
             catch (RequestFailedException ex)
