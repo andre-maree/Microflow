@@ -41,7 +41,7 @@ SetStepProperties: [PUT] SetStepProperties/{workflowName}/{stepNumber}
 ```
 - Webhook:
 ```r
-WebhookWithAction: [GET,POST] webhooks/{webhookId}/{action}
+Webhook: [GET,POST] webhooks/{webhookId}/{action}
 ```
 - Scalegroup:
 ```r
