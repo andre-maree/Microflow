@@ -12,7 +12,7 @@
         string MainOrchestrationId { get; set; }
         string RunId { get; set; }
         string StepId { get; set; }
-        bool StopOnWebhookFailed { get; set; }
+        bool StopOnWebhookTimeout { get; set; }
         string ScaleGroupId { get; set; }
         string SubStepsToRunForWebhookTimeout { get; set; }
         bool ForwardResponseData { get; set; }

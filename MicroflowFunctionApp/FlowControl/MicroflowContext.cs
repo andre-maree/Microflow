@@ -312,7 +312,7 @@ namespace Microflow.FlowControl
         [Deterministic]
         private async Task ProcessSubSteps()
         {
-            if (MicroflowHttpResponse.Success || !HttpCallWithRetries.StopOnWebhookFailed)
+            if (MicroflowHttpResponse.Success || !HttpCallWithRetries.StopOnWebhookTimeout)
             {
                 LogStepEnd();
 
@@ -543,7 +543,7 @@ namespace Microflow.FlowControl
                                       -408,
                                       string.IsNullOrWhiteSpace(HttpCallWithRetries.WebhookId)
                                         ? "callout timeout"
-                                        : $"action timed out, StopOnActionFailed is {HttpCallWithRetries.StopOnWebhookFailed}")
+                                        : $"action timed out, StopOnWebhookTimeout is {HttpCallWithRetries.StopOnWebhookTimeout}")
                 ));
             }
             else

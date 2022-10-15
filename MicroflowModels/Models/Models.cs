@@ -70,7 +70,7 @@ namespace MicroflowModels
         public int StepNumber { get; set; }
         public string CalloutUrl { get; set; }
         public string ScaleGroupId { get; set; }
-        public bool StopOnWebhookFailed { get; set; } = true;
+        public bool StopOnWebhookTimeout { get; set; } = true;
         public bool IsHttpGet { get; set; }
         public int CalloutTimeoutSeconds { get; set; } = 1000;
         public bool AsynchronousPollingEnabled { get; set; } = true;
