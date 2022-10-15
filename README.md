@@ -10,7 +10,7 @@ A Microflow workflow is a list of steps, with each step having child steps. Each
 
 During the workflow creation and editing phases, a step can be set to call out to an endpoint, and then to also spawn a webhook to wait for a reply:
 
-> Microflow is a dynamic and powerful micro-service orchestrator with webhook functionality.
+> Microflow is a dynamic and flexible micro-service orchestrator with webhook functionality.
 
 Read more about Microflow in the [wiki](https://github.com/andre-maree/Microflow/wiki "wiki").
 
