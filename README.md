@@ -2,7 +2,7 @@
 
 Microflow is a serverless-capable micro-service orchestrator built on top of the Microsoft Durable Functions framework. It can execute complex workflows that will automatically scale out and back, with pay-as-you-go billing when running serverlessly. It is also possible to run it on the Azure App Service or on Docker or Kubernetes.
 
-Microflow is more than just an "if-else" based workflow engine. Very complex workflows can be executed. The major benefit Microflow provides over Durable Functions, is that workflows can be created and modified externally and then be upserted as JSON. All aspects of workflow editing can be done and then executed without any code deployments.
+Microflow is more than just an "if-else" based workflow engine. Very complex workflows can be executed. The major benefit over Durable Functions, is that workflows can be created and modified externally and then be upserted as JSON. All aspects of workflow editing can be done and then executed without any code deployments.
 
 > One instance of Microflow can store many JSON defined workflows, and execute these workflows in parallel without impacting each other. Every workflow can  run as a singleton or as many parallel instances. Auto-scaling will ensure that there are always enough resources.
 
