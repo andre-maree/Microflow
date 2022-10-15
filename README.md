@@ -10,6 +10,13 @@ A Microflow workflow is a list of steps, with each step having child steps. Each
 
 > Microflow is a dynamic and flexible micro-service orchestrator with webhook functionality.
 
+Other functionality include:
+- Protect resorces from overloading by grouping steps with a ScaleGroupId and a maximum instance count per scale group.
+- Start, pause and stop the running of a specicfic workflow.
+- Workflows can be chained together by calling other workflows. A global guid can be set to tie all these workflows together, and then also be used to start, stop and pause by the global guid.
+- All request and reponse data is logged to Azure blobs.
+- Response data can be passed on from parent steps to child steps.
+
 Read more about Microflow in the [wiki](https://github.com/andre-maree/Microflow/wiki "wiki").
 
 ## API Overview:
