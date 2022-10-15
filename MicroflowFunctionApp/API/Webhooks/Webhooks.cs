@@ -16,21 +16,13 @@ namespace Microflow.Webhooks
     /// </summary>
     public static class Webhooks
     {
-        [FunctionName("Webhook")]
-        public static async Task<HttpResponseMessage> Webhook(
-        [HttpTrigger(AuthorizationLevel.Function, "get", "post",
-        Route = Constants.MicroflowPath + "/webhooks/{webhookId}")] HttpRequestMessage req,
-        [DurableClient] IDurableOrchestrationClient orchClient,
-        string webhookId)
-            => await orchClient.ProcessWebhook(webhookId, string.Empty);
-
         ///// <summary>
         ///// For a webhook defined as {webhookId}/{action}
         ///// </summary>
         [FunctionName("WebhookWithAction")]
         public static async Task<HttpResponseMessage> WebhookWithAction(
         [HttpTrigger(AuthorizationLevel.Function, "get", "post",
-        Route = Constants.MicroflowPath + "/webhooks/{webhookId}/{action}")] HttpRequestMessage req,
+        Route = Constants.MicroflowPath + "/webhooks/{webhookId}/{action?}")] HttpRequestMessage req,
         [DurableClient] IDurableOrchestrationClient orchClient,
         string webhookId, string action)
             => await orchClient.ProcessWebhook(webhookId, action);

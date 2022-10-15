@@ -54,7 +54,7 @@ namespace Microflow.HttpOrchestrators
                 // TODO: always use https
                 //if (httpCall.WebhookSubStepsMapping != null && httpCall.WebhookSubStepsMapping.Length > 0)
                 //{
-                log.LogCritical($"Waiting for webhook: {CallNames.BaseUrl}/webhooks/{context.InstanceId}/" + "{action}");
+                log.LogCritical($"Waiting for webhook: {CallNames.BaseUrl}/webhooks/{context.InstanceId}/" + "{action?}");
 
                 // wait for the external event, set the timeout
                 microflowWebhookResponse = await context.WaitForExternalEvent<MicroflowHttpResponse>(context.InstanceId,
