@@ -12,7 +12,7 @@ During the workflow creation and editing phases, a step can be set to call out t
 
 > Microflow is a dynamic and powerful micro-service orchestrator with webhook functionality.
 
-
+Read more about Microflow in the [wiki](https://github.com/andre-maree/Microflow/wiki "wiki").
 
 ## API Overview:
 The base URL for all calls is "microflow/v1". The full url will look like this: http://localhost:7071/microflow/v1/UpsertWorkflow/{globalKey?} 
