@@ -43,7 +43,7 @@ namespace MicroflowModels
         [DataMember(Name = "MergeFields", EmitDefaultValue = false)]
         public Dictionary<string, string> MergeFields { get; set; } = new Dictionary<string, string>();
 
-        public MicroflowRetryOptions DefaultRetryOptions { get; set; }
+        public RetryOptions DefaultRetryOptions { get; set; }
 
         public string WorkflowVersion { get;set; }
     }
@@ -100,10 +100,10 @@ namespace MicroflowModels
         public bool ForwardResponseData { get; set; }
 
         [DataMember(Name = "RetryOptions", EmitDefaultValue = false)]
-        public MicroflowRetryOptions RetryOptions { get; set; }
+        public RetryOptions RetryOptions { get; set; }
     }
 
-    public class MicroflowRetryOptions
+    public class RetryOptions
     {
         public int DelaySeconds { get; set; } = 5;
         public int MaxDelaySeconds { get; set; } = 120;

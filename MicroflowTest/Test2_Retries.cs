@@ -29,7 +29,7 @@ namespace MicroflowTest
             microflow.workflow.Step(1).StopOnWebhookTimeout = false;
 
             microflow.workflow.Step(1).WebhookTimeoutSeconds = 3;
-            microflow.workflow.Step(1).RetryOptions = new MicroflowRetryOptions() { BackoffCoefficient = 1, DelaySeconds = 1, MaxDelaySeconds = 1, MaxRetries = 2, TimeOutSeconds = 300 };
+            microflow.workflow.Step(1).RetryOptions = new RetryOptions() { BackoffCoefficient = 1, DelaySeconds = 1, MaxDelaySeconds = 1, MaxRetries = 2, TimeOutSeconds = 300 };
 
             // Upsert
             bool successUpsert = await TestWorkflowHelper.UpsertWorkFlow(microflow.workflow);

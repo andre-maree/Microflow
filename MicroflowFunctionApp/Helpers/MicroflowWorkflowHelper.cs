@@ -14,9 +14,9 @@ namespace Microflow.Helpers
             return MicroflowStartupHelper.CreateStartupRun(req.RequestUri.ParseQueryString(), ref instanceId, workflowName);
         }
 
-        public static RetryOptions GetRetryOptions(this IHttpCallWithRetries httpCallWithRetries)
+        public static Microsoft.Azure.WebJobs.Extensions.DurableTask.RetryOptions GetRetryOptions(this IHttpCallWithRetries httpCallWithRetries)
         {
-            RetryOptions ops = new(TimeSpan.FromSeconds(httpCallWithRetries.RetryDelaySeconds),
+            Microsoft.Azure.WebJobs.Extensions.DurableTask.RetryOptions ops = new(TimeSpan.FromSeconds(httpCallWithRetries.RetryDelaySeconds),
                                                 httpCallWithRetries.RetryMaxRetries + 1)
             {
                 RetryTimeout = TimeSpan.FromSeconds(httpCallWithRetries.RetryTimeoutSeconds),

@@ -32,13 +32,13 @@ namespace MicroflowSDK
         {
             foreach (Step step in steps)
             {
-                step.RetryOptions = new MicroflowRetryOptions();
+                step.RetryOptions = new RetryOptions();
             }
         }
 
         public static void SetRetryForSteps(int delaySeconds, int maxDelaySeconds, int maxRetries, int timeOutSeconds, int backoffCoefficient, params Step[] steps)
         {
-            MicroflowRetryOptions retryOptions = new MicroflowRetryOptions()
+            RetryOptions retryOptions = new RetryOptions()
             {
                 DelaySeconds = delaySeconds,
                 MaxDelaySeconds = maxDelaySeconds,

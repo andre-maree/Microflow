@@ -19,7 +19,7 @@ namespace Microflow.Webhooks
         ///// <summary>
         ///// For a webhook defined as {webhookId}/{action}
         ///// </summary>
-        [FunctionName("WebhookWithAction")]
+        [FunctionName("Webhook")]
         public static async Task<HttpResponseMessage> WebhookWithAction(
         [HttpTrigger(AuthorizationLevel.Function, "get", "post",
         Route = Constants.MicroflowPath + "/webhooks/{webhookId}/{action?}")] HttpRequestMessage req,

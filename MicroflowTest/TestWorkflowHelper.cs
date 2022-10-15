@@ -116,7 +116,7 @@ namespace MicroflowTest
                 WorkflowVersion = "1.0",
                 Steps = workflow,
                 MergeFields = CreateMergeFields(paramss, isHttpGet.Value),
-                DefaultRetryOptions = new MicroflowRetryOptions()
+                DefaultRetryOptions = new RetryOptions()
             };
 
             string workflowName = string.IsNullOrWhiteSpace(microflow.WorkflowVersion)

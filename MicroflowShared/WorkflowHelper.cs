@@ -366,7 +366,7 @@ namespace MicroflowShared
                         SubStepsToRunForCalloutFailure = JsonSerializer.Deserialize<List<int>>(step.SubStepsToRunForCalloutFailure),
                         SubStepsToRunForWebhookTimeout = JsonSerializer.Deserialize<List<int>>(step.SubStepsToRunForWebhookTimeout),
                         StepNumber = Convert.ToInt32(step.RowKey),
-                        RetryOptions = step.RetryDelaySeconds == 0 ? null : new MicroflowRetryOptions()
+                        RetryOptions = step.RetryDelaySeconds == 0 ? null : new MicroflowModels.RetryOptions()
                         {
                             BackoffCoefficient = step.RetryBackoffCoefficient,
                             DelaySeconds = step.RetryDelaySeconds,
