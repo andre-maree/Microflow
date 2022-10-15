@@ -17,7 +17,7 @@ Other functionality include:
 - All request and reponse data is logged to Azure blobs.
 - Response data can be passed on from parent steps to child steps.
 
-Read more about Microflow in the [wiki](https://github.com/andre-maree/Microflow/wiki "wiki").
+Read more about Microflow in the [wiki](https://github.com/andre-maree/Microflow/wiki "wiki") (under construction).
 
 ## API Overview:
 The base URL for all calls is "microflow/v1". The full url will look like this: http://localhost:7071/microflow/v1/UpsertWorkflow/{globalKey?} 
