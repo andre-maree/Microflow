@@ -62,10 +62,10 @@ public class Test1_WorkflowExecution
 Four steps 1 to 4. Step 1 has child steps 2 and 3, and step 4 has steps 2 and 3 as parents. Steps 2 and 3 will wait for step 1 to complete and then execute in parallel (siblings). Step 4 will wait for both steps 2 and 3 to complete. Every step in this example will make an http post call to https://reqbin.com/echo/post/json, as specified by "default_post_url" in the MergeFields collection. There are no webhooks enabled on any steps. This is a simplistic example to start with:
 ```json
 {
-  "WorkflowName": "Myflow_ClientX2",
-  "WorkflowVersion": "2.1",
+  "WorkflowName": "Unit_test_workflow",
+  "WorkflowVersion": "1.0",
   "MergeFields": {
-    "default_post_url": "https://reqbin.com/echo/post/json?WorkflowName=<WorkflowName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&WebhookId=<WebhookId>&RunId=<RunId>&StepNumber=<StepNumber>&GlobalKey=<GlobalKey>&StepId=<StepId>"
+    "default_post_url": "https://reqbin.com/echo/post/json"
   },
   "DefaultRetryOptions": {
     "DelaySeconds": 5,
@@ -89,6 +89,8 @@ Four steps 1 to 4. Step 1 has child steps 2 and 3, and step 4 has steps 2 and 3 
       "WebhookId": null,
       "EnableWebhook": false,
       "WebhookTimeoutSeconds": 1000,
+      "StopOnCalloutFailure": false,
+      "SubStepsToRunForCalloutFailure": null,
       "WebhookSubStepsMapping": null,
       "WaitForAllParents": true,
       "SubSteps": [
@@ -111,6 +113,8 @@ Four steps 1 to 4. Step 1 has child steps 2 and 3, and step 4 has steps 2 and 3 
       "WebhookId": null,
       "EnableWebhook": false,
       "WebhookTimeoutSeconds": 1000,
+      "StopOnCalloutFailure": false,
+      "SubStepsToRunForCalloutFailure": null,
       "WebhookSubStepsMapping": null,
       "WaitForAllParents": true,
       "SubSteps": [
@@ -132,6 +136,8 @@ Four steps 1 to 4. Step 1 has child steps 2 and 3, and step 4 has steps 2 and 3 
       "WebhookId": null,
       "EnableWebhook": false,
       "WebhookTimeoutSeconds": 1000,
+      "StopOnCalloutFailure": false,
+      "SubStepsToRunForCalloutFailure": null,
       "WebhookSubStepsMapping": null,
       "WaitForAllParents": true,
       "SubSteps": [
@@ -153,6 +159,8 @@ Four steps 1 to 4. Step 1 has child steps 2 and 3, and step 4 has steps 2 and 3 
       "WebhookId": null,
       "EnableWebhook": false,
       "WebhookTimeoutSeconds": 1000,
+      "StopOnCalloutFailure": false,
+      "SubStepsToRunForCalloutFailure": null,
       "WebhookSubStepsMapping": null,
       "WaitForAllParents": true,
       "SubSteps": [],
