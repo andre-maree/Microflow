@@ -40,6 +40,7 @@ namespace MicroflowModels
     {
         public List<int> SubStepsToRun { get; set; }
         public string Action { get; set; }
+        public CalloutOrWebhook CalloutOrWebhook { get;set;}
     }
     //public interface IMicroflowHttpResponse
     //{

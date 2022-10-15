@@ -20,7 +20,7 @@ namespace MicroflowTest
             List<Step> stepsList = TestWorkflowHelper.CreateTestWorkflow_SimpleSteps();
 
             // create Microflow with the created workflow
-            (MicroflowModels.Microflow workflow, string workflowName) microflow = TestWorkflowHelper.CreateMicroflow(stepsList);
+            (MicroflowModels.Microflow workflow, string workflowName) microflow = TestWorkflowHelper.CreateMicroflow(stepsList, passThroughParams: false);
 
             // set loop to 1, how many time the workflow will execute
             int loop = 1;

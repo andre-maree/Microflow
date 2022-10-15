@@ -6,6 +6,12 @@ namespace MicroflowModels
 {
     #region POCOs
 
+    public enum CalloutOrWebhook
+    {
+        Callout,
+        Webhook
+    }
+
     public class SubStepsMappingForActions
     {
         public string WebhookAction { get; set; }
@@ -66,28 +72,32 @@ namespace MicroflowModels
             SubSteps = subSteps;
         }
 
-        public string StepId { get; set; }
         public int StepNumber { get; set; }
+        public string StepId { get; set; }
+
+        [DataMember(Name = "SubSteps", EmitDefaultValue = false)]
+        public List<int> SubSteps { get; set; } = new List<int>();
+
+        [DataMember(Name = "WaitForAllParents", EmitDefaultValue = false)]
+        public bool WaitForAllParents { get; set; } = true;
+
         public string CalloutUrl { get; set; }
-        public string ScaleGroupId { get; set; }
-        public bool StopOnWebhookFailed { get; set; } = true;
-        public bool IsHttpGet { get; set; }
         public int CalloutTimeoutSeconds { get; set; } = 1000;
-        public bool AsynchronousPollingEnabled { get; set; } = true;
-        public bool ForwardResponseData { get; set; }
-        public List<int> SubStepsToRunForWebhookTimeout { get; set; }
-        public string WebhookId { get; set; }
+        public bool StopOnCalloutFailure { get; set; }
+        public List<int> SubStepsToRunForCalloutFailure { get; set; }
+        public bool IsHttpGet { get; set; }
         public bool EnableWebhook { get; set; }
+        public string WebhookId { get; set; }
+        public bool StopOnWebhookTimeout { get; set; } = true;
+        public List<int> SubStepsToRunForWebhookTimeout { get; set; }
         public int WebhookTimeoutSeconds { get; set; } = 1000;
 
         [DataMember(Name = "WebhookSubStepsMapping", EmitDefaultValue = false)]
         public List<SubStepsMappingForActions> WebhookSubStepsMapping { get; set; }
 
-        [DataMember(Name = "WaitForAllParents", EmitDefaultValue = false)]
-        public bool WaitForAllParents { get; set; } = true;
-
-        [DataMember(Name = "SubSteps", EmitDefaultValue = false)]
-        public List<int> SubSteps { get; set; } = new List<int>();
+        public string ScaleGroupId { get; set; }
+        public bool AsynchronousPollingEnabled { get; set; } = true;
+        public bool ForwardResponseData { get; set; }
 
         [DataMember(Name = "RetryOptions", EmitDefaultValue = false)]
         public MicroflowRetryOptions RetryOptions { get; set; }

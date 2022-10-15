@@ -118,7 +118,7 @@ namespace Microflow.API.Internal
 
             HttpResponseMessage resp = new();
 
-            // test the returned status codes here and also the effect if Microflows step setting StopOnActionFailed
+            // test the returned status codes here and also the effect if Microflows step setting StopOnWebhookTimeout
             //resp.StatusCode = System.Net.HttpStatusCode.NotFound;
             resp.StatusCode = System.Net.HttpStatusCode.OK;
             // set the location and check in the stpe log if its saved when 201 created
