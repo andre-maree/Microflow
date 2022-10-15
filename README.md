@@ -2,17 +2,22 @@
 
 Microflow is a serverless-capable micro-service orchestrator built on top of the Microsoft Durable Functions framework. It can execute complex workflows that will automatically scale out and back, with pay-as-you-go billing when running serverlessly. It is also possible to run it on the Azure App Service or on Docker or Kubernetes.
 
-Microflow is more than just an "if-else" based workflow engine. Very complex workflows can be executed. The major benefit Microflow provides over Durable Functions, is that workflows can be created and modified externally and then be upserted as JSON. All aspects of workflow editing can be done and then executed without any code deployments.
+Microflow is more than just an "if-else" based workflow engine. Very complex workflows can be executed. The major benefit over Durable Functions, is that workflows can be created and modified externally and then be upserted as JSON. All aspects of workflow editing can be done and then executed without any code deployments.
 
-> One instance of Microflow can store many JSON defined workflows, and execute these workflows in parallel without impacting each other. Every workflow can  run as a singleton or as many parallel instances. Auto-scaling will ensure that there are always enough resources.
+> One instance of Microflow can store many JSON defined workflows, and execute these workflows in parallel without impacting each other. Furthermore, every workflow can  run as a singleton or as many parallel instances. Auto-scaling will ensure that there are always enough resources.
 
-A Microflow workflow is a list of steps, with each step having child steps. Each step can call an http endpoint via get or post. Child steps will wait for all its parents to complete before executing. Each step has a Callout property to be set as the external micro-service call url.
+A Microflow workflow is a list of steps, with each step having child steps. Each step can call an http endpoint via get or post. Child steps will wait for all its parents to complete before executing. Each step has a Callout property that can be set as the external micro-service call url. A step can also have a webhook set that will then spawn and wait for a reply after the callout was done:
 
-During the workflow creation and editing phases, a step can be set to call out to an endpoint, and then to also spawn a webhook to wait for a reply:
+> Microflow is a dynamic and flexible micro-service orchestrator with webhook functionality.
 
-> Microflow is a dynamic and powerful micro-service orchestrator with webhook functionality.
+Other functionality include:
+- Protect resorces from overloading by grouping steps with a ScaleGroupId and a maximum instance count per scale group.
+- Start, pause and stop the running of a specicfic workflow.
+- Workflows can be chained together by calling other workflows. A global guid can be set to tie all these workflows together, and then also be used to start, stop and pause by the global guid.
+- All request and reponse data is logged to Azure blobs.
+- Response data can be passed on from parent steps to child steps.
 
-
+Read more about Microflow in the [wiki](https://github.com/andre-maree/Microflow/wiki "wiki").
 
 ## API Overview:
 The base URL for all calls is "microflow/v1". The full url will look like this: http://localhost:7071/microflow/v1/UpsertWorkflow/{globalKey?} 
@@ -36,9 +41,7 @@ SetStepProperties: [PUT] SetStepProperties/{workflowName}/{stepNumber}
 ```
 - Webhook:
 ```r
-Webhook: [GET,POST] webhooks/{webhookId}
-WebhookWithAction: [GET,POST] webhooks/{webhookId}/{action}
-GetWebhooks: [GET,POST] GetWebhooks/{workflowName}/{webhookId}/{stepNumber}/{instanceGuid?}
+Webhook: [GET,POST] webhooks/{webhookId}/{action}
 ```
 - Scalegroup:
 ```r
@@ -76,94 +79,94 @@ Four steps 1 to 4. Step 1 has child steps 2 and 3, and step 4 has steps 2 and 3 
   },
   "Steps": [
     {
-      "StepId": "myStep 1",
       "StepNumber": 1,
-      "CalloutUrl": "{default_post_url}",
-      "ScaleGroupId": null,
-      "StopOnWebhookTimeout": true,
-      "IsHttpGet": false,
-      "CalloutTimeoutSeconds": 1000,
-      "AsynchronousPollingEnabled": true,
-      "ForwardResponseData": false,
-      "SubStepsToRunForWebhookTimeout": null,
-      "WebhookId": null,
-      "EnableWebhook": false,
-      "WebhookTimeoutSeconds": 1000,
-      "StopOnCalloutFailure": false,
-      "SubStepsToRunForCalloutFailure": null,
-      "WebhookSubStepsMapping": null,
-      "WaitForAllParents": true,
+      "StepId": "myStep 1",
       "SubSteps": [
         2,
         3
       ],
+      "WaitForAllParents": true,
+      "CalloutUrl": "{default_post_url}",
+      "CalloutTimeoutSeconds": 1000,
+      "StopOnCalloutFailure": false,
+      "SubStepsToRunForCalloutFailure": null,
+      "IsHttpGet": false,
+      "EnableWebhook": false,
+      "WebhookId": null,
+      "StopOnWebhookTimeout": true,
+      "SubStepsToRunForWebhookTimeout": null,
+      "WebhookTimeoutSeconds": 1000,
+      "WebhookSubStepsMapping": null,
+      "ScaleGroupId": null,
+      "AsynchronousPollingEnabled": true,
+      "ForwardResponseData": false,
       "RetryOptions": null
     },
     {
-      "StepId": "myStep 2",
       "StepNumber": 2,
-      "CalloutUrl": "{default_post_url}",
-      "ScaleGroupId": null,
-      "StopOnWebhookTimeout": true,
-      "IsHttpGet": false,
-      "CalloutTimeoutSeconds": 1000,
-      "AsynchronousPollingEnabled": true,
-      "ForwardResponseData": false,
-      "SubStepsToRunForWebhookTimeout": null,
-      "WebhookId": null,
-      "EnableWebhook": false,
-      "WebhookTimeoutSeconds": 1000,
-      "StopOnCalloutFailure": false,
-      "SubStepsToRunForCalloutFailure": null,
-      "WebhookSubStepsMapping": null,
-      "WaitForAllParents": true,
+      "StepId": "myStep 2",
       "SubSteps": [
         4
       ],
+      "WaitForAllParents": true,
+      "CalloutUrl": "{default_post_url}",
+      "CalloutTimeoutSeconds": 1000,
+      "StopOnCalloutFailure": false,
+      "SubStepsToRunForCalloutFailure": null,
+      "IsHttpGet": false,
+      "EnableWebhook": false,
+      "WebhookId": null,
+      "StopOnWebhookTimeout": true,
+      "SubStepsToRunForWebhookTimeout": null,
+      "WebhookTimeoutSeconds": 1000,
+      "WebhookSubStepsMapping": null,
+      "ScaleGroupId": null,
+      "AsynchronousPollingEnabled": true,
+      "ForwardResponseData": false,
       "RetryOptions": null
     },
     {
-      "StepId": "myStep 3",
       "StepNumber": 3,
-      "CalloutUrl": "{default_post_url}",
-      "ScaleGroupId": null,
-      "StopOnWebhookTimeout": true,
-      "IsHttpGet": false,
-      "CalloutTimeoutSeconds": 1000,
-      "AsynchronousPollingEnabled": true,
-      "ForwardResponseData": false,
-      "SubStepsToRunForWebhookTimeout": null,
-      "WebhookId": null,
-      "EnableWebhook": false,
-      "WebhookTimeoutSeconds": 1000,
-      "StopOnCalloutFailure": false,
-      "SubStepsToRunForCalloutFailure": null,
-      "WebhookSubStepsMapping": null,
-      "WaitForAllParents": true,
+      "StepId": "myStep 3",
       "SubSteps": [
         4
       ],
+      "WaitForAllParents": true,
+      "CalloutUrl": "{default_post_url}",
+      "CalloutTimeoutSeconds": 1000,
+      "StopOnCalloutFailure": false,
+      "SubStepsToRunForCalloutFailure": null,
+      "IsHttpGet": false,
+      "EnableWebhook": false,
+      "WebhookId": null,
+      "StopOnWebhookTimeout": true,
+      "SubStepsToRunForWebhookTimeout": null,
+      "WebhookTimeoutSeconds": 1000,
+      "WebhookSubStepsMapping": null,
+      "ScaleGroupId": null,
+      "AsynchronousPollingEnabled": true,
+      "ForwardResponseData": false,
       "RetryOptions": null
     },
     {
-      "StepId": "myStep 4",
       "StepNumber": 4,
+      "StepId": "myStep 4",
+      "SubSteps": [],
+      "WaitForAllParents": true,
       "CalloutUrl": "{default_post_url}",
-      "ScaleGroupId": null,
-      "StopOnWebhookTimeout": true,
-      "IsHttpGet": false,
       "CalloutTimeoutSeconds": 1000,
-      "AsynchronousPollingEnabled": true,
-      "ForwardResponseData": false,
-      "SubStepsToRunForWebhookTimeout": null,
-      "WebhookId": null,
-      "EnableWebhook": false,
-      "WebhookTimeoutSeconds": 1000,
       "StopOnCalloutFailure": false,
       "SubStepsToRunForCalloutFailure": null,
+      "IsHttpGet": false,
+      "EnableWebhook": false,
+      "WebhookId": null,
+      "StopOnWebhookTimeout": true,
+      "SubStepsToRunForWebhookTimeout": null,
+      "WebhookTimeoutSeconds": 1000,
       "WebhookSubStepsMapping": null,
-      "WaitForAllParents": true,
-      "SubSteps": [],
+      "ScaleGroupId": null,
+      "AsynchronousPollingEnabled": true,
+      "ForwardResponseData": false,
       "RetryOptions": null
     }
   ]
