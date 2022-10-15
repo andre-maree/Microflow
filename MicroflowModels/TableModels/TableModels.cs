@@ -94,7 +94,6 @@ namespace MicroflowModels
         }
         public bool AsynchronousPollingEnabled { get; set; }
         public string CalloutUrl { get; set; }
-
         public string WebhookId { get; set; }
         public bool EnableWebhook { get; set; }
         public int WebhookTimeoutSeconds { get; set; } = 1000;
@@ -105,6 +104,8 @@ namespace MicroflowModels
         public string ScaleGroupId { get; set; }
         public bool ForwardResponseData { get; set; }
         public string SubStepsToRunForWebhookTimeout { get; set; }
+        public bool StopOnCalloutFailure { get; set; }
+        public string SubStepsToRunForCalloutFailure { get; set; }
 
         //[IgnoreDataMember]
         public string GlobalKey { get; set; }

@@ -12,6 +12,8 @@
         string MainOrchestrationId { get; set; }
         string RunId { get; set; }
         string StepId { get; set; }
+        bool StopOnCalloutFailure { get; set; }
+        string SubStepsToRunForCalloutFailure { get; set; }
         bool StopOnWebhookTimeout { get; set; }
         string ScaleGroupId { get; set; }
         string SubStepsToRunForWebhookTimeout { get; set; }

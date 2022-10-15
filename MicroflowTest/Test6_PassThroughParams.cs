@@ -26,7 +26,7 @@ namespace MicroflowTest
             //stepsList[3].WaitForAllParents = false;
 
             // create Microflow with the created workflow
-            (MicroflowModels.Microflow workflow, string workflowName) microflow = TestWorkflowHelper.CreateMicroflow(stepsList, true);
+            (MicroflowModels.Microflow workflow, string workflowName) microflow = TestWorkflowHelper.CreateMicroflow(stepsList, isHttpGet: true);
 
             // set loop to 1, how many time the workflow will execute
             int loop = 1;
@@ -65,7 +65,7 @@ namespace MicroflowTest
 
             var arr = sortedSteps[0].PartitionKey.Split("__");
 
-            var s = $"https://reqbin.com/echo/get/json?WorkflowName=Myflow_ClientX2@2.1&MainOrchestrationId={arr[1]}&SubOrchestrationId={sortedSteps[0].SubOrchestrationId}&WebhookId=a&RunId={sortedSteps[0].RunId}&StepNumber=1&GlobalKey={sortedSteps[0].GlobalKey}&StepId={stepsList[0].StepId}";
+            var s = $"https://reqbin.com/echo/get/json?WorkflowName={microflow.workflowName}&MainOrchestrationId={arr[1]}&SubOrchestrationId={sortedSteps[0].SubOrchestrationId}&WebhookId=a&RunId={sortedSteps[0].RunId}&StepNumber=1&GlobalKey={sortedSteps[0].GlobalKey}&StepId={stepsList[0].StepId}";
 
             Assert.IsTrue(s.Equals(sortedSteps[0].CalloutUrl));
         }
@@ -83,7 +83,7 @@ namespace MicroflowTest
             //stepsList[3].WaitForAllParents = false;
 
             // create Microflow with the created workflow
-            (MicroflowModels.Microflow workflow, string workflowName) microflow = TestWorkflowHelper.CreateMicroflow(stepsList, false);
+            (MicroflowModels.Microflow workflow, string workflowName) microflow = TestWorkflowHelper.CreateMicroflow(stepsList, isHttpGet: false);
 
             // set loop to 1, how many time the workflow will execute
             int loop = 1;

@@ -81,13 +81,14 @@ namespace Microflow.HttpOrchestrators
             }
             catch (TimeoutException)
             {
-                if (!httpCall.StopOnWebhookTimeout)
+                if (!httpCall.StopOnCalloutFailure)
                 {
                     return new MicroflowHttpResponse()
                     {
+                        CalloutOrWebhook = CalloutOrWebhook.Callout,
                         Success = false,
                         HttpResponseStatusCode = -408,
-                        Content = $"inline callout to {httpCall.CalloutUrl} timed out, StopOnWebhookTimeout is false"
+                        Content = $"Callout to {httpCall.CalloutUrl} timed out"
                     };
                 }
 
@@ -95,13 +96,14 @@ namespace Microflow.HttpOrchestrators
             }
             catch (Exception e)
             {
-                if (!httpCall.StopOnWebhookTimeout)
+                if (!httpCall.StopOnCalloutFailure)
                 {
                     return new MicroflowHttpResponse()
                     {
+                        CalloutOrWebhook = CalloutOrWebhook.Callout,
                         Success = false,
-                        HttpResponseStatusCode = -999,
-                        Content = $"inline callout to to {httpCall.CalloutUrl} failed, StopOnWebhookTimeout is false - " + e.Message
+                        HttpResponseStatusCode = -500,
+                        Content = $"Callout to to {httpCall.CalloutUrl} failed - " + e.Message
                     };
                 }
 

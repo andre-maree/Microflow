@@ -92,9 +92,10 @@ namespace Microflow.HttpOrchestrators
                 {
                     return new MicroflowHttpResponse()
                     {
+                        CalloutOrWebhook = CalloutOrWebhook.Webhook,
                         Success = false,
                         HttpResponseStatusCode = microflowWebhookResponse.HttpResponseStatusCode,
-                        Content = $"webhook action {context.InstanceId} falied, StopOnWebhookTimeout is {httpCall.StopOnWebhookTimeout}"
+                        Content = $"Webhook action {context.InstanceId} falied"
                     };
                 }
             }
@@ -108,9 +109,10 @@ namespace Microflow.HttpOrchestrators
                 {
                     return new MicroflowHttpResponse()
                     {
+                        CalloutOrWebhook = CalloutOrWebhook.Webhook,
                         Success = false,
                         HttpResponseStatusCode = -500,
-                        Content = $"Webhook action failed, StopOnWebhookTimeout is {httpCall.StopOnWebhookTimeout} - " + e.Message
+                        Content = $"Webhook action failed - " + e.Message
                     };
                 }
 

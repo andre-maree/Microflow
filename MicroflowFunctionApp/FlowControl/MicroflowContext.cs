@@ -199,16 +199,16 @@ namespace Microflow.FlowControl
             }
             catch (Exception ex)
             {
-                if (ex.InnerException is TimeoutException tex)
-                {
-                    HandleWebhookTimeout(tex);
+                //if (ex.InnerException is TimeoutException tex)
+                //{
+                //    HandleWebhookTimeout(tex);
 
-                    MicroflowTasks.Add(ProcessSubSteps());
-                }
-                else
-                {
+                //    MicroflowTasks.Add(ProcessSubSteps());
+                //}
+                //else
+                //{
                     await HandleCalloutException(ex);
-                }
+                //}
             }
         }
 
@@ -276,6 +276,7 @@ namespace Microflow.FlowControl
             {
                 MicroflowHttpResponse = new MicroflowHttpResponse()
                 {
+                    CalloutOrWebhook = CalloutOrWebhook.Webhook,
                     Success = false,
                     HttpResponseStatusCode = -408,
                     SubStepsToRun = JsonSerializer.Deserialize<List<int>>(HttpCallWithRetries.SubStepsToRunForWebhookTimeout)
@@ -285,6 +286,7 @@ namespace Microflow.FlowControl
             {
                 MicroflowHttpResponse = new MicroflowHttpResponse()
                 {
+                    CalloutOrWebhook = CalloutOrWebhook.Webhook,
                     Success = false,
                     HttpResponseStatusCode = -408,
                     Content = tex.Message
@@ -312,17 +314,32 @@ namespace Microflow.FlowControl
         [Deterministic]
         private async Task ProcessSubSteps()
         {
-            if (MicroflowHttpResponse.Success || !HttpCallWithRetries.StopOnWebhookTimeout)
+            if (MicroflowHttpResponse.Success)
+            {
+                await ContinueProcessing();
+            }
+            else if(MicroflowHttpResponse.CalloutOrWebhook == CalloutOrWebhook.Callout && !HttpCallWithRetries.StopOnCalloutFailure)
+            {
+                MicroflowHttpResponse.SubStepsToRun = JsonSerializer.Deserialize<List<int>>(HttpCallWithRetries.SubStepsToRunForCalloutFailure);
+
+                await ContinueProcessing();
+            }
+            else if (MicroflowHttpResponse.CalloutOrWebhook == CalloutOrWebhook.Webhook && !HttpCallWithRetries.StopOnWebhookTimeout)
+            {
+                await ContinueProcessing();
+            }
+            else
+            {
+                LogStepFail();
+            }
+
+            async Task ContinueProcessing()
             {
                 LogStepEnd();
 
                 List<Task<CanExecuteResult>> canExecuteTasks = CanExecute();
 
                 await ProcessStepCanExecuteTasks(canExecuteTasks);
-            }
-            else
-            {
-                LogStepFail();
             }
         }
 
@@ -541,9 +558,7 @@ namespace Microflow.FlowControl
                                       null,
                                       false,
                                       -408,
-                                      string.IsNullOrWhiteSpace(HttpCallWithRetries.WebhookId)
-                                        ? "callout timeout"
-                                        : $"action timed out, StopOnWebhookTimeout is {HttpCallWithRetries.StopOnWebhookTimeout}")
+                                      $"callout timed out, StopOnCalloutFailure is {HttpCallWithRetries.StopOnCalloutFailure}")
                 ));
             }
             else

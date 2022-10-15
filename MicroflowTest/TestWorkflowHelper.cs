@@ -36,7 +36,7 @@ namespace MicroflowTest
         public static List<Step> CreateTestWorkflow_SimpleSteps()
         {
             // create 4 steps from 1 to 4, each with a post url merge field
-            List<Step> steps = WorkflowManager.CreateSteps(4, 1,"{default_post_url}");
+            List<Step> steps = WorkflowManager.CreateSteps(4, 1, "{default_post_url}");
 
             // add child steps 2 and 3 to 1, steps 2 and 3 executes in parallel
             steps.StepNumber(1).AddSubSteps(steps.StepNumber(2), steps.StepNumber(3));
@@ -94,14 +94,28 @@ namespace MicroflowTest
             return steps;
         }
 
-        public static (MicroflowModels.Microflow microflow, string workflowName) CreateMicroflow(List<Step> workflow, bool? isHttpGet = false)
+        public static (MicroflowModels.Microflow microflow, string workflowName) CreateMicroflow(List<Step> workflow, bool? passThroughParams = true, bool? isHttpGet = false)
         {
+            PassThroughParams paramss = new();
+
+            if (passThroughParams.Value == false)
+            {
+                paramss.GlobalKey = false;
+                paramss.MainOrchestrationId = false;
+                paramss.RunId = false;
+                paramss.StepId = false;
+                paramss.StepNumber = false;
+                paramss.SubOrchestrationId = false;
+                paramss.WebhookId = false;
+                paramss.WorkflowName = false;
+            }
+
             MicroflowModels.Microflow microflow = new()
             {
-                WorkflowName = "Myflow_ClientX2",
-                WorkflowVersion = "2.1",
+                WorkflowName = "Unit_test_workflow",
+                WorkflowVersion = "1.0",
                 Steps = workflow,
-                MergeFields = CreateMergeFields(new PassThroughParams(), isHttpGet.Value),
+                MergeFields = CreateMergeFields(paramss, isHttpGet.Value),
                 DefaultRetryOptions = new MicroflowRetryOptions()
             };
 
@@ -126,7 +140,7 @@ namespace MicroflowTest
             else if (task.StatusCode == System.Net.HttpStatusCode.Accepted)
             {
                 string content = await task.Content.ReadAsStringAsync();
-                    OrchResult? res = JsonSerializer.Deserialize<OrchResult>(content);
+                OrchResult? res = JsonSerializer.Deserialize<OrchResult>(content);
 
                 instanceId = res.id;
                 statusUrl = res.statusQueryGetUri;
@@ -151,7 +165,7 @@ namespace MicroflowTest
             // Upsert
             HttpResponseMessage result = await TestWorkflowHelper.HttpClient.PostAsJsonAsync(TestWorkflowHelper.BaseUrl + "/UpsertWorkflow/", workflow, new JsonSerializerOptions(JsonSerializerDefaults.General));
 
-            if(result.StatusCode == System.Net.HttpStatusCode.OK)
+            if (result.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 return true;
             }
@@ -189,9 +203,9 @@ namespace MicroflowTest
             Dictionary<string, string> mergeFields = new();
             // use 
             mergeFields.Add("default_post_url", $"https://reqbin.com/echo/{method}/json" + querystring);
-                                                                                     // set the callout url to the new SleepTestOrchestrator http normal function url
-                                                                                     //mergeFields.Add("default_post_url", baseUrl + "/SleepTestOrchestrator_HttpStart" + querystring);
-                                                                                     //mergeFields.Add("default_post_url", baseUrl + "/testpost" + querystring);
+            // set the callout url to the new SleepTestOrchestrator http normal function url
+            //mergeFields.Add("default_post_url", baseUrl + "/SleepTestOrchestrator_HttpStart" + querystring);
+            //mergeFields.Add("default_post_url", baseUrl + "/testpost" + querystring);
 
             return mergeFields;
         }
