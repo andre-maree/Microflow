@@ -49,7 +49,11 @@ namespace MicroflowTest
                     //    $"{TestWorkflowHelper.BaseUrl}/getwebhooks/{microflow.workflowName}/{microflow.workflow.Step(2).WebhookId}/{microflow.workflow.Step(2).StepNumber}");
                     HttpResponseMessage webhookcall = await TestWorkflowHelper.HttpClient.GetAsync($"{TestWorkflowHelper.BaseUrl}/webhooks/{microflow.workflow.Step(2).WebhookId}");
 
-                    if (webhookcall.StatusCode == System.Net.HttpStatusCode.OK)
+                    if(webhookcall.StatusCode == System.Net.HttpStatusCode.Accepted)
+                    {
+                        continue;
+                    }
+                    else if (webhookcall.StatusCode == System.Net.HttpStatusCode.OK)
                     {
                         donewebhook = true;
                     }
@@ -129,7 +133,11 @@ namespace MicroflowTest
                 {
                     HttpResponseMessage webhookcall = await TestWorkflowHelper.HttpClient.GetAsync($"{TestWorkflowHelper.BaseUrl}/webhooks/{webhookId}/approve");
 
-                    if (webhookcall.StatusCode == System.Net.HttpStatusCode.OK)
+                    if (webhookcall.StatusCode == System.Net.HttpStatusCode.Accepted)
+                    {
+                        continue;
+                    }
+                    else if (webhookcall.StatusCode == System.Net.HttpStatusCode.OK)
                     {
                         donewebhook = true;
                     }

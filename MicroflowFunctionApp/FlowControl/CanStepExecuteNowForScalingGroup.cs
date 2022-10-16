@@ -13,9 +13,9 @@ namespace Microflow.FlowControl
     /// <summary>
     /// Check if the step can execute taking into account the max concurrent steps in the scale group
     /// </summary>
-    [Deterministic]
     public static class CanStepExecuteNowForScalingGroup
     {
+        [Deterministic]
         [FunctionName(ScaleGroupCalls.CanExecuteNowInScaleGroup)]
         public static async Task CheckMaxScaleCountForGroup([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
