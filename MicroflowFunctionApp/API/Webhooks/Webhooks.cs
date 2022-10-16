@@ -33,9 +33,9 @@ namespace Microflow.Webhooks
                                                                         string webhookId,
                                                                         string action)
         {
-            var statusCheck = await client.GetStatusAsync(webhookId);
+            DurableOrchestrationStatus statusCheck = await client.GetStatusAsync("callout" + webhookId);
 
-            if(statusCheck == null || statusCheck.RuntimeStatus == OrchestrationRuntimeStatus.Completed || statusCheck.RuntimeStatus == OrchestrationRuntimeStatus.Terminated)
+            if (statusCheck == null)
             {
                 return new(HttpStatusCode.NotFound);
             }
@@ -55,13 +55,11 @@ namespace Microflow.Webhooks
                     return new(HttpStatusCode.OK);
                 }
 
-                var webHooksTask = TableHelper.GetWebhookSubSteps(webhookId);
-
-                var subStepsMapping = await webHooksTask;
+                List<SubStepsMappingForActions> subStepsMapping = await TableHelper.GetWebhookSubSteps(webhookId);
 
                 if (subStepsMapping != null && subStepsMapping.Count > 0)
                 {
-                    var hook = subStepsMapping.Find(h => h.WebhookAction.Equals(action, System.StringComparison.OrdinalIgnoreCase));
+                    SubStepsMappingForActions hook = subStepsMapping.Find(h => h.WebhookAction.Equals(action, System.StringComparison.OrdinalIgnoreCase));
 
                     if (hook != null)
                     {
@@ -80,20 +78,8 @@ namespace Microflow.Webhooks
             }
             catch (ArgumentException)
             {
-                // attempt to wait for a 1,5 seconds
-                await Task.Delay(1500);
-
-                try
-                {
-                    await client.RaiseEventAsync(webhookId, webhookId, webhookResult);
-
-                    return new(HttpStatusCode.OK);
-                }
-                catch (ArgumentException)
-                {
                     // unliky but possible that the event have not yet been created
                     return new(HttpStatusCode.Accepted);
-                }
             }
             catch
             {

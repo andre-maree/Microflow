@@ -159,7 +159,16 @@ namespace Microflow.FlowControl
         {
             try
             {
-                string subInstanceId = MicroflowDurableContext.NewGuid().ToString();
+                string subInstanceId;
+
+                if (HttpCallWithRetries.EnableWebhook)
+                {
+                    subInstanceId = "callout" + HttpCallWithRetries.WebhookId;
+                }
+                else
+                {
+                    subInstanceId = MicroflowDurableContext.NewGuid().ToString();
+                }
 
                 MicroflowHttpHelper.ParseUrlMicroflowData(HttpCallWithRetries, subInstanceId);
 

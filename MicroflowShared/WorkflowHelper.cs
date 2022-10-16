@@ -95,7 +95,7 @@ namespace MicroflowShared
                     globState = globStateTask.Result.EntityState;
                 }
 
-                var projState = await projStateTask;
+                EntityStateResponse<int> projState = await projStateTask;
                 if (projState.EntityState != MicroflowStates.Ready || globState != MicroflowStates.Ready)
                 {
                     return new HttpResponseMessage(HttpStatusCode.Locked);
@@ -420,7 +420,7 @@ namespace MicroflowShared
         {
             TableClient tableClient = TableHelper.GetStepsTable();
 
-            var steps = GetStepEntities(workflowRun.WorkflowName);
+            AsyncPageable<TableEntity> steps = GetStepEntities(workflowRun.WorkflowName);
             List<TableTransactionAction> batch = new();
             List<Task> batchTasks = new();
 

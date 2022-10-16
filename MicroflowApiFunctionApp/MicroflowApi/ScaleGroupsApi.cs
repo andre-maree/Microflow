@@ -39,20 +39,20 @@ namespace MicroflowApi
 
             if (string.IsNullOrWhiteSpace(scaleGroupId))
             {
-                foreach (var rr in res.Entities)
+                foreach (DurableEntityStatus rr in res.Entities)
                 {
                     result.Add(rr.EntityId.EntityKey, (int)rr.State);
                 }
             }
             else
             {
-                foreach (var rr in res.Entities.Where(e => e.EntityId.EntityKey.Equals(scaleGroupId)))
+                foreach (DurableEntityStatus rr in res.Entities.Where(e => e.EntityId.EntityKey.Equals(scaleGroupId)))
                 {
                     result.Add(rr.EntityId.EntityKey, (int)rr.State);
                 }
             }
 
-            var content = new StringContent(JsonSerializer.Serialize(result));
+            StringContent content = new StringContent(JsonSerializer.Serialize(result));
 
             return new HttpResponseMessage(HttpStatusCode.OK)
             {

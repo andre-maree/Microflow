@@ -203,7 +203,7 @@ namespace Microflow.Helpers
                                                      MicroflowRun workflowRun,
                                                      string logRowKey)
         {
-            var logEntity = new LogOrchestrationEntity(false,
+            LogOrchestrationEntity logEntity = new LogOrchestrationEntity(false,
                                                        workflowRun.WorkflowName,
                                                        logRowKey,
                                                        $"VM: {Environment.MachineName} - {workflowRun.WorkflowName} completed successfully",
