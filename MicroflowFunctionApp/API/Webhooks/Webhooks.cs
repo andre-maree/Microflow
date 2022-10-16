@@ -31,14 +31,14 @@ namespace Microflow.Webhooks
                                                                         string webhookId,
                                                                         string action)
         {
+            MicroflowHttpResponse webhookResult = new()
+            {
+                Success = true,
+                HttpResponseStatusCode = 200
+            };
+
             try
             {
-                MicroflowHttpResponse webhookResult = new()
-                {
-                    Success = true,
-                    HttpResponseStatusCode = 200
-                };
-
                 if (string.IsNullOrEmpty(action))
                 {
                     await client.RaiseEventAsync(webhookId, webhookId, webhookResult);
@@ -68,6 +68,23 @@ namespace Microflow.Webhooks
                 await client.RaiseEventAsync(webhookId, webhookId, webhookResult);
 
                 return new(HttpStatusCode.OK);
+            }
+            catch (ArgumentException)
+            {
+                // attempt to wait for a 1,5 seconds
+                await Task.Delay(1500);
+
+                try
+                {
+                    await client.RaiseEventAsync(webhookId, webhookId, webhookResult);
+
+                    return new(HttpStatusCode.OK);
+                }
+                catch (ArgumentException)
+                {
+                    // unliky but possible that the event have not yet been created
+                    return new(HttpStatusCode.Accepted);
+                }
             }
             catch
             {
