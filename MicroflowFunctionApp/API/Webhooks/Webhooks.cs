@@ -7,6 +7,8 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using MicroflowModels.Helpers;
 using MicroflowModels;
 using System;
+using System.Collections.Generic;
+using DurableTask.AzureStorage;
 
 namespace Microflow.Webhooks
 {
@@ -31,6 +33,13 @@ namespace Microflow.Webhooks
                                                                         string webhookId,
                                                                         string action)
         {
+            var statusCheck = await client.GetStatusAsync(webhookId);
+
+            if(statusCheck == null || statusCheck.RuntimeStatus == OrchestrationRuntimeStatus.Completed || statusCheck.RuntimeStatus == OrchestrationRuntimeStatus.Terminated)
+            {
+                return new(HttpStatusCode.NotFound);
+            }
+
             MicroflowHttpResponse webhookResult = new()
             {
                 Success = true,

@@ -47,8 +47,6 @@ namespace Microflow.HttpOrchestrators
 
                 string webhookRowKey = $"{httpCall.RowKey}~{httpCall.WebhookId}~{context.InstanceId}";
 
-                await LogWebhookCreate(context, httpCall.PartitionKey, webhookRowKey, httpCall.RunId);
-
                 MicroflowHttpResponse microflowWebhookResponse = null;
 
                 // TODO: always use https
@@ -57,8 +55,13 @@ namespace Microflow.HttpOrchestrators
                 log.LogCritical($"Waiting for webhook: {CallNames.BaseUrl}/webhooks/{context.InstanceId}/" + "{action?}");
 
                 // wait for the external event, set the timeout
-                microflowWebhookResponse = await context.WaitForExternalEvent<MicroflowHttpResponse>(context.InstanceId,
-                                                                                                       TimeSpan.FromSeconds(httpCall.WebhookTimeoutSeconds));
+                Task<MicroflowHttpResponse> eventTask = context.WaitForExternalEvent<MicroflowHttpResponse>(context.InstanceId, TimeSpan.FromSeconds(httpCall.WebhookTimeoutSeconds));
+
+                Task logTaskCreate = LogWebhookCreate(context, httpCall.PartitionKey, webhookRowKey, httpCall.RunId);
+
+                await Task.WhenAll(logTaskCreate, eventTask);
+
+                microflowWebhookResponse = eventTask.Result;
                 //}
                 //else
                 //{
