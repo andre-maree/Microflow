@@ -98,10 +98,15 @@ namespace Microflow.Helpers
             return newDurableHttpRequest;
         }
 
-
         [Deterministic]
         public static void ParseUrlMicroflowData(IHttpCallWithRetries httpCall, string instanceId)
         {
+            // do not replace the querystring if it is a post
+            if(!httpCall.IsHttpGet)
+            {
+                return;
+            }
+
             StringBuilder sb = new(httpCall.CalloutUrl);
 
             sb.Replace("<WorkflowName>", httpCall.PartitionKey);
