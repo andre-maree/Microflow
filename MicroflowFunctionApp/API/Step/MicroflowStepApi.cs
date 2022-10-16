@@ -71,9 +71,9 @@ namespace Microflow.Api.Step
                 }
             }.GetStep();
 
-            foreach(var kvp in kvpList)
+            foreach(KeyValuePair<string, object> kvp in kvpList)
             {
-                var prop = t.GetProperty(kvp.Key);
+                System.Reflection.PropertyInfo prop = t.GetProperty(kvp.Key);
 
                 if (prop.PropertyType == typeof(int))
                 {

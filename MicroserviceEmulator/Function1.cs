@@ -14,7 +14,7 @@ namespace MicroserviceEmulator
         public static async Task<List<string>> RunOrchestrator(
             [OrchestrationTrigger] IDurableOrchestrationContext context)
         {
-            var outputs = new List<string>();
+            List<string> outputs = new List<string>();
 
             // Replace "hello" with the name of your Durable Activity Function.
             outputs.Add(await context.CallActivityAsync<string>("Function1_Hello", "Tokyo"));

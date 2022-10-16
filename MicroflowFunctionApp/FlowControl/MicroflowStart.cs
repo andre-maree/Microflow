@@ -37,7 +37,7 @@ namespace Microflow.FlowControl
                 // start
                 await client.StartNewAsync("MicroflowStartOrchestration", instanceId, workflowRun);
 
-                var response = await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromSeconds(1));
+                HttpResponseMessage response = await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromSeconds(1));
 
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
@@ -83,7 +83,7 @@ namespace Microflow.FlowControl
 
             try
             {
-                var resp = context.MicroflowCheckAndWaitForReadyToRun(workflowRun.WorkflowName);
+                Task<bool> resp = context.MicroflowCheckAndWaitForReadyToRun(workflowRun.WorkflowName);
 
                 if (!await resp)
                 {
