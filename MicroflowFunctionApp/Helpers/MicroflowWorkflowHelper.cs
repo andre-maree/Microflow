@@ -34,7 +34,7 @@ namespace Microflow.Helpers
         public static void CalculateGlobalKey(this HttpCall httpCall)
         {
             // check if it is call to Microflow
-            if (httpCall.CalloutUrl.StartsWith($"{CallNames.BaseUrl}MicroflowStart/"))
+            if (httpCall.CalloutUrl.StartsWith($"{CallNames.BaseUrl}start/"))
             {
                 // parse query string
                 NameValueCollection data = new Uri(httpCall.CalloutUrl).ParseQueryString();
