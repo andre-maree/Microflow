@@ -1,8 +1,4 @@
-﻿using MicroflowModels;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace MicroflowSDK
+﻿namespace MicroflowSDK
 {
     public static class WebhooksManager
     {

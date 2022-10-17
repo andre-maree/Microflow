@@ -42,12 +42,6 @@ namespace Microflow.Webhooks
                 return new(HttpStatusCode.NotFound);
             }
 
-            MicroflowHttpResponse webhookResult = new()
-            {
-                Success = true,
-                HttpResponseStatusCode = 200
-            };
-
             try
             {
                 // no action
@@ -58,7 +52,11 @@ namespace Microflow.Webhooks
                         return new(HttpStatusCode.NotFound);
                     }
 
-                    await client.RaiseEventAsync(webhookId, webhookId, webhookResult);
+                    await client.RaiseEventAsync(webhookId, webhookId, new MicroflowHttpResponse()
+                    {
+                        Success = true,
+                        HttpResponseStatusCode = 200
+                    });
 
                     return new(HttpStatusCode.OK);
                 }
@@ -73,10 +71,17 @@ namespace Microflow.Webhooks
 
                 SubStepsMappingForActions hook = webhookSubStepsMapping.FirstOrDefault(h => h.WebhookAction.Equals(action, StringComparison.OrdinalIgnoreCase));
 
+                MicroflowHttpResponse webhookResult;
+
                 if (hook != null)
                 {
-                    webhookResult.SubStepsToRun = hook.SubStepsToRunForAction;
-                    webhookResult.Action = action;
+                    webhookResult = new()
+                    {
+                        Success = true,
+                        HttpResponseStatusCode = 200,
+                        SubStepsToRun = hook.SubStepsToRunForAction,
+                        Action = action
+                    };
                 }
                 else
                 {
