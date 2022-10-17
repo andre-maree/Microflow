@@ -49,7 +49,7 @@ namespace MicroflowTest
                     //    $"{TestWorkflowHelper.BaseUrl}/getwebhooks/{microflow.workflowName}/{microflow.workflow.Step(2).WebhookId}/{microflow.workflow.Step(2).StepNumber}");
                     HttpResponseMessage webhookcall = await TestWorkflowHelper.HttpClient.GetAsync($"{TestWorkflowHelper.BaseUrl}/webhooks/{microflow.workflow.Step(2).WebhookId}");
 
-                    // if the callout sent a out webhookid externally, and the events is not created yet, then a 202 will always return
+                    // if the callout sent out a webhookid externally, and the events is not created yet, then a 202 will always return
                     if(webhookcall.StatusCode == System.Net.HttpStatusCode.Accepted || webhookcall.StatusCode == System.Net.HttpStatusCode.NotFound)
                     {
                         continue;
@@ -134,7 +134,7 @@ namespace MicroflowTest
                 {
                     HttpResponseMessage webhookcall = await TestWorkflowHelper.HttpClient.GetAsync($"{TestWorkflowHelper.BaseUrl}/webhooks/{webhookId}/approve");
 
-                    // if the callout sent a out webhookid externally, and the events is not created yet, then a 202 will always return
+                    // if the callout sent out a webhookid externally, and the events is not created yet, then a 202 will always return
                     if (webhookcall.StatusCode == System.Net.HttpStatusCode.Accepted || webhookcall.StatusCode == System.Net.HttpStatusCode.NotFound)
                     {
                         continue;
