@@ -211,11 +211,25 @@ namespace MicroflowShared
             {
                 Step step = steps[i];
 
-                if (step.EnableWebhook && step.WebhookSubStepsMapping != null && step.WebhookSubStepsMapping.Count > 0)
+                if (step.EnableWebhook)
                 {
+                    if (webhookTasks.Count > 20)
+                    {
+                        await Task.WhenAny(webhookTasks);
+                    }
+
+                    Webhook webhookEntity;
+
                     step.WebhookId = string.IsNullOrWhiteSpace(step.WebhookId) ? Guid.NewGuid().ToString() : step.WebhookId;
 
-                    Webhook webhookEntity = new(step.WebhookId, JsonSerializer.Serialize(step.WebhookSubStepsMapping));
+                    if (step.WebhookSubStepsMapping != null && step.WebhookSubStepsMapping.Count > 0)
+                    {
+                        webhookEntity = new(step.WebhookId, JsonSerializer.Serialize(step.WebhookSubStepsMapping));
+                    }
+                    else
+                    {
+                        webhookEntity = new(step.WebhookId, null);
+                    }
 
                     webhookTasks.Add(UpsertWebhook(webhookTasks, webhookEntity, webhooksTable));
                 }

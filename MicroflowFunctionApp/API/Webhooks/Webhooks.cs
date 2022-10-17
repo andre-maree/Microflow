@@ -9,6 +9,8 @@ using MicroflowModels;
 using System;
 using System.Collections.Generic;
 using DurableTask.AzureStorage;
+using System.Text.Json;
+using System.Linq;
 
 namespace Microflow.Webhooks
 {
@@ -33,9 +35,9 @@ namespace Microflow.Webhooks
                                                                         string webhookId,
                                                                         string action)
         {
-            DurableOrchestrationStatus statusCheck = await client.GetStatusAsync("callout" + webhookId);
+            Webhook webhook = await TableHelper.GetWebhook(webhookId);
 
-            if (statusCheck == null)
+            if (webhook == null)
             {
                 return new(HttpStatusCode.NotFound);
             }
@@ -48,28 +50,37 @@ namespace Microflow.Webhooks
 
             try
             {
-                if (string.IsNullOrEmpty(action))
+                // no action
+                if (string.IsNullOrWhiteSpace(action))
                 {
+                    if (!string.IsNullOrWhiteSpace(webhook.WebhookSubStepsMapping))
+                    {
+                        return new(HttpStatusCode.NotFound);
+                    }
+
                     await client.RaiseEventAsync(webhookId, webhookId, webhookResult);
 
                     return new(HttpStatusCode.OK);
                 }
 
-                List<SubStepsMappingForActions> subStepsMapping = await TableHelper.GetWebhookSubSteps(webhookId);
-
-                if (subStepsMapping != null && subStepsMapping.Count > 0)
+                // with action
+                if (string.IsNullOrWhiteSpace(webhook.WebhookSubStepsMapping))
                 {
-                    SubStepsMappingForActions hook = subStepsMapping.Find(h => h.WebhookAction.Equals(action, System.StringComparison.OrdinalIgnoreCase));
+                    return new(HttpStatusCode.NotFound);
+                }
 
-                    if (hook != null)
-                    {
-                        webhookResult.SubStepsToRun = hook.SubStepsToRunForAction;
-                        webhookResult.Action = action;
-                    }
-                    else
-                    {
-                        return new(HttpStatusCode.BadRequest);
-                    }
+                List<SubStepsMappingForActions> webhookSubStepsMapping = JsonSerializer.Deserialize<List<SubStepsMappingForActions>>(webhook.WebhookSubStepsMapping);
+
+                SubStepsMappingForActions hook = webhookSubStepsMapping.FirstOrDefault(h => h.WebhookAction.Equals(action, StringComparison.OrdinalIgnoreCase));
+
+                if (hook != null)
+                {
+                    webhookResult.SubStepsToRun = hook.SubStepsToRunForAction;
+                    webhookResult.Action = action;
+                }
+                else
+                {
+                    return new(HttpStatusCode.NotFound);
                 }
 
                 await client.RaiseEventAsync(webhookId, webhookId, webhookResult);
@@ -78,8 +89,22 @@ namespace Microflow.Webhooks
             }
             catch (ArgumentException)
             {
+                try
+                {
+                    DurableOrchestrationStatus statusCheck = await client.GetStatusAsync("callout" + webhookId);
+
+                    if (statusCheck == null)
+                    {
+                        return new(HttpStatusCode.NotFound);
+                    }
+
                     // unliky but possible that the event have not yet been created
                     return new(HttpStatusCode.Accepted);
+                }
+                catch
+                {
+                    return new(HttpStatusCode.InternalServerError);
+                }
             }
             catch
             {

@@ -57,13 +57,11 @@ namespace MicroflowModels.Helpers
             return await tableClient.GetEntityAsync<HttpCallWithRetries>(workflowRun.WorkflowName, workflowRun.RunObject.StepNumber);
         }
 
-        public static async Task<List<SubStepsMappingForActions>> GetWebhookSubSteps(string webhookId)
+        public static async Task<Webhook> GetWebhook(string webhookId)
         {
             TableClient tableClient = GetWebhooksTable();
 
-            Azure.Response<Webhook> mapping = await tableClient.GetEntityAsync<Webhook>(webhookId, "0", new string[] { "WebhookSubStepsMapping" });
-
-            return mapping.Value.WebhookSubStepsMapping == null ? null : JsonSerializer.Deserialize<List<SubStepsMappingForActions>>(mapping.Value.WebhookSubStepsMapping);
+            return await tableClient.GetEntityAsync<Webhook>(webhookId, "0", new string[] { "WebhookSubStepsMapping" });
         }
 
         public static TableClient GetErrorsTable()
