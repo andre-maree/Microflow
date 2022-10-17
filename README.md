@@ -29,7 +29,7 @@ GetWorkflow: [GET] GetWorkflow/{workflowName}
 ```
 - Workflow control ({cmd} = pause, ready or stop):
 ```r
-MicroflowStart: [GET,POST] Start/{workflowName}/{instanceId?}
+MicroflowStart: [GET,POST] Start/{workflowName}/{instanceId?}?globalKey={globalKey}&loop={loop}
 GlobalControl: [GET] GlobalControl/{cmd}/{globalKey}
 WorkflowControl: [GET] WorkflowControl/{cmd}/{workflowName}/{workflowVersion}
 ```
