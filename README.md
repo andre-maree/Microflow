@@ -4,7 +4,7 @@ Microflow is a serverless-capable micro-service orchestrator built on top of the
 
 Microflow is more than just an "if-else" based workflow engine. Very complex workflows can be executed. The major benefit over Durable Functions, is that workflow JSON can be created and modified separately and then be upserted to Microflow to store and execute. All aspects of workflow editing can be done, upserted, and then executed without any code deployments.
 
-> One instance of Microflow can store many JSON defined workflows, and execute these workflows in parallel without impacting each other. Furthermore, every workflow can  run as a singleton or as multiple parallel instances. Auto-scaling will ensure that there are always enough resources.
+> One deployment of Microflow can store many JSON defined workflows, and execute these workflows in parallel without impacting each other. Furthermore, every workflow can  run as a singleton or as multiple parallel instances. Auto-scaling will ensure that there are always enough resources.
 
 A Microflow workflow is a list of steps, with each step having child steps. Complex inter-step relations is possible, for example: a step can be both a parent and a sibling to another step. Each step can call an http endpoint via get or post. Child steps will wait for all its parents to complete before executing. Each step has a CalloutUrl property that can be set as the external micro-service call URL. A step can also have a webhook set that will then spawn and wait for a reply after the callout was done:
 
