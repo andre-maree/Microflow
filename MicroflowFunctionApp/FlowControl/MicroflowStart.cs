@@ -35,7 +35,7 @@ namespace Microflow.FlowControl
                 MicroflowRun workflowRun = MicroflowWorkflowHelper.CreateMicroflowRun(req, ref instanceId, workflowName);
                 
                 // start
-                await client.StartNewAsync("MicroflowStartOrchestration", instanceId, workflowRun);
+                await client.StartNewAsync(CallNames.MicroflowStartOrchestration, instanceId, workflowRun);
 
                 HttpResponseMessage response = await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromSeconds(1));
 

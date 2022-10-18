@@ -60,7 +60,7 @@ namespace Microflow.Helpers
                 }
             }
 
-            workflowRun.RunObject.StepNumber = "-1";
+            //workflowRun.RunObject.StepNumber = "-1";
             workflowRun.OrchestratorInstanceId = instanceId;
 
             return workflowRun;
