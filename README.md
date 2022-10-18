@@ -62,7 +62,7 @@ public class Test1_WorkflowExecution
 
 ## Example Workflow JSON of Test1_WorkflowExecution -> GetStartedWorkflow():
 
-Four steps 1 to 4 is created. Step 1 has child steps 2 and 3, and step 4 has steps 2 and 3 as parents. Steps 2 and 3 will wait for step 1 to complete and then execute in parallel (siblings). Step 4 will wait for both steps 2 and 3 to complete. Every step in this example will make an http post call to https://reqbin.com/echo/post/json, as specified by "default_post_url" in the MergeFields collection. There are no webhooks enabled on any steps. This is a simplistic example to start with:
+A list of four steps from 1 to 4 is created. Step 1 has child steps 2 and 3, and step 4 has steps 2 and 3 as parents. Steps 2 and 3 will wait for step 1 to complete and then execute in parallel (siblings). Step 4 will wait for both steps 2 and 3 to complete. Every step in this example will make an http post call to https://reqbin.com/echo/post/json, as specified by "default_post_url" in the MergeFields collection. There are no webhooks enabled on any steps. This is a simplistic example to start with:
 ```json
 {
   "WorkflowName": "Unit_test_workflow",
