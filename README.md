@@ -12,7 +12,7 @@ A Microflow workflow is a list of steps, with each step having child steps. Comp
 
 Other functionality include:
 - Protect resources from overloading by grouping steps with a ScaleGroupId and setting a maximum concurrent instance count per scale group.
-- Pause, continue, and stop the running of a specicfic workflow.
+- Pause, continue, and stop the running of a specific workflow.
 - Workflows can be chained together by calling other workflows. A global guid can be set to tie all these workflows together, and then also be used to start, stop and pause by the global guid.
 - All request and response data is logged to Azure blobs.
 - Response data can be passed on from parent steps to child steps.
