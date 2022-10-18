@@ -40,6 +40,8 @@ namespace MicroflowModels
             public const string MicroflowStart = "MicroflowStart";
             public const string MicroflowStartOrchestration = "MicroflowStartOrchestration";
             public const string StepFlowControl = "StepFlowControl";
+            public const string RunFromSteps = "RunFromSteps";
+            public const string RunWorkflowFromSteps = "RunWorkflowFromSteps";
         }
 
         public static class MicroflowStates

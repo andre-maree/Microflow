@@ -10,22 +10,23 @@ using MicroflowModels.Helpers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Extensions.Logging;
 using static MicroflowModels.Constants;
-using static Microsoft.AspNetCore.Hosting.Internal.HostingApplication;
 
 namespace Microflow.Api.Step
 {
     public static class MicroflowStepApi
     {
         /// <summary>
-        /// Get a Microflow step config
+        /// Run specified steps in a workflow
         /// </summary>
-        [FunctionName("RunFromStep")]
-        public static async Task<HttpResponseMessage> RunFromStep([HttpTrigger(AuthorizationLevel.Anonymous, "get",
-                                                                      Route = MicroflowPath + "/runFromStep/{workflowName}/{stepNumber}/{globalKey?}")] HttpRequestMessage req,
+        [FunctionName(CallNames.RunFromSteps)]
+        public static async Task<HttpResponseMessage> RunFromStep([HttpTrigger(AuthorizationLevel.Anonymous, "post",
+                                                                      Route = MicroflowPath + "/RunFromSteps/{workflowName}/{globalKey?}")] HttpRequestMessage req,
                                                                       [DurableClient] IDurableOrchestrationClient client,
-                                                                      string workflowName, int stepNumber, string globalKey)
+                                                                      string workflowName, string globalKey)
         {
+            List<int> steps = JsonSerializer.Deserialize<List<int>>(await req.Content.ReadAsStringAsync());
 
             MicroflowRun workflowRun = new()
             {
@@ -33,8 +34,7 @@ namespace Microflow.Api.Step
                 WorkflowName = workflowName,
                 RunObject = new()
                 {
-                    RunId = Guid.NewGuid().ToString(),
-                    StepNumber= stepNumber.ToString()
+                    RunId = Guid.NewGuid().ToString()
                 }
             };
 
@@ -47,7 +47,7 @@ namespace Microflow.Api.Step
                 workflowRun.RunObject.GlobalKey = globalKey;
             }
 
-            string instanceId = await client.StartNewAsync("RunWorkflowFromStep", null, workflowRun);
+            string instanceId = await client.StartNewAsync(CallNames.RunWorkflowFromSteps, null, (workflowRun, steps));
 
             HttpResponseMessage response = await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromSeconds(1));
 
@@ -63,20 +63,32 @@ namespace Microflow.Api.Step
         /// </summary>
         /// <returns></returns>
         [Deterministic]
-        [FunctionName("RunWorkflowFromStep")]
-        public static async Task StartFromStep([OrchestrationTrigger] IDurableOrchestrationContext context)
-                                                       //MicroflowRun workflowRun)
+        [FunctionName(CallNames.RunWorkflowFromSteps)]
+        public static async Task StartFromSteps([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger logger)
         {
-            MicroflowRun workflowRun = context.GetInput<MicroflowRun>();
+            (MicroflowRun workflowRun, List<int> steps) = context.GetInput<(MicroflowRun, List<int>)>();
+
+            var slog = context.CreateReplaySafeLogger(logger);
 
             // log start
-            string logRowKey = TableHelper.GetTableLogRowKeyDescendingByDate(context.CurrentUtcDateTime, $"_{workflowRun.OrchestratorInstanceId}_fromStep_{workflowRun.RunObject.StepNumber}");
+            string logRowKey = TableHelper.GetTableLogRowKeyDescendingByDate(context.CurrentUtcDateTime, $"_{workflowRun.OrchestratorInstanceId}_runFromStep_{workflowRun.RunObject.StepNumber}");
 
             //log.LogInformation($"Started orchestration with ID = '{context.InstanceId}', workflow = '{workflowRun.WorkflowName}'");
 
             await context.LogOrchestrationStartAsync(workflowRun, logRowKey);
 
-            await context.CallSubOrchestratorAsync(CallNames.ExecuteStep, workflowRun);
+            slog.LogCritical($"Started Run ID {workflowRun.RunObject.RunId}...");
+
+            List<Task> tasks = new();
+
+            foreach(int stepNumber in steps)
+            {
+                workflowRun.RunObject.StepNumber = stepNumber.ToString();
+
+                tasks.Add(context.CallSubOrchestratorAsync(CallNames.ExecuteStep, workflowRun));
+            }
+
+            await Task.WhenAll(tasks);
 
             // log to table workflow completed
             Task logTask = context.LogOrchestrationEnd(workflowRun, logRowKey);
@@ -84,6 +96,10 @@ namespace Microflow.Api.Step
             context.SetMicroflowStateReady(workflowRun);
 
             await logTask;
+
+            slog.LogCritical($"Run ID {workflowRun.RunObject.RunId} completed successfully..."); 
+            slog.LogWarning($"Workflow run {workflowRun.WorkflowName} completed successfully...");
+            slog.LogWarning("<<<<<<<<<<<<<<<<<<<<<<<<<-----> !!! A GREAT SUCCESS  !!! <----->>>>>>>>>>>>>>>>>>>>>>>>>");
             // done
         }
 
@@ -145,7 +161,7 @@ namespace Microflow.Api.Step
                 }
             }.GetStep();
 
-            foreach(KeyValuePair<string, object> kvp in kvpList)
+            foreach (KeyValuePair<string, object> kvp in kvpList)
             {
                 System.Reflection.PropertyInfo prop = t.GetProperty(kvp.Key);
 
