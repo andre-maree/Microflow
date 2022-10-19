@@ -38,6 +38,7 @@ WorkflowControl: [GET] WorkflowControl/{cmd}/{workflowName}/{workflowVersion}
 GetStep: [GET] GetStep/{workflowName}/{stepNumber}
 UpsertStep: [PUT] UpsertStep
 SetStepProperties: [PUT] SetStepProperties/{workflowName}/{stepNumber}
+RunFromSteps: [POST] RunFromSteps/{workflowName}/{globalKey?}
 ```
 - Webhook:
 ```r
