@@ -142,6 +142,7 @@ namespace MicroflowTest
         }
 
         [TestMethod]
+        // This is the GetStartedWorkflow() running twice in parallel
         public async Task GetStartedWorkflowWithParallelRunnibgWorkflows()
         {
             // create a simple workflow with parent step 1, subling children step 2 and 3, and child of 2 and 3 step 4
