@@ -47,14 +47,9 @@ namespace Microflow.Api.Step
                 workflowRun.RunObject.GlobalKey = globalKey;
             }
 
-            string instanceId = await client.StartNewAsync(CallNames.RunWorkflowFromSteps, null, (workflowRun, steps));
+            await client.StartNewAsync(CallNames.RunFromStepsOrchestrator, workflowRun.OrchestratorInstanceId, (workflowRun, steps));
 
-            HttpResponseMessage response = await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromSeconds(1));
-
-            return new(HttpStatusCode.OK)
-            {
-                //Content = new StringContent(JsonSerializer.Serialize(step))
-            };
+            return await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, workflowRun.OrchestratorInstanceId, TimeSpan.FromSeconds(1));
         }
 
 
@@ -63,7 +58,7 @@ namespace Microflow.Api.Step
         /// </summary>
         /// <returns></returns>
         [Deterministic]
-        [FunctionName(CallNames.RunWorkflowFromSteps)]
+        [FunctionName(CallNames.RunFromStepsOrchestrator)]
         public static async Task StartFromSteps([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger logger)
         {
             (MicroflowRun workflowRun, List<int> steps) = context.GetInput<(MicroflowRun, List<int>)>();
@@ -71,7 +66,7 @@ namespace Microflow.Api.Step
             var slog = context.CreateReplaySafeLogger(logger);
 
             // log start
-            string logRowKey = TableHelper.GetTableLogRowKeyDescendingByDate(context.CurrentUtcDateTime, $"_{workflowRun.OrchestratorInstanceId}_runFromStep_{workflowRun.RunObject.StepNumber}");
+            string logRowKey = TableHelper.GetTableLogRowKeyDescendingByDate(context.CurrentUtcDateTime, $"_{workflowRun.OrchestratorInstanceId}_RunFromSteps");
 
             //log.LogInformation($"Started orchestration with ID = '{context.InstanceId}', workflow = '{workflowRun.WorkflowName}'");
 

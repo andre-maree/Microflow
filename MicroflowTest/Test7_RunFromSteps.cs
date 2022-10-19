@@ -2,9 +2,12 @@ using Microflow.MicroflowTableModels;
 using MicroflowModels;
 using MicroflowSDK;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 
 namespace MicroflowTest
@@ -15,7 +18,50 @@ namespace MicroflowTest
         [TestMethod]
         public async Task RunFromSteps()
         {
-            Assert.Fail();
+            string workflowName = await RunBasicWorkflow();
+
+            HttpResponseMessage runcall = await TestWorkflowHelper.HttpClient.PostAsJsonAsync<List<int>>($"{TestWorkflowHelper.BaseUrl}/RunFromSteps/{workflowName}", new() { 2, 3 });
+
+            //// CHECK RESULTS //// stepnumber 1 is now not in the log
+            string result = await runcall.Content.ReadAsStringAsync();
+            OrchResult orchResult = JsonConvert.DeserializeObject<OrchResult>(result);
+
+            while (true)
+            {
+                await Task.Delay(2000);
+
+                HttpResponseMessage res = await TestWorkflowHelper.HttpClient.GetAsync(orchResult.statusQueryGetUri);
+
+                if (res.StatusCode == System.Net.HttpStatusCode.OK)
+                    break;
+            }
+
+            // get the orchestration log to check the results
+            List<LogOrchestrationEntity> log = await LogReader.GetOrchLog(workflowName);
+
+            // check that the orchestraion id is logged 
+            Assert.IsTrue(log.Single(i => i.OrchestrationId.Equals(orchResult.id) && i.RowKey.Contains("RunFromSteps")) != null);
+
+            // get the steps log to check the results
+            List<LogStepEntity> steps = await LogReader.GetStepsLog(workflowName, orchResult.id);
+
+            List<LogStepEntity> sortedSteps = steps.OrderBy(e => e.EndDate).ToList();
+
+            if (sortedSteps[0].StepNumber == 2)
+                Assert.IsTrue(sortedSteps[1].StepNumber == 3);
+            else
+            {
+                Assert.IsTrue(sortedSteps[0].StepNumber == 3);
+                Assert.IsTrue(sortedSteps[1].StepNumber == 2);
+            }
+
+            Assert.IsTrue(sortedSteps[2].StepNumber == 4);
+
+            Assert.IsTrue(sortedSteps.Count == 3);
+        }
+
+        private static async Task<string> RunBasicWorkflow()
+        {
             // create a simple workflow with parent step 1, subling children step 2 and 3, and child of 2 and 3 step 4
             // siblings steps 2 and 3 runs in parallel
             List<Step> stepsList = TestWorkflowHelper.CreateTestWorkflow_SimpleSteps();
@@ -65,7 +111,8 @@ namespace MicroflowTest
             Assert.IsTrue(sortedSteps[3].StepNumber == 4);
 
             Assert.IsTrue(sortedSteps.Count == 4);
-        }
 
+            return microflow.workflowName;
+        }
     }
 }
