@@ -25,7 +25,7 @@ namespace Microflow.Webhooks
         [FunctionName("Webhook")]
         public static async Task<HttpResponseMessage> WebhookWithAction(
         [HttpTrigger(AuthorizationLevel.Function, "get", "post",
-        Route = Constants.MicroflowPath + "/webhooks/{webhookId}/{action?}")] HttpRequestMessage req,
+        Route = Constants.MicroflowPath + "/Webhooks/{webhookId}/{action?}")] HttpRequestMessage req,
         [DurableClient] IDurableOrchestrationClient orchClient,
         string webhookId, string action)
             => await orchClient.ProcessWebhook(webhookId, action);
