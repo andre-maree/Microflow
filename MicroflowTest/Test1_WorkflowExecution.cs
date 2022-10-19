@@ -13,6 +13,7 @@ namespace MicroflowTest
     public class Test1_WorkflowExecution
     {
         [TestMethod]
+        // https://github.com/andre-maree/Microflow/wiki/Unit-Tests#getstartedworkflow
         public async Task GetStartedWorkflow()
         {
             // create a simple workflow with parent step 1, subling children step 2 and 3, and child of 2 and 3 step 4
@@ -67,6 +68,7 @@ namespace MicroflowTest
         }
 
         [TestMethod]
+        // https://github.com/andre-maree/Microflow/wiki/Unit-Tests#complexworkflow
         public async Task ComplexWorkflow()
         {
             for (int i = 0; i < 1; i++)
