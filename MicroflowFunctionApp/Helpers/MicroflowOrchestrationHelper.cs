@@ -25,7 +25,9 @@ namespace Microflow.Helpers
             // log start
             string logRowKey = TableHelper.GetTableLogRowKeyDescendingByDate(context.CurrentUtcDateTime, $"_{workflowRun.OrchestratorInstanceId}");
 
-            await context.LogOrchestrationStartAsync(log, workflowRun, logRowKey);
+            await context.LogOrchestrationStartAsync(workflowRun, logRowKey);
+
+            log.LogInformation($"Started orchestration with ID = '{context.InstanceId}', workflow = '{workflowRun.WorkflowName}'");
 
             await context.MicroflowStart(log, workflowRun);
 
@@ -216,7 +218,6 @@ namespace Microflow.Helpers
 
         [Deterministic]
         public static async Task LogOrchestrationStartAsync(this IDurableOrchestrationContext context,
-                                                            ILogger log,
                                                             MicroflowRun workflowRun,
                                                             string logRowKey)
         {
@@ -229,8 +230,6 @@ namespace Microflow.Helpers
                                                                           workflowRun.RunObject.GlobalKey);
 
             await context.CallActivityAsync(CallNames.LogOrchestration, logEntity);
-
-            log.LogInformation($"Started orchestration with ID = '{context.InstanceId}', workflow = '{workflowRun.WorkflowName}'");
         }
     }
 }

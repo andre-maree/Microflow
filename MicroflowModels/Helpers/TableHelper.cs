@@ -94,6 +94,7 @@ namespace MicroflowModels.Helpers
 
             return tableClient.GetTableClient($"MicroflowWebhookConfigs");
         }
+
         public static TableClient GetLogOrchestrationTable()
         {
             TableServiceClient tableClient = GetTableClient();
