@@ -1,5 +1,6 @@
 using Microflow.MicroflowTableModels;
 using MicroflowModels;
+using MicroflowSDK;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,8 @@ namespace MicroflowTest
     [TestClass]
     public class Test1_WorkflowExecution
     {
+        //http://localhost:7071/microflow/v1/QuickInsertAndStartWorkflow/{workflowName}/{instanceId}/{globalKey?}
+
         [TestMethod]
         // https://github.com/andre-maree/Microflow/wiki/Unit-Tests#getstartedworkflow
         public async Task GetStartedWorkflow()
@@ -32,7 +35,7 @@ namespace MicroflowTest
 
             // upsert Microflow json
             //string json = JsonSerializer.Serialize(microflow.workflow);
-            bool successUpsert = await TestWorkflowHelper.UpsertWorkFlow(microflow.workflow);
+            bool successUpsert = await WorkflowManager.UpsertWorkFlow(microflow.workflow, TestWorkflowHelper.BaseUrl);
 
             Assert.IsTrue(successUpsert);
 
@@ -88,7 +91,7 @@ namespace MicroflowTest
                 string globalKey = Guid.NewGuid().ToString();
 
                 // upsert Microflow json
-                bool successUpsert = await TestWorkflowHelper.UpsertWorkFlow(microflow.workflow);
+                bool successUpsert = await WorkflowManager.UpsertWorkFlow(microflow.workflow, TestWorkflowHelper.BaseUrl);
 
                 Assert.IsTrue(successUpsert);
 
@@ -161,7 +164,7 @@ namespace MicroflowTest
 
             // upsert Microflow json
             //string json = JsonSerializer.Serialize(microflow.workflow);
-            bool successUpsert = await TestWorkflowHelper.UpsertWorkFlow(microflow.workflow);
+            bool successUpsert = await WorkflowManager.UpsertWorkFlow(microflow.workflow, TestWorkflowHelper.BaseUrl);
 
             Assert.IsTrue(successUpsert);
 

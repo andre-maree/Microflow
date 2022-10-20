@@ -26,7 +26,7 @@ namespace MicroflowTest
             microflow.workflow.Step(2).EnableWebhook = true;
 
             // Upsert
-            bool successUpsert = await TestWorkflowHelper.UpsertWorkFlow(microflow.workflow);
+            bool successUpsert = await WorkflowManager.UpsertWorkFlow(microflow.workflow, TestWorkflowHelper.BaseUrl);
 
             Assert.IsTrue(successUpsert);
 
@@ -113,7 +113,7 @@ namespace MicroflowTest
             microflow.workflow.Step(4).WaitForAllParents = false;
 
             // Upsert
-            bool successUpsert = await TestWorkflowHelper.UpsertWorkFlow(microflow.workflow);
+            bool successUpsert = await WorkflowManager.UpsertWorkFlow(microflow.workflow, TestWorkflowHelper.BaseUrl);
 
             Assert.IsTrue(successUpsert);
 

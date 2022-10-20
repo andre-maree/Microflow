@@ -31,7 +31,7 @@ namespace MicroflowTest
             microflow.workflow.Step(1).RetryOptions = new RetryOptions() { BackoffCoefficient = 1, DelaySeconds = 1, MaxDelaySeconds = 1, MaxRetries = 2, TimeOutSeconds = 300 };
 
             // Upsert
-            bool successUpsert = await TestWorkflowHelper.UpsertWorkFlow(microflow.workflow);
+            bool successUpsert = await WorkflowManager.UpsertWorkFlow(microflow.workflow, TestWorkflowHelper.BaseUrl);
 
             Assert.IsTrue(successUpsert);
 

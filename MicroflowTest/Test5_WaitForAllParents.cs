@@ -24,7 +24,7 @@ namespace MicroflowTest
             microflow.workflow.Step(14).WaitForAllParents = false;
 
             // Upsert
-            bool successUpsert = await TestWorkflowHelper.UpsertWorkFlow(microflow.workflow);
+            bool successUpsert = await WorkflowManager.UpsertWorkFlow(microflow.workflow, TestWorkflowHelper.BaseUrl);
 
             Assert.IsTrue(successUpsert);
 

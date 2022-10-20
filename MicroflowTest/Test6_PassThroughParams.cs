@@ -35,7 +35,7 @@ namespace MicroflowTest
 
             // upsert Microflow json
             //string json = JsonSerializer.Serialize(microflow.workflow);
-            bool successUpsert = await TestWorkflowHelper.UpsertWorkFlow(microflow.workflow);
+            bool successUpsert = await WorkflowManager.UpsertWorkFlow(microflow.workflow, TestWorkflowHelper.BaseUrl);
 
             Assert.IsTrue(successUpsert);
 
@@ -92,7 +92,7 @@ namespace MicroflowTest
 
             // upsert Microflow json
             //string json = JsonSerializer.Serialize(microflow.workflow);
-            bool successUpsert = await TestWorkflowHelper.UpsertWorkFlow(microflow.workflow);
+            bool successUpsert = await WorkflowManager.UpsertWorkFlow(microflow.workflow, TestWorkflowHelper.BaseUrl);
 
             Assert.IsTrue(successUpsert);
 

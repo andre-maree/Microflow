@@ -1,5 +1,6 @@
 using Microflow.MicroflowTableModels;
 using MicroflowModels;
+using MicroflowSDK;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -156,7 +157,7 @@ namespace MicroflowTest
         {
             // upsert Microflow json
             //string json = JsonSerializer.Serialize(microflow.workflow);
-            bool successUpsert = await TestWorkflowHelper.UpsertWorkFlow(microflow.workflow);
+            bool successUpsert = await WorkflowManager.UpsertWorkFlow(microflow.workflow, TestWorkflowHelper.BaseUrl);
 
             Assert.IsTrue(successUpsert);
         }

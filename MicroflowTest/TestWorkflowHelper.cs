@@ -160,19 +160,6 @@ namespace MicroflowTest
             return (instanceId, statusUrl);
         }
 
-        public static async Task<bool> UpsertWorkFlow(MicroflowModels.Microflow workflow)
-        {
-            // Upsert
-            HttpResponseMessage result = await TestWorkflowHelper.HttpClient.PostAsJsonAsync(TestWorkflowHelper.BaseUrl + "/UpsertWorkflow/", workflow, new JsonSerializerOptions(JsonSerializerDefaults.General));
-
-            if (result.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                return true;
-            }
-
-            return false;
-        }
-
         public static async Task SetScaleGroupMax(int maxConcurrentInstanceCount, string scaleGroupId)
         {
             // set scale group

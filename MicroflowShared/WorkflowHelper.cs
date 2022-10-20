@@ -17,6 +17,113 @@ namespace MicroflowShared
         /// <summary>
         /// From the api call
         /// </summary>
+        public static async Task<HttpResponseMessage> QuickInsertAndStartWorkflow(this IDurableOrchestrationClient client,
+                                                                           string content,
+                                                                           string globalKey)
+        {
+            Microflow microflow;
+
+            try
+            {
+                // deserialize the workflow json
+                microflow = JsonSerializer.Deserialize<Microflow>(content);
+            }
+            catch (Exception ex)
+            {
+                HttpResponseMessage resp = new(HttpStatusCode.BadRequest)
+                {
+                    Content = new StringContent(ex.Message)
+                };
+
+                try
+                {
+                    _ = await TableHelper.LogError("workflow deserialization error",
+                                                       globalKey,
+                                                       null,
+                                                       ex);
+                }
+                catch
+                {
+                    resp.StatusCode = HttpStatusCode.InternalServerError;
+                }
+
+                return resp;
+            }
+
+            if (string.IsNullOrWhiteSpace(microflow?.WorkflowName))
+            {
+                return new(HttpStatusCode.BadRequest)
+                {
+                    Content = new StringContent("No workflow name")
+                };
+            }
+            else if (microflow.Steps?.Count == 0)
+            {
+                return new(HttpStatusCode.BadRequest)
+                {
+                    Content = new StringContent("No workflow steps")
+                };
+            }
+
+            //    // create a workflow run
+            MicroflowRun workflowRun = new()
+            {
+                WorkflowName = string.IsNullOrWhiteSpace(microflow.WorkflowVersion)
+                                ? microflow.WorkflowName
+                                : $"{microflow.WorkflowName}@{microflow.WorkflowVersion}"
+            };
+
+            try
+            {
+                //    // parse the mergefields
+                content.ParseMergeFields(ref microflow);
+
+                // prepare the workflow by persisting parent info to table storage
+                await workflowRun.PrepareWorkflow(microflow);
+
+                microflow.Steps = null;
+                microflow.WorkflowName = null;
+                string workflowConfigJson = JsonSerializer.Serialize(microflow);
+
+                return new HttpResponseMessage(HttpStatusCode.OK);
+            }
+            catch (Azure.RequestFailedException e)
+            {
+                HttpResponseMessage resp = new(HttpStatusCode.BadRequest)
+                {
+                    Content = new StringContent(e.Message)
+                };
+
+                return resp;
+            }
+            catch (Exception e)
+            {
+                HttpResponseMessage resp = new(HttpStatusCode.BadRequest)
+                {
+                    Content = new StringContent(e.Message)
+                };
+
+                try
+                {
+                    _ = await TableHelper.LogError(microflow.WorkflowName
+                                                       ?? "no workflow",
+                                                       workflowRun.RunObject.GlobalKey,
+                                                       workflowRun.RunObject.RunId,
+                                                       e);
+                }
+                catch
+                {
+                    resp.StatusCode = HttpStatusCode.InternalServerError;
+                }
+
+                return resp;
+            }
+        }
+        /////////////////////////////////////////////////////////////////////////////
+        
+        /// <summary>
+        /// From the api call
+        /// </summary>
         public static async Task<HttpResponseMessage> UpsertWorkflow(this IDurableEntityClient client,
                                                                            string content,
                                                                            string globalKey)

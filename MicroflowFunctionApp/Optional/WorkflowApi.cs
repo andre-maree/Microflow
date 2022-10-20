@@ -5,11 +5,27 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using System.Net.Http;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using MicroflowShared;
+using Microflow.Helpers;
 
 namespace MicroflowApi
 {
     public class WorkflowSplitCode
     {
+        /// <summary>
+        /// This must be called at least once before a workflow runs,
+        /// this is to prevent multiple concurrent instances from writing step data at workflow run,
+        /// call UpsertWorkflow when something changed in the workflow, but do not always call this when concurrent multiple workflows
+        /// </summary>
+        [FunctionName("QuickInsertAndStartWorkflow")]
+        public static async Task<HttpResponseMessage> QuickInsertAndStartWorkflow([HttpTrigger(AuthorizationLevel.Anonymous, "post",
+                                                                  Route = MicroflowModels.Constants.MicroflowPath + "/QuickInsertAndStartWorkflow/{workflowName}/{instanceId}/{globalKey?}")] HttpRequestMessage req,
+                                                                  [DurableClient] IDurableOrchestrationClient client, string workflowName, string instanceId, string globalKey)
+        {
+            await client.QuickInsertAndStartWorkflow(await req.Content.ReadAsStringAsync(), globalKey);
+
+            return await client.StartWorkflow(req, instanceId, workflowName);
+        }
+
         /// <summary>
         /// This must be called at least once before a workflow runs,
         /// this is to prevent multiple concurrent instances from writing step data at workflow run,
