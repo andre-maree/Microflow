@@ -26,6 +26,7 @@ The base URL for all calls is "microflow/v1". The full url will look like this: 
 ```r
 UpsertWorkflow: [POST] UpsertWorkflow/{globalKey?}
 GetWorkflow: [GET] GetWorkflow/{workflowName}
+QuickInsertAndStartWorkflow: [POST] QuickInsertAndStartWorkflow/{workflowNameVersion}/{instanceId?}/{globalKey?}
 ```
 - Workflow control ({cmd} = pause, ready or stop):
 ```r
