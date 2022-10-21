@@ -126,51 +126,9 @@ namespace MicroflowTest
             return (microflow, workflowName);
         }
 
-        public static async Task<(string, string)> StartMicroflow((MicroflowModels.Microflow workflow, string workflowName) microflow, int loop, string globalKey, bool waitForCompleted = true)
+        public static async Task<HttpResponseMessage> StartMicroflow((MicroflowModels.Microflow workflow, string workflowName) microflow, int loop, string globalKey)
         {
-            HttpResponseMessage task = await TestWorkflowHelper.HttpClient.GetAsync(TestWorkflowHelper.BaseUrl + $"/Start/{microflow.workflowName}?globalkey={globalKey}&loop={loop}");
-
-            string instanceId = "";
-            string statusUrl = "";
-
-            if (task.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                instanceId = await task.Content.ReadAsStringAsync();
-            }
-            else if (task.StatusCode == System.Net.HttpStatusCode.Accepted)
-            {
-                string content = await task.Content.ReadAsStringAsync();
-                OrchResult? res = JsonSerializer.Deserialize<OrchResult>(content);
-
-                instanceId = res.id;
-                statusUrl = res.statusQueryGetUri;
-
-                while (true && waitForCompleted)
-                {
-                    await Task.Delay(2000);
-
-                    HttpResponseMessage res2 = await HttpClient.GetAsync(res.statusQueryGetUri);
-                    string res2result = await res2.Content.ReadAsStringAsync();
-
-                    if (res2result.Contains("\"runtimeStatus\":\"Completed\""))
-                        break;
-                }
-            }
-
-            return (instanceId, statusUrl);
-        }
-
-        public static async Task<bool> UpsertWorkFlow(MicroflowModels.Microflow workflow)
-        {
-            // Upsert
-            HttpResponseMessage result = await TestWorkflowHelper.HttpClient.PostAsJsonAsync(TestWorkflowHelper.BaseUrl + "/UpsertWorkflow/", workflow, new JsonSerializerOptions(JsonSerializerDefaults.General));
-
-            if (result.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                return true;
-            }
-
-            return false;
+            return await HttpClient.GetAsync(TestWorkflowHelper.BaseUrl + $"/Start/{microflow.workflowName}?globalkey={globalKey}&loop={loop}");
         }
 
         public static async Task SetScaleGroupMax(int maxConcurrentInstanceCount, string scaleGroupId)
@@ -209,17 +167,5 @@ namespace MicroflowTest
 
             return mergeFields;
         }
-    }
-}
-
-namespace MicroflowTest
-{
-    public class OrchResult
-    {
-        public string id { get; set; }
-        public string purgeHistoryDeleteUri { get; set; }
-        public string sendEventPostUri { get; set; }
-        public string statusQueryGetUri { get; set; }
-        public string terminatePostUri { get; set; }
     }
 }

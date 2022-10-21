@@ -30,41 +30,7 @@ namespace Microflow.FlowControl
                                                                 [DurableClient] IDurableOrchestrationClient client,
                                                                 string instanceId, string workflowName)
         {
-            try
-            {
-                MicroflowRun workflowRun = MicroflowWorkflowHelper.CreateMicroflowRun(req, ref instanceId, workflowName);
-                
-                // start
-                await client.StartNewAsync(CallNames.MicroflowStartOrchestration, instanceId, workflowRun);
-
-                HttpResponseMessage response = await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromSeconds(1));
-
-                if (response.StatusCode == HttpStatusCode.OK)
-                {
-                    response.Content = new StringContent(instanceId);
-                }
-
-                return response;
-
-            }
-            catch (RequestFailedException ex)
-            {
-                HttpResponseMessage resp = new(HttpStatusCode.InternalServerError)
-                {
-                    Content = new StringContent(ex.Message + " - workflow in error state, call 'UpsertWorkflow' at least once before running a workflow.")
-                };
-
-                return resp;
-            }
-            catch (Exception e)
-            {
-                HttpResponseMessage resp = new(HttpStatusCode.InternalServerError)
-                {
-                    Content = new StringContent(e.Message)
-                };
-
-                return resp;
-            }
+            return await client.StartWorkflow(req, instanceId, workflowName);
         }
 
         /// <summary>

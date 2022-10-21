@@ -5,6 +5,8 @@ using Azure.Data.Tables.Models;
 using MicroflowModels;
 using MicroflowModels.Helpers;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.WindowsAzure.Storage;
+using System.Linq.Expressions;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -14,15 +16,8 @@ namespace MicroflowShared
 {
     public static class WorkflowHelper
     {
-        /// <summary>
-        /// From the api call
-        /// </summary>
-        public static async Task<HttpResponseMessage> UpsertWorkflow(this IDurableEntityClient client,
-                                                                           string content,
-                                                                           string globalKey)
+        private static async Task<(bool Success, HttpResponseMessage? HttpResponseMessage, Microflow? Microflow, string? WorkflowNameVersion)> ParseMicroflow(string content, string globalKey)
         {
-            bool doneReadyFalse = false;
-
             Microflow microflow;
 
             try
@@ -49,33 +44,80 @@ namespace MicroflowShared
                     resp.StatusCode = HttpStatusCode.InternalServerError;
                 }
 
-                return resp;
+                return (false, resp, null, null);
             }
 
             if (string.IsNullOrWhiteSpace(microflow?.WorkflowName))
             {
-                return new(HttpStatusCode.BadRequest)
+                return (false, new(HttpStatusCode.BadRequest)
                 {
                     Content = new StringContent("No workflow name")
-                };
+                }, null, null);
             }
             else if (microflow.Steps?.Count == 0)
             {
-                return new(HttpStatusCode.BadRequest)
+                return (false, new(HttpStatusCode.BadRequest)
                 {
                     Content = new StringContent("No workflow steps")
-                };
+                }, null, null);
             }
 
-            //    // create a workflow run
-            MicroflowRun workflowRun = new()
-            {
-                WorkflowName = string.IsNullOrWhiteSpace(microflow.WorkflowVersion)
+            return (true, null, microflow, string.IsNullOrWhiteSpace(microflow.WorkflowVersion)
                                 ? microflow.WorkflowName
-                                : $"{microflow.WorkflowName}@{microflow.WorkflowVersion}"
-            };
+                                : $"{microflow.WorkflowName}@{microflow.WorkflowVersion}");
+        }
 
-            EntityId projStateId = new(MicroflowStateKeys.WorkflowState, workflowRun.WorkflowName);
+        /// <summary>
+        /// Skips workflow and global states, deletes, workflow save, create tables
+        /// </summary>
+        public static async Task<HttpResponseMessage> QuickInsert(this IDurableOrchestrationClient client,
+                                                                           string content,
+                                                                           string globalKey)
+        {
+            (bool Success, HttpResponseMessage? HttpResponseMessage, Microflow? Microflow, string? WorkflowNameVersion) = await ParseMicroflow(content, globalKey);
+
+            if (!Success)
+            {
+                return HttpResponseMessage;
+            }
+
+            try
+            {
+                //    // parse the mergefields
+                content.ParseMergeFields(ref Microflow);
+
+                // prepare the workflow by persisting parent info to table storage
+                await PrepareWorkflow(WorkflowNameVersion, Microflow);
+
+                return new HttpResponseMessage(HttpStatusCode.OK);
+            }
+            catch (Azure.RequestFailedException e)
+            {
+                HttpResponseMessage resp = new(HttpStatusCode.BadRequest)
+                {
+                    Content = new StringContent(e.Message)
+                };
+
+                return resp;
+            }
+            catch (Exception e)
+            {
+                return await HandleUpsertException(WorkflowNameVersion, e);
+            }
+        }
+
+        /// <summary>
+        /// Also does workflow and global states, deletes, workflow save, create tables
+        /// </summary>
+        public static async Task<HttpResponseMessage> UpsertWorkflow(this IDurableEntityClient client,
+                                                                           string content,
+                                                                           string globalKey)
+        {
+            bool doneReadyFalse = false;
+
+            var parseResult = await ParseMicroflow(content, globalKey);
+
+            EntityId projStateId = new(MicroflowStateKeys.WorkflowState, parseResult.WorkflowNameVersion);
 
             try
             {
@@ -109,22 +151,22 @@ namespace MicroflowShared
                 await CreateTables();
 
                 //  clear step table data
-                Task delTask = workflowRun.DeleteSteps();
+                Task delTask = DeleteSteps(parseResult.Microflow.WorkflowName, parseResult.Microflow.Steps);
 
                 //    // parse the mergefields
-                content.ParseMergeFields(ref microflow);
+                content.ParseMergeFields(ref parseResult.Microflow);
 
                 await delTask;
 
                 // prepare the workflow by persisting parent info to table storage
-                await workflowRun.PrepareWorkflow(microflow);
+                await PrepareWorkflow(parseResult.WorkflowNameVersion, parseResult.Microflow);
 
-                microflow.Steps = null;
-                microflow.WorkflowName = null;
-                string workflowConfigJson = JsonSerializer.Serialize(microflow);
+                //parseResult.Microflow.Steps = null;
+                //parseResult.Microflow.WorkflowName = null;
+                string workflowConfigJson = JsonSerializer.Serialize(parseResult.Microflow);
 
-                // create the storage tables for the workflow
-                await UpsertWorkflowConfigString(workflowRun.WorkflowName, workflowConfigJson);
+                // upsert raw microflow json
+                await UpsertWorkflowConfigString(parseResult.Microflow.WorkflowName, workflowConfigJson);
 
                 return new HttpResponseMessage(HttpStatusCode.OK);
             }
@@ -139,25 +181,7 @@ namespace MicroflowShared
             }
             catch (Exception e)
             {
-                HttpResponseMessage resp = new(HttpStatusCode.BadRequest)
-                {
-                    Content = new StringContent(e.Message)
-                };
-
-                try
-                {
-                    _ = await TableHelper.LogError(microflow.WorkflowName
-                                                       ?? "no workflow",
-                                                       workflowRun.RunObject.GlobalKey,
-                                                       workflowRun.RunObject.RunId,
-                                                       e);
-                }
-                catch
-                {
-                    resp.StatusCode = HttpStatusCode.InternalServerError;
-                }
-
-                return resp;
+                return await HandleUpsertException(parseResult.WorkflowNameVersion, e);
             }
             finally
             {
@@ -189,7 +213,7 @@ namespace MicroflowShared
         /// only call this to create a new workflow or to update an existing 1
         /// Saves step meta data to table storage and read during execution
         /// </summary>
-        public static async Task PrepareWorkflow(this MicroflowRun workflowRun, Microflow workflow)
+        public static async Task PrepareWorkflow(string workflowNameVersion, Microflow workflow)
         {
             List<Task> webhookTasks = new();
             List<TableTransactionAction> batch = new();
@@ -251,7 +275,7 @@ namespace MicroflowShared
 
                 if (step.RetryOptions != null)
                 {
-                    HttpCallWithRetries httpCallRetriesEntity = new(workflowRun.WorkflowName, step.StepNumber.ToString(), step.StepId, sb.ToString())
+                    HttpCallWithRetries httpCallRetriesEntity = new(workflowNameVersion, step.StepNumber.ToString(), step.StepId, sb.ToString())
                     {
                         WebhookId = step.WebhookId,
                         EnableWebhook = step.EnableWebhook,
@@ -266,20 +290,19 @@ namespace MicroflowShared
                         AsynchronousPollingEnabled = step.AsynchronousPollingEnabled,
                         ScaleGroupId = step.ScaleGroupId,
                         ForwardResponseData = step.ForwardResponseData,
+                        RetryDelaySeconds = step.RetryOptions.DelaySeconds,
+                        RetryMaxDelaySeconds = step.RetryOptions.MaxDelaySeconds,
+                        RetryMaxRetries = step.RetryOptions.MaxRetries,
+                        RetryTimeoutSeconds = step.RetryOptions.TimeOutSeconds,
+                        RetryBackoffCoefficient = step.RetryOptions.BackoffCoefficient
                     };
-
-                    httpCallRetriesEntity.RetryDelaySeconds = step.RetryOptions.DelaySeconds;
-                    httpCallRetriesEntity.RetryMaxDelaySeconds = step.RetryOptions.MaxDelaySeconds;
-                    httpCallRetriesEntity.RetryMaxRetries = step.RetryOptions.MaxRetries;
-                    httpCallRetriesEntity.RetryTimeoutSeconds = step.RetryOptions.TimeOutSeconds;
-                    httpCallRetriesEntity.RetryBackoffCoefficient = step.RetryOptions.BackoffCoefficient;
 
                     // batchop
                     batch.Add(new TableTransactionAction(TableTransactionActionType.UpsertReplace, httpCallRetriesEntity));
                 }
                 else
                 {
-                    HttpCall httpCallEntity = new(workflowRun.WorkflowName, step.StepNumber.ToString(), step.StepId, sb.ToString())
+                    HttpCall httpCallEntity = new(workflowNameVersion, step.StepNumber.ToString(), step.StepId, sb.ToString())
                     {
                         WebhookId = step.WebhookId,
                         EnableWebhook = step.EnableWebhook,
@@ -314,7 +337,7 @@ namespace MicroflowShared
                 sb.Append(subId).Append(",1,0;");
             }
 
-            HttpCall containerEntity = new(workflowRun.WorkflowName, "-1", null, sb.ToString());
+            HttpCall containerEntity = new(workflowNameVersion, "-1", null, sb.ToString());
 
             batch.Add(new TableTransactionAction(TableTransactionActionType.UpsertReplace, containerEntity));
 
@@ -338,6 +361,29 @@ namespace MicroflowShared
             }
 
             workflow = JsonSerializer.Deserialize<Microflow>(sb.ToString());
+        }
+
+        private static async Task<HttpResponseMessage> HandleUpsertException(string workflowName, Exception e)
+        {
+            HttpResponseMessage resp = new(HttpStatusCode.BadRequest)
+            {
+                Content = new StringContent(e.Message)
+            };
+
+            try
+            {
+                _ = await TableHelper.LogError(workflowName
+                                                   ?? "no workflow",
+                                                   "no global",
+                                                   "no runid",
+                                                   e);
+            }
+            catch
+            {
+                resp.StatusCode = HttpStatusCode.InternalServerError;
+            }
+
+            return resp;
         }
 
         #region Table operations
@@ -430,22 +476,25 @@ namespace MicroflowShared
             return tableClient.QueryAsync<TableEntity>(filter: $"PartitionKey eq '{workflowName}'", select: new List<string>() { "PartitionKey", "RowKey" });
         }
 
-        public static async Task DeleteSteps(this MicroflowRun workflowRun)
+        public static async Task DeleteSteps(string workflowName, List<Step> newStepIds)
         {
             TableClient tableClient = TableHelper.GetStepsTable();
 
-            AsyncPageable<TableEntity> steps = GetStepEntities(workflowRun.WorkflowName);
+            AsyncPageable<TableEntity> steps = GetStepEntities(workflowName);
             List<TableTransactionAction> batch = new();
             List<Task> batchTasks = new();
 
             await foreach (TableEntity entity in steps)
             {
-                batch.Add(new TableTransactionAction(TableTransactionActionType.Delete, entity));
-
-                if (batch.Count == 100)
+                if (newStepIds.Find(f => f.StepId.Equals(entity.RowKey)) == null)
                 {
-                    batchTasks.Add(tableClient.SubmitTransactionAsync(batch));
-                    batch = new List<TableTransactionAction>();
+                    batch.Add(new TableTransactionAction(TableTransactionActionType.Delete, entity));
+
+                    if (batch.Count == 100)
+                    {
+                        batchTasks.Add(tableClient.SubmitTransactionAsync(batch));
+                        batch = new List<TableTransactionAction>();
+                    }
                 }
             }
 
