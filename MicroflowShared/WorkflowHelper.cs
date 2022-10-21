@@ -5,8 +5,6 @@ using Azure.Data.Tables.Models;
 using MicroflowModels;
 using MicroflowModels.Helpers;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Microsoft.WindowsAzure.Storage;
-using System.Linq.Expressions;
 using System.Net;
 using System.Text;
 using System.Text.Json;

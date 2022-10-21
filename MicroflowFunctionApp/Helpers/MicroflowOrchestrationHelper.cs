@@ -80,7 +80,8 @@ namespace Microflow.Helpers
                     {
                         RunId = guid,
                         StepNumber = stepsAndCounts[j],
-                        GlobalKey = workflowRun.RunObject.GlobalKey
+                        GlobalKey = workflowRun.RunObject.GlobalKey,
+                        MicroflowStepResponseData = workflowRun.RunObject.MicroflowStepResponseData
                     };
 
                     subTasks.Add(context.CallSubOrchestratorAsync(CallNames.ExecuteStep, workflowRun));

@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging;
 using System.Net.Http;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microflow.Helpers;
-using System.Net;
 using MicroflowModels;
 using Azure;
 using static MicroflowModels.Constants;

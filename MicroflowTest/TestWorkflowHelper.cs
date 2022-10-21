@@ -126,9 +126,14 @@ namespace MicroflowTest
             return (microflow, workflowName);
         }
 
-        public static async Task<HttpResponseMessage> StartMicroflow((MicroflowModels.Microflow workflow, string workflowName) microflow, int loop, string globalKey)
+        public static async Task<HttpResponseMessage> StartMicroflow((MicroflowModels.Microflow workflow, string workflowName) microflow, int loop, string globalKey, string? postData = null)
         {
-            return await HttpClient.GetAsync(TestWorkflowHelper.BaseUrl + $"/Start/{microflow.workflowName}?globalkey={globalKey}&loop={loop}");
+            if (postData == null)
+            {
+                return await HttpClient.GetAsync(BaseUrl + $"/Start/{microflow.workflowName}?globalkey={globalKey}&loop={loop}");
+            }
+
+            return await HttpClient.PostAsync(BaseUrl + $"/Start/{microflow.workflowName}?globalkey={globalKey}&loop={loop}", new StringContent(postData));
         }
 
         public static async Task SetScaleGroupMax(int maxConcurrentInstanceCount, string scaleGroupId)
