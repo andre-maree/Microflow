@@ -38,7 +38,7 @@ namespace MicroflowTest
             Assert.IsTrue(successUpsert);
 
             // start the upserted Microflow
-            HttpResponseMessage startResult = await TestWorkflowHelper.StartMicroflow(microflow, loop, globalKey, "qweqwe");
+            HttpResponseMessage startResult = await TestWorkflowHelper.StartMicroflow(microflow, loop, globalKey);
 
             string instanceId = await WorkflowManager.WaitForWorkflowCompleted(startResult);
 
