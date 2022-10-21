@@ -126,9 +126,14 @@ namespace MicroflowTest
             return (microflow, workflowName);
         }
 
-        public static async Task<HttpResponseMessage> StartMicroflow((MicroflowModels.Microflow workflow, string workflowName) microflow, int loop, string globalKey)
+        public static async Task<HttpResponseMessage> StartMicroflow((MicroflowModels.Microflow workflow, string workflowName) microflow, int loop, string globalKey, string? postData = null)
         {
-            return await HttpClient.GetAsync(TestWorkflowHelper.BaseUrl + $"/Start/{microflow.workflowName}?globalkey={globalKey}&loop={loop}");
+            if (postData == null)
+            {
+                return await HttpClient.GetAsync(BaseUrl + $"/Start/{microflow.workflowName}?globalkey={globalKey}&loop={loop}");
+            }
+
+            return await HttpClient.PostAsync(BaseUrl + $"/Start/{microflow.workflowName}?globalkey={globalKey}&loop={loop}", new StringContent(postData));
         }
 
         public static async Task SetScaleGroupMax(int maxConcurrentInstanceCount, string scaleGroupId)
@@ -144,28 +149,37 @@ namespace MicroflowTest
 
         public static Dictionary<string, string> CreateMergeFields(PassThroughParams passThroughParams, bool IsGet)
         {
-            string method = IsGet ? "get" : "post";
-            PropertyInfo[] props = passThroughParams.GetType().GetProperties();
-            string querystring = "?";
-            foreach (var param in props)
-            {
-                var val = param.GetValue(passThroughParams);
-                if ((bool)val == true)
-                {
-                    querystring += $"{param.Name}=<{param.Name}>&";
-                }
-            }
-            querystring = querystring.Remove(querystring.Length - 1);
-            //string querystring2 = "?WorkflowName=<WorkflowName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&Webhook=<Webhook>&RunId=<RunId>&StepNumber=<StepNumber>&GlobalKey=<GlobalKey>&StepId=<StepId>";
-
             Dictionary<string, string> mergeFields = new();
-            // use 
-            mergeFields.Add("default_post_url", $"https://reqbin.com/echo/{method}/json" + querystring);
-            // set the callout url to the new SleepTestOrchestrator http normal function url
-            //mergeFields.Add("default_post_url", baseUrl + "/SleepTestOrchestrator_HttpStart" + querystring);
-            //mergeFields.Add("default_post_url", baseUrl + "/testpost" + querystring);
 
-            return mergeFields;
+            if (IsGet)
+            {
+                PropertyInfo[] props = passThroughParams.GetType().GetProperties();
+                string querystring = "?";
+                foreach (var param in props)
+                {
+                    var val = param.GetValue(passThroughParams);
+                    if ((bool)val == true)
+                    {
+                        querystring += $"{param.Name}=<{param.Name}>&";
+                    }
+                }
+                querystring = querystring.Remove(querystring.Length - 1);
+                //string querystring2 = "?WorkflowName=<WorkflowName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&Webhook=<Webhook>&RunId=<RunId>&StepNumber=<StepNumber>&GlobalKey=<GlobalKey>&StepId=<StepId>";
+
+                // use 
+                mergeFields.Add("default_post_url", $"https://reqbin.com/echo/get/json" + querystring);
+                // set the callout url to the new SleepTestOrchestrator http normal function url
+                //mergeFields.Add("default_post_url", baseUrl + "/SleepTestOrchestrator_HttpStart" + querystring);
+                //mergeFields.Add("default_post_url", baseUrl + "/testpost" + querystring);
+
+                return mergeFields;
+            }
+            else
+            {
+                mergeFields.Add("default_post_url", $"https://reqbin.com/echo/post/json");
+
+                return mergeFields;
+            }
         }
     }
 }

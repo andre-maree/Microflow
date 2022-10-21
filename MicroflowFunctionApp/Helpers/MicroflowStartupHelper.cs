@@ -18,6 +18,21 @@ namespace Microflow.Helpers
             {
                 MicroflowRun workflowRun = MicroflowWorkflowHelper.CreateMicroflowRun(req, ref instanceId, workflowNameVersion);
 
+                if (req.Method == HttpMethod.Post)
+                {
+                    string content = await req.Content.ReadAsStringAsync();
+
+                    if(!string.IsNullOrEmpty(content))
+                    {
+                        workflowRun.RunObject.MicroflowStepResponseData = new()
+                        {
+                            Content = content
+                        };
+                    }
+
+                    workflowRun.RunObject.MicroflowStepResponseData.Content = content;
+                }
+
                 // start
                 await client.StartNewAsync(CallNames.MicroflowStartOrchestration, instanceId, workflowRun);
 

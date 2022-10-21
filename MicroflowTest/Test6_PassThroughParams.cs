@@ -99,8 +99,10 @@ namespace MicroflowTest
 
             Assert.IsTrue(successUpsert);
 
+            string input = "hello echo";
+
             // start the upserted Microflow
-            HttpResponseMessage startResult = await TestWorkflowHelper.StartMicroflow(microflow, loop, globalKey);
+            HttpResponseMessage startResult = await TestWorkflowHelper.StartMicroflow(microflow, loop, globalKey, input);
 
             string instanceId = await WorkflowManager.WaitForWorkflowCompleted(startResult);
 
@@ -129,12 +131,26 @@ namespace MicroflowTest
             var blobHttpRequest = blobHttpRequestTask.Result;
             var blobHttpRosponse = blobHttpRosponseTask.Result;
 
-            Assert.IsTrue(blobHttpRequest.Equals("{\"WorkflowName\":\"" + microflow.workflowName + "\",\"MainOrchestrationId\":\"" + arr[1] + "\",\"SubOrchestrationId\":\"" + sortedSteps[0].SubOrchestrationId +  "\",\"Webhook\":\"" + stepsList[0].WebhookId + "\",\"RunId\":\"" + sortedSteps[0].RunId + "\",\"StepNumber\":1,\"StepId\":\"myStep 1\",\"GlobalKey\":\"" + sortedSteps[0].GlobalKey + "\",\"PostData\":null}"));
+            Assert.IsTrue(blobHttpRequest.Equals("{\"WorkflowName\":\""
+                + microflow.workflowName
+                + "\",\"MainOrchestrationId\":\""
+                + arr[1]
+                + "\",\"SubOrchestrationId\":\""
+                + sortedSteps[0].SubOrchestrationId
+                + "\",\"Webhook\":\""
+                + stepsList[0].WebhookId
+                + "\",\"RunId\":\""
+                + sortedSteps[0].RunId
+                + "\",\"StepNumber\":1,\"StepId\":\"myStep 1\",\"GlobalKey\":\""
+                + sortedSteps[0].GlobalKey
+                + "\",\"PostData\":\""
+                + input
+                + "\"}"));
             
             Assert.IsTrue(blobHttpRosponse.Equals("{\"success\":\"true\"}\n"));
 
             // Microflow will not replace the querystring with meta data if it is a post
-            Assert.IsTrue(sortedSteps[0].CalloutUrl.Equals("https://reqbin.com/echo/post/json?WorkflowName=<WorkflowName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&WebhookId=<WebhookId>&RunId=<RunId>&StepNumber=<StepNumber>&GlobalKey=<GlobalKey>&StepId=<StepId>"));
+            Assert.IsTrue(sortedSteps[0].CalloutUrl.Equals("https://reqbin.com/echo/post/json"));
         }
     }
 }
