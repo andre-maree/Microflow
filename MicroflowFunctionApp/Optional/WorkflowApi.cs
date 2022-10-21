@@ -12,18 +12,17 @@ namespace MicroflowApi
     public class WorkflowSplitCode
     {
         /// <summary>
-        /// This must be called at least once before a workflow runs,
-        /// this is to prevent multiple concurrent instances from writing step data at workflow run,
-        /// call UpsertWorkflow when something changed in the workflow, but do not always call this when concurrent multiple workflows
+        /// Inserts a workflow and starts it - skips workflow and global states, deletes, workflow save, create tables
+        /// This will update the entire entity, so if its not the same steps then an unexpacted issue can occur
         /// </summary>
         [FunctionName("QuickInsertAndStartWorkflow")]
         public static async Task<HttpResponseMessage> QuickInsertAndStartWorkflow([HttpTrigger(AuthorizationLevel.Anonymous, "post",
-                                                                  Route = MicroflowModels.Constants.MicroflowPath + "/QuickInsertAndStartWorkflow/{workflowName}/{instanceId}/{globalKey?}")] HttpRequestMessage req,
-                                                                  [DurableClient] IDurableOrchestrationClient client, string workflowName, string instanceId, string globalKey)
+                                                                  Route = MicroflowModels.Constants.MicroflowPath + "/QuickInsertAndStartWorkflow/{workflowNameVersion}/{instanceId?}/{globalKey?}")] HttpRequestMessage req,
+                                                                  [DurableClient] IDurableOrchestrationClient client, string workflowNameVersion, string instanceId, string globalKey)
         {
-            await client.QuickInsertAndStartWorkflow(await req.Content.ReadAsStringAsync(), globalKey);
+            await client.QuickInsert(await req.Content.ReadAsStringAsync(), globalKey);
 
-            return await client.StartWorkflow(req, instanceId, workflowName);
+            return await client.StartWorkflow(req, instanceId, workflowNameVersion);
         }
 
         /// <summary>

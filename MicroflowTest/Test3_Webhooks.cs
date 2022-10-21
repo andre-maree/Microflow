@@ -31,42 +31,34 @@ namespace MicroflowTest
             Assert.IsTrue(successUpsert);
 
             // start the upserted Microflow
-            (string instanceId, string statusUrl) startResult = await TestWorkflowHelper.StartMicroflow(microflow, loop, globalKey, false);
-
-            bool donewebhook = false;
+            HttpResponseMessage startResult = await TestWorkflowHelper.StartMicroflow(microflow, loop, globalKey);
 
             while (true)
             {
                 await Task.Delay(2000);
 
-                if (!donewebhook)
+                //HttpResponseMessage webhookcall = await TestWorkflowHelper.HttpClient.GetAsync(
+                //    $"{TestWorkflowHelper.BaseUrl}/getwebhooks/{microflow.workflowName}/{microflow.workflow.Step(2).WebhookId}/{microflow.workflow.Step(2).StepNumber}");
+                HttpResponseMessage webhookcall = await TestWorkflowHelper.HttpClient.GetAsync($"{TestWorkflowHelper.BaseUrl}/webhooks/{microflow.workflow.Step(2).WebhookId}");
+
+                // if the callout sent out a webhookid externally, and the events is not created yet, then a 202 will always return
+                if (webhookcall.StatusCode == System.Net.HttpStatusCode.Accepted || webhookcall.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
-                    //HttpResponseMessage webhookcall = await TestWorkflowHelper.HttpClient.GetAsync(
-                    //    $"{TestWorkflowHelper.BaseUrl}/getwebhooks/{microflow.workflowName}/{microflow.workflow.Step(2).WebhookId}/{microflow.workflow.Step(2).StepNumber}");
-                    HttpResponseMessage webhookcall = await TestWorkflowHelper.HttpClient.GetAsync($"{TestWorkflowHelper.BaseUrl}/webhooks/{microflow.workflow.Step(2).WebhookId}");
-
-                    // if the callout sent out a webhookid externally, and the events is not created yet, then a 202 will always return
-                    if(webhookcall.StatusCode == System.Net.HttpStatusCode.Accepted || webhookcall.StatusCode == System.Net.HttpStatusCode.NotFound)
-                    {
-                        continue;
-                    }
-                    else if (webhookcall.StatusCode == System.Net.HttpStatusCode.OK)
-                    {
-                        donewebhook = true;
-                    }
+                    continue;
                 }
-
-                HttpResponseMessage res = await TestWorkflowHelper.HttpClient.GetAsync(startResult.statusUrl);
-
-                if (res.StatusCode == System.Net.HttpStatusCode.OK)
+                else if (webhookcall.StatusCode == System.Net.HttpStatusCode.OK)
+                {
                     break;
+                }
             }
+
+            string instanceId = await WorkflowManager.WaitForWorkflowCompleted(startResult);
 
             List<Microflow.MicroflowTableModels.LogOrchestrationEntity> log = await LogReader.GetOrchLog(microflow.workflowName);
 
-            Assert.IsTrue(log.FindIndex(i => i.OrchestrationId.Equals(startResult.instanceId)) >= 0);
+            Assert.IsTrue(log.FindIndex(i => i.OrchestrationId.Equals(instanceId)) >= 0);
 
-            List<Microflow.MicroflowTableModels.LogStepEntity> steps = await LogReader.GetStepsLog(microflow.workflowName, startResult.instanceId);
+            List<Microflow.MicroflowTableModels.LogStepEntity> steps = await LogReader.GetStepsLog(microflow.workflowName, instanceId);
 
             List<Microflow.MicroflowTableModels.LogStepEntity> s = steps.OrderBy(e => e.EndDate).ToList();
 
@@ -118,40 +110,32 @@ namespace MicroflowTest
             Assert.IsTrue(successUpsert);
 
             // start the upserted Microflow
-            (string instanceId, string statusUrl) startResult = await TestWorkflowHelper.StartMicroflow(microflow, loop, globalKey, false);
-
-            bool donewebhook = false;
+            HttpResponseMessage startResult = await TestWorkflowHelper.StartMicroflow(microflow, loop, globalKey);
 
             while (true)
             {
                 await Task.Delay(2000);
 
-                if (!donewebhook)
+                HttpResponseMessage webhookcall = await TestWorkflowHelper.HttpClient.GetAsync($"{TestWorkflowHelper.BaseUrl}/webhooks/{webhookId}/approve");
+
+                // if the callout sent out a webhookid externally, and the events is not created yet, then a 202 will always return
+                if (webhookcall.StatusCode == System.Net.HttpStatusCode.Accepted || webhookcall.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
-                    HttpResponseMessage webhookcall = await TestWorkflowHelper.HttpClient.GetAsync($"{TestWorkflowHelper.BaseUrl}/webhooks/{webhookId}/approve");
-
-                    // if the callout sent out a webhookid externally, and the events is not created yet, then a 202 will always return
-                    if (webhookcall.StatusCode == System.Net.HttpStatusCode.Accepted || webhookcall.StatusCode == System.Net.HttpStatusCode.NotFound)
-                    {
-                        continue;
-                    }
-                    else if (webhookcall.StatusCode == System.Net.HttpStatusCode.OK)
-                    {
-                        donewebhook = true;
-                    }
+                    continue;
                 }
-
-                HttpResponseMessage res = await TestWorkflowHelper.HttpClient.GetAsync(startResult.statusUrl);
-
-                if (res.StatusCode == System.Net.HttpStatusCode.OK)
+                else if (webhookcall.StatusCode == System.Net.HttpStatusCode.OK)
+                {
                     break;
+                }
             }
+
+            string instanceId = await WorkflowManager.WaitForWorkflowCompleted(startResult);
 
             List<Microflow.MicroflowTableModels.LogOrchestrationEntity> log = await LogReader.GetOrchLog(microflow.workflowName);
 
-            Assert.IsTrue(log.FindIndex(i => i.OrchestrationId.Equals(startResult.instanceId)) >= 0);
+            Assert.IsTrue(log.FindIndex(i => i.OrchestrationId.Equals(instanceId)) >= 0);
 
-            List<Microflow.MicroflowTableModels.LogStepEntity> steps = await LogReader.GetStepsLog(microflow.workflowName, startResult.instanceId);
+            List<Microflow.MicroflowTableModels.LogStepEntity> steps = await LogReader.GetStepsLog(microflow.workflowName, instanceId);
 
             List<Microflow.MicroflowTableModels.LogStepEntity> s = steps.OrderBy(e => e.EndDate).ToList();
 

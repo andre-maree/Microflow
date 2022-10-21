@@ -12,16 +12,16 @@ namespace Microflow.Helpers
 {
     public static class MicroflowStartupHelper
     {
-        public static async Task<HttpResponseMessage> StartWorkflow(this IDurableOrchestrationClient client, HttpRequestMessage req, string instanceId, string workflowName)
+        public static async Task<HttpResponseMessage> StartWorkflow(this IDurableOrchestrationClient client, HttpRequestMessage req, string instanceId, string workflowNameVersion)
         {
             try
             {
-                MicroflowRun workflowRun = MicroflowWorkflowHelper.CreateMicroflowRun(req, ref instanceId, workflowName);
+                MicroflowRun workflowRun = MicroflowWorkflowHelper.CreateMicroflowRun(req, ref instanceId, workflowNameVersion);
 
                 // start
                 await client.StartNewAsync(CallNames.MicroflowStartOrchestration, instanceId, workflowRun);
 
-                HttpResponseMessage response = await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromSeconds(1));
+                HttpResponseMessage response = client.CreateCheckStatusResponse(req, instanceId);
 
                 if (response.StatusCode == HttpStatusCode.OK)
                 {

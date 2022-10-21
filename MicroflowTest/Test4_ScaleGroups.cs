@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace MicroflowTest
@@ -38,9 +39,11 @@ namespace MicroflowTest
             await TestWorkflowHelper.SetScaleGroupMax(10, scaleGroupId);
 
             // start the upserted Microflow
-            (string instanceId, string statusUrl) startResult = await TestWorkflowHelper.StartMicroflow(microflow, loop, globalKey);
+            HttpResponseMessage startResult = await TestWorkflowHelper.StartMicroflow(microflow, loop, globalKey);
 
-            await TestNoScaleGroupWithMax10(microflow, startResult);
+            string instanceId = await WorkflowManager.WaitForWorkflowCompleted(startResult);
+
+            await TestNoScaleGroupWithMax10(microflow, instanceId);
         }
 
         [TestMethod]
@@ -67,22 +70,24 @@ namespace MicroflowTest
             await TestWorkflowHelper.SetScaleGroupMax(1, scaleGroupId);
 
             // start the upserted Microflow
-            (string instanceId, string statusUrl) startResult = await TestWorkflowHelper.StartMicroflow(microflow, loop, globalKey);
+            HttpResponseMessage startResult = await TestWorkflowHelper.StartMicroflow(microflow, loop, globalKey);
 
-            await TestNoScaleGroupWithMax1(microflow, startResult);
+            string instanceId = await WorkflowManager.WaitForWorkflowCompleted(startResult);
+
+            await TestNoScaleGroupWithMax1(microflow, instanceId);
         }
 
-            private static async Task TestNoScaleGroupWithMax1((MicroflowModels.Microflow workflow, string workflowName) microflow, (string instanceId, string statusUrl) startResult)
+            private static async Task TestNoScaleGroupWithMax1((MicroflowModels.Microflow workflow, string workflowName) microflow, string instanceId)
         {
             //// CHECK RESULTS ////
 
             // get the orchestration log to check the results
             List<LogOrchestrationEntity> log = await LogReader.GetOrchLog(microflow.workflowName);
 
-            Assert.IsTrue(log.FindIndex(i => i.OrchestrationId.Equals(startResult.instanceId)) >= 0);
+            Assert.IsTrue(log.FindIndex(i => i.OrchestrationId.Equals(instanceId)) >= 0);
 
             // get the steps log to check the results
-            List<LogStepEntity> steps = await LogReader.GetStepsLog(microflow.workflowName, startResult.instanceId);
+            List<LogStepEntity> steps = await LogReader.GetStepsLog(microflow.workflowName, instanceId);
 
             List<LogStepEntity> sortedSteps = TestBasicFlow(steps);
 
@@ -104,17 +109,17 @@ namespace MicroflowTest
             }
         }
 
-        private static async Task TestNoScaleGroupWithMax10((MicroflowModels.Microflow workflow, string workflowName) microflow, (string instanceId, string statusUrl) startResult)
+        private static async Task TestNoScaleGroupWithMax10((MicroflowModels.Microflow workflow, string workflowName) microflow, string instanceId)
         {
             //// CHECK RESULTS ////
 
             // get the orchestration log to check the results
             List<LogOrchestrationEntity> log = await LogReader.GetOrchLog(microflow.workflowName);
 
-            Assert.IsTrue(log.FindIndex(i => i.OrchestrationId.Equals(startResult.instanceId)) >= 0);
+            Assert.IsTrue(log.FindIndex(i => i.OrchestrationId.Equals(instanceId)) >= 0);
 
             // get the steps log to check the results
-            List<LogStepEntity> steps = await LogReader.GetStepsLog(microflow.workflowName, startResult.instanceId);
+            List<LogStepEntity> steps = await LogReader.GetStepsLog(microflow.workflowName, instanceId);
 
             List<LogStepEntity> sortedSteps = TestBasicFlow(steps);
 

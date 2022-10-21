@@ -23,27 +23,16 @@ namespace MicroflowTest
             HttpResponseMessage runcall = await TestWorkflowHelper.HttpClient.PostAsJsonAsync<List<int>>($"{TestWorkflowHelper.BaseUrl}/RunFromSteps/{workflowName}", new() { 2, 3 });
 
             //// CHECK RESULTS //// stepnumber 1 is now not in the log
-            string result = await runcall.Content.ReadAsStringAsync();
-            OrchResult orchResult = JsonConvert.DeserializeObject<OrchResult>(result);
-
-            while (true)
-            {
-                await Task.Delay(2000);
-
-                HttpResponseMessage res = await TestWorkflowHelper.HttpClient.GetAsync(orchResult.statusQueryGetUri);
-
-                if (res.StatusCode == System.Net.HttpStatusCode.OK)
-                    break;
-            }
+            string instanceId = await WorkflowManager.WaitForWorkflowCompleted(runcall);
 
             // get the orchestration log to check the results
             List<LogOrchestrationEntity> log = await LogReader.GetOrchLog(workflowName);
 
             // check that the orchestraion id is logged 
-            Assert.IsTrue(log.Single(i => i.OrchestrationId.Equals(orchResult.id) && i.RowKey.Contains("RunFromSteps")) != null);
+            Assert.IsTrue(log.Single(i => i.OrchestrationId.Equals(instanceId) && i.RowKey.Contains("RunFromSteps")) != null);
 
             // get the steps log to check the results
-            List<LogStepEntity> steps = await LogReader.GetStepsLog(workflowName, orchResult.id);
+            List<LogStepEntity> steps = await LogReader.GetStepsLog(workflowName, instanceId);
 
             List<LogStepEntity> sortedSteps = steps.OrderBy(e => e.EndDate).ToList();
 
@@ -83,7 +72,9 @@ namespace MicroflowTest
             Assert.IsTrue(successUpsert);
 
             // start the upserted Microflow
-            (string instanceId, string statusUrl) startResult = await TestWorkflowHelper.StartMicroflow(microflow, loop, globalKey);
+            HttpResponseMessage startResult = await TestWorkflowHelper.StartMicroflow(microflow, loop, globalKey);
+
+            string instanceId = await WorkflowManager.WaitForWorkflowCompleted(startResult);
 
             //// CHECK RESULTS ////
 
@@ -91,10 +82,10 @@ namespace MicroflowTest
             List<LogOrchestrationEntity> log = await LogReader.GetOrchLog(microflow.workflowName);
 
             // check that the orchestraion id is logged
-            Assert.IsTrue(log.FindIndex(i => i.OrchestrationId.Equals(startResult.instanceId)) >= 0);
+            Assert.IsTrue(log.FindIndex(i => i.OrchestrationId.Equals(instanceId)) >= 0);
 
             // get the steps log to check the results
-            List<LogStepEntity> steps = await LogReader.GetStepsLog(microflow.workflowName, startResult.instanceId);
+            List<LogStepEntity> steps = await LogReader.GetStepsLog(microflow.workflowName, instanceId);
 
             List<LogStepEntity> sortedSteps = steps.OrderBy(e => e.EndDate).ToList();
 
