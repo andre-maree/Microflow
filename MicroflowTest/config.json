@@ -1,4 +1,9 @@
 {
   "MicroflowStorage": "UseDevelopmentStorage=true",
-  "BaseUrl": "http://localhost:7071/microflow/v1"
+  "BaseUrl": "http://localhost:7071/microflow/v1",
+  "CallOut_GET_Url": "https://reqbin.com/echo/get/json",
+  "CallOut_POST_Url": "https://reqbin.com/echo/post/json",
+  "UseEmulator": "false",
+  "EmulatorCallOut_GET_Url": "http://localhost:7072/api/SleepTestOrchestrator_HttpStart",
+  "EmulatorCallOut_POST_Url": "http://localhost:7072/api/SleepTestOrchestrator_HttpStart"
 }

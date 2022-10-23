@@ -5,6 +5,7 @@ using System;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using static MicroflowModels.Constants;
 
 namespace Microflow.Helpers
 {
@@ -53,7 +54,7 @@ namespace Microflow.Helpers
                     StepId = httpCall.StepId,
                     StepNumber = Convert.ToInt32(httpCall.RowKey),
                     MainOrchestrationId = httpCall.MainOrchestrationId,
-                    Webhook = httpCall.WebhookId,
+                    Webhook = httpCall.EnableWebhook ? $"{CallNames.BaseUrl}/webhooks/{httpCall.WebhookId}" : null,
                     GlobalKey = httpCall.GlobalKey,
                     PostData = microflowHttpResponse.Content
                 };
@@ -112,7 +113,10 @@ namespace Microflow.Helpers
             sb.Replace("<WorkflowName>", httpCall.PartitionKey);
             sb.Replace("<MainOrchestrationId>", httpCall.MainOrchestrationId);
             sb.Replace("<SubOrchestrationId>", instanceId);
-            sb.Replace("<WebhookId>", httpCall.WebhookId);
+            if(httpCall.EnableWebhook)
+            {
+                sb.Replace("<WebhookId>", $"{CallNames.BaseUrl}/webhooks/{httpCall.WebhookId}");
+            }
             sb.Replace("<RunId>", httpCall.RunId);
             sb.Replace("<StepId>", httpCall.StepId);
             sb.Replace("<StepNumber>", httpCall.RowKey);

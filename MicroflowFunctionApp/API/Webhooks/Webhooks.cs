@@ -28,11 +28,12 @@ namespace Microflow.Webhooks
         Route = Constants.MicroflowPath + "/Webhooks/{webhookId}/{action?}")] HttpRequestMessage req,
         [DurableClient] IDurableOrchestrationClient orchClient,
         string webhookId, string action)
-            => await orchClient.ProcessWebhook(webhookId, action);
+            => await orchClient.ProcessWebhook(webhookId, action, req.RequestUri);
 
         private static async Task<HttpResponseMessage> ProcessWebhook(this IDurableOrchestrationClient client,
                                                                         string webhookId,
-                                                                        string action)
+                                                                        string action,
+                                                                        Uri location)
         {
             Webhook webhook = await TableHelper.GetWebhook(webhookId);
 
@@ -103,7 +104,10 @@ namespace Microflow.Webhooks
                     }
 
                     // unliky but possible that the event have not yet been created
-                    return new(HttpStatusCode.Accepted);
+                    HttpResponseMessage response = new(HttpStatusCode.Accepted);
+                    response.Headers.Location = location;
+
+                    return response;
                 }
                 catch
                 {

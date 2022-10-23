@@ -32,11 +32,10 @@ namespace Microflow.API.Internal
         {
             ILogger log = context.CreateReplaySafeLogger(inLog);
 
-            string data = context.GetInput<string>();
-            MicroflowPostData postData = JsonSerializer.Deserialize<MicroflowPostData>(data);
+            (MicroflowPostData postData, string action) = context.GetInput<(MicroflowPostData, string)>();
 
             Random random = new();
-            TimeSpan ts = TimeSpan.FromSeconds(random.Next(10, 15));
+            TimeSpan ts = TimeSpan.FromSeconds(random.Next(1, 5));
             DateTime deadline = context.CurrentUtcDateTime.Add(ts);
 
             using (CancellationTokenSource cts = new())
@@ -58,10 +57,14 @@ namespace Microflow.API.Internal
             // test if the webhook is done, do the call back if there is 1
             if (!string.IsNullOrWhiteSpace(postData.Webhook))
             {
+                postData.Webhook += string.IsNullOrEmpty(action) ? "" : "/" + action;
+            
                 DurableHttpRequest req = new(HttpMethod.Get, new Uri(postData.Webhook));
 
                 await context.CallHttpAsync(req);
             }
+
+            return;
         }
 
         /// <summary>
@@ -69,22 +72,31 @@ namespace Microflow.API.Internal
         /// </summary>
         [FunctionName("SleepTestOrchestrator_HttpStart")]
         public static async Task<HttpResponseMessage> SleepTestOrchestrator_HttpStart(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "SleepTestOrchestrator_HttpStart")] HttpRequestMessage req,
-            [DurableClient] IDurableOrchestrationClient client)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "SleepTestOrchestrator_HttpStart/{webhookAction?}/{isAsync:bool?}")] HttpRequestMessage req,
+            [DurableClient] IDurableOrchestrationClient client, string webhookAction, bool? isAsync)
         {
+            if (!isAsync.HasValue)
+            {
+                isAsync = false;
+            }
+
+            MicroflowPostData postData;
+
             string instanceId = Guid.NewGuid().ToString();
+
             if (req.Method == HttpMethod.Post)
             {
                 string data = await req.Content.ReadAsStringAsync();
 
-                await client.StartNewAsync("SleepTestOrchestrator", instanceId, data);
+                postData = JsonSerializer.Deserialize<MicroflowPostData>(data);
 
-                return client.CreateCheckStatusResponse(req, instanceId);
+                await client.StartNewAsync("SleepTestOrchestrator", instanceId, (postData, webhookAction));
             }
             else
             {
                 NameValueCollection data = req.RequestUri.ParseQueryString();
-                MicroflowPostData postData = new()
+
+                postData = new()
                 {
                     Webhook = data["Webhook"],
                     MainOrchestrationId = data["MainOrchestrationId"],
@@ -95,11 +107,29 @@ namespace Microflow.API.Internal
                     SubOrchestrationId = data["SubOrchestrationId"],
                     GlobalKey = data["GlobalKey"]
                 };
-
-                // Function input comes from the request content.
-                await client.StartNewAsync("SleepTestOrchestrator", instanceId, JsonSerializer.Serialize(postData));
                 
-                return await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromSeconds(1));
+                await client.StartNewAsync("SleepTestOrchestrator", instanceId, (postData, webhookAction));
+            }
+
+            if(isAsync.Value)
+            {
+                return client.CreateCheckStatusResponse(req, instanceId);
+            }
+            else if (!string.IsNullOrEmpty(postData.Webhook))
+            {
+                return new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+                {
+                    Content = new StringContent("{\"success\":\"true\"}\n")
+                };
+            }
+            else
+            {
+                await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromSeconds(1000));
+
+                return new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+                {
+                    Content = new StringContent("{\"success\":\"true\"}\n")
+                };
             }
         }
 
@@ -113,7 +143,7 @@ namespace Microflow.API.Internal
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
 
             MicroflowPostData data = JsonSerializer.Deserialize<MicroflowPostData>(requestBody);
-            
+
             await MicroflowHttpClient.HttpClient.PostAsJsonAsync($"{Environment.GetEnvironmentVariable("BaseUrl")}SleepTestOrchestrator_HttpStart/", data);
 
             HttpResponseMessage resp = new();

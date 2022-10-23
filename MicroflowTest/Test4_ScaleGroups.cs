@@ -4,6 +4,7 @@ using MicroflowSDK;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -143,15 +144,8 @@ namespace MicroflowTest
             List<LogStepEntity> sortedSteps = steps.OrderBy(e => e.EndDate).ToList();
 
             Assert.IsTrue(sortedSteps[0].StepNumber == 1);
-
-            if (sortedSteps[1].StepNumber == 2)
-                Assert.IsTrue(sortedSteps[2].StepNumber == 3);
-            else
-            {
-                Assert.IsTrue(sortedSteps[1].StepNumber == 3);
-                Assert.IsTrue(sortedSteps[2].StepNumber == 2);
-            }
-
+            Assert.IsTrue(sortedSteps[1].StepNumber == 2 || sortedSteps[1].StepNumber == 3);
+            Assert.IsTrue(sortedSteps.Count(n => n.StepNumber == 14) == 1);
             Assert.IsTrue(sortedSteps.Count == 14);
             Assert.IsTrue(sortedSteps[13].StepNumber == 14);
 
