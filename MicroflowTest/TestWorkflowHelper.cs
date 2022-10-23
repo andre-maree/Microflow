@@ -4,22 +4,32 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
+using static System.Net.WebRequestMethods;
 
 namespace MicroflowTest
 {
     public static class TestWorkflowHelper
     {
         public static Dictionary<string, string> Config = GetConfig();
-        public static string BaseUrl = Config["BaseUrl"];
+        public static string BaseUrl = Config["BaseUrl"]; 
         public static readonly HttpClient HttpClient = new();
+        public static readonly bool UseEmulator = Convert.ToBoolean(Config["UseEmulator"]);
+        public static string CalloutGETUrl = UseEmulator ? Config["EmulatorCallOut_GET_Url"] : Config["CallOut_GET_Url"];
+        public static string CalloutPOSTUrl = UseEmulator ? Config["EmulatorCallOut_POST_Url"] : Config["CallOut_POST_Url"];
 
         static TestWorkflowHelper()
         {
+        }
+
+        public static void SetEmulatorWebhookAction(MicroflowModels.Microflow workflow)
+        {
+            workflow.MergeFields["default_post_url"] += "/approve";
         }
 
         public static Dictionary<string, string> GetConfig()
@@ -167,7 +177,7 @@ namespace MicroflowTest
                 //string querystring2 = "?WorkflowName=<WorkflowName>&MainOrchestrationId=<MainOrchestrationId>&SubOrchestrationId=<SubOrchestrationId>&Webhook=<Webhook>&RunId=<RunId>&StepNumber=<StepNumber>&GlobalKey=<GlobalKey>&StepId=<StepId>";
 
                 // use 
-                mergeFields.Add("default_post_url", $"https://reqbin.com/echo/get/json" + querystring);
+                mergeFields.Add("default_post_url", CalloutGETUrl + querystring);
                 // set the callout url to the new SleepTestOrchestrator http normal function url
                 //mergeFields.Add("default_post_url", baseUrl + "/SleepTestOrchestrator_HttpStart" + querystring);
                 //mergeFields.Add("default_post_url", baseUrl + "/testpost" + querystring);
@@ -176,7 +186,7 @@ namespace MicroflowTest
             }
             else
             {
-                mergeFields.Add("default_post_url", $"https://reqbin.com/echo/post/json");
+                mergeFields.Add("default_post_url", CalloutPOSTUrl);
 
                 return mergeFields;
             }

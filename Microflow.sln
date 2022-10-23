@@ -11,8 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MicroflowApiFunctionApp", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MicroflowShared", "MicroflowShared\MicroflowShared.csproj", "{C83CCA23-46D9-4819-8C45-ED01154A4121}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MicroserviceEmulator", "MicroserviceEmulator\MicroserviceEmulator.csproj", "{B7848E81-D80E-42BB-B949-E2B01BAD59A4}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,10 +33,6 @@ Global
 		{C83CCA23-46D9-4819-8C45-ED01154A4121}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C83CCA23-46D9-4819-8C45-ED01154A4121}.Release|Any CPU.ActiveCfg = Debug|Any CPU
 		{C83CCA23-46D9-4819-8C45-ED01154A4121}.Release|Any CPU.Build.0 = Debug|Any CPU
-		{B7848E81-D80E-42BB-B949-E2B01BAD59A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B7848E81-D80E-42BB-B949-E2B01BAD59A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B7848E81-D80E-42BB-B949-E2B01BAD59A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B7848E81-D80E-42BB-B949-E2B01BAD59A4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

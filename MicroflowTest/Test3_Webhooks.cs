@@ -33,22 +33,26 @@ namespace MicroflowTest
             // start the upserted Microflow
             HttpResponseMessage startResult = await TestWorkflowHelper.StartMicroflow(microflow, loop, globalKey);
 
-            while (true)
+            // Emulator will reply on the webhook
+            if (!TestWorkflowHelper.UseEmulator)
             {
-                await Task.Delay(2000);
-
-                //HttpResponseMessage webhookcall = await TestWorkflowHelper.HttpClient.GetAsync(
-                //    $"{TestWorkflowHelper.BaseUrl}/getwebhooks/{microflow.workflowName}/{microflow.workflow.Step(2).WebhookId}/{microflow.workflow.Step(2).StepNumber}");
-                HttpResponseMessage webhookcall = await TestWorkflowHelper.HttpClient.GetAsync($"{TestWorkflowHelper.BaseUrl}/webhooks/{microflow.workflow.Step(2).WebhookId}");
-
-                // if the callout sent out a webhookid externally, and the events is not created yet, then a 202 will always return
-                if (webhookcall.StatusCode == System.Net.HttpStatusCode.Accepted || webhookcall.StatusCode == System.Net.HttpStatusCode.NotFound)
+                while (true)
                 {
-                    continue;
-                }
-                else if (webhookcall.StatusCode == System.Net.HttpStatusCode.OK)
-                {
-                    break;
+                    await Task.Delay(2000);
+
+                    //HttpResponseMessage webhookcall = await TestWorkflowHelper.HttpClient.GetAsync(
+                    //    $"{TestWorkflowHelper.BaseUrl}/getwebhooks/{microflow.workflowName}/{microflow.workflow.Step(2).WebhookId}/{microflow.workflow.Step(2).StepNumber}");
+                    HttpResponseMessage webhookcall = await TestWorkflowHelper.HttpClient.GetAsync($"{TestWorkflowHelper.BaseUrl}/webhooks/{microflow.workflow.Step(2).WebhookId}");
+
+                    // if the callout sent out a webhookid externally, and the events is not created yet, then a 202 will always return
+                    if (webhookcall.StatusCode == System.Net.HttpStatusCode.Accepted || webhookcall.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    {
+                        continue;
+                    }
+                    else if (webhookcall.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        break;
+                    }
                 }
             }
 
@@ -84,6 +88,12 @@ namespace MicroflowTest
 
             (MicroflowModels.Microflow workflow, string workflowName) microflow = TestWorkflowHelper.CreateMicroflow(workflow);
 
+            // Emulator will reply on the webhook, set /approve
+            if (TestWorkflowHelper.UseEmulator)
+            {
+                TestWorkflowHelper.SetEmulatorWebhookAction(microflow.workflow);
+            }
+
             int loop = 1;
             string globalKey = Guid.NewGuid().ToString();
 
@@ -112,20 +122,24 @@ namespace MicroflowTest
             // start the upserted Microflow
             HttpResponseMessage startResult = await TestWorkflowHelper.StartMicroflow(microflow, loop, globalKey);
 
-            while (true)
+            // Emulator will reply on the webhook
+            if (!TestWorkflowHelper.UseEmulator)
             {
-                await Task.Delay(2000);
-
-                HttpResponseMessage webhookcall = await TestWorkflowHelper.HttpClient.GetAsync($"{TestWorkflowHelper.BaseUrl}/webhooks/{webhookId}/approve");
-
-                // if the callout sent out a webhookid externally, and the events is not created yet, then a 202 will always return
-                if (webhookcall.StatusCode == System.Net.HttpStatusCode.Accepted || webhookcall.StatusCode == System.Net.HttpStatusCode.NotFound)
+                while (true)
                 {
-                    continue;
-                }
-                else if (webhookcall.StatusCode == System.Net.HttpStatusCode.OK)
-                {
-                    break;
+                    await Task.Delay(2000);
+
+                    HttpResponseMessage webhookcall = await TestWorkflowHelper.HttpClient.GetAsync($"{TestWorkflowHelper.BaseUrl}/webhooks/{webhookId}/approve");
+
+                    // if the callout sent out a webhookid externally, and the events is not created yet, then a 202 will always return
+                    if (webhookcall.StatusCode == System.Net.HttpStatusCode.Accepted || webhookcall.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    {
+                        continue;
+                    }
+                    else if (webhookcall.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        break;
+                    }
                 }
             }
 

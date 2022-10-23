@@ -44,13 +44,9 @@ namespace MicroflowTest
 
             Assert.IsTrue(sorted[0].StepNumber == 1);
 
-            if (sorted[1].StepNumber == 2)
-                Assert.IsTrue(sorted[2].StepNumber == 3);
-            else
-            {
-                Assert.IsTrue(sorted[1].StepNumber == 3);
-                Assert.IsTrue(sorted[2].StepNumber == 2);
-            }
+            Assert.IsTrue(sorted[1].StepNumber == 2 || sorted[1].StepNumber == 3);
+
+            Assert.IsTrue(sorted.Count() == 23);
 
             // with WaitForAllParents = true, step 14 will execute once when all parents are completed
             // with WaitForAllParents = false, step 14 will execute each time a parent completes

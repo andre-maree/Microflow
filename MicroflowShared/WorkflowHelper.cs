@@ -255,6 +255,10 @@ namespace MicroflowShared
 
                     webhookTasks.Add(UpsertWebhook(webhookTasks, webhookEntity, webhooksTable));
                 }
+                else if(!string.IsNullOrWhiteSpace(step.WebhookId))
+                {
+                    step.WebhookId = null;
+                }
 
                 (int StepNumber, int ParentCount, int WaitForAllParents) subInfo = liParentCounts.FirstOrDefault(s => s.StepNumber == step.StepNumber);
 

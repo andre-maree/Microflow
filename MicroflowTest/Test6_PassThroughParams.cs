@@ -66,7 +66,7 @@ namespace MicroflowTest
 
             var arr = sortedSteps[0].PartitionKey.Split("__");
 
-            var s = $"https://reqbin.com/echo/get/json?WorkflowName={microflow.workflowName}&MainOrchestrationId={arr[1]}&SubOrchestrationId={sortedSteps[0].SubOrchestrationId}&WebhookId={stepsList[0].WebhookId}&RunId={sortedSteps[0].RunId}&StepNumber=1&GlobalKey={sortedSteps[0].GlobalKey}&StepId={stepsList[0].StepId}";
+            var s = $"{TestWorkflowHelper.CalloutGETUrl}?WorkflowName={microflow.workflowName}&MainOrchestrationId={arr[1]}&SubOrchestrationId={sortedSteps[0].SubOrchestrationId}&WebhookId=<WebhookId>&RunId={sortedSteps[0].RunId}&StepNumber=1&GlobalKey={sortedSteps[0].GlobalKey}&StepId={stepsList[0].StepId}";
 
             Assert.IsTrue(s.Equals(sortedSteps[0].CalloutUrl));
         }
@@ -137,9 +137,8 @@ namespace MicroflowTest
                 + arr[1]
                 + "\",\"SubOrchestrationId\":\""
                 + sortedSteps[0].SubOrchestrationId
-                + "\",\"Webhook\":\""
-                + stepsList[0].WebhookId
-                + "\",\"RunId\":\""
+                + "\",\"Webhook\":null,"
+                + "\"RunId\":\""
                 + sortedSteps[0].RunId
                 + "\",\"StepNumber\":1,\"StepId\":\"myStep 1\",\"GlobalKey\":\""
                 + sortedSteps[0].GlobalKey
@@ -150,7 +149,7 @@ namespace MicroflowTest
             Assert.IsTrue(blobHttpRosponse.Equals("{\"success\":\"true\"}\n"));
 
             // Microflow will not replace the querystring with meta data if it is a post
-            Assert.IsTrue(sortedSteps[0].CalloutUrl.Equals("https://reqbin.com/echo/post/json"));
+            //Assert.IsTrue(sortedSteps[0].CalloutUrl.Equals("https://reqbin.com/echo/post/json"));
         }
     }
 }
