@@ -20,7 +20,7 @@ namespace Microflow
             {
                 try
                 {
-                    HttpResponseMessage result = await MicroflowHttpClient.HttpClient.PostAsJsonAsync(httpCall.CalloutUrl, (ProcessId: httpCall.PartitionKey, StepId: httpCall.RowKey), cts.Token);
+                    HttpResponseMessage result = await EmulatorShared.HttpClient.PostAsJsonAsync(httpCall.CalloutUrl, (ProcessId: httpCall.PartitionKey, StepId: httpCall.RowKey), cts.Token);
 
                     if (result.IsSuccessStatusCode)
                     {
