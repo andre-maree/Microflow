@@ -144,7 +144,7 @@ namespace Microflow.API.Internal
 
             MicroflowPostData data = JsonSerializer.Deserialize<MicroflowPostData>(requestBody);
 
-            await MicroflowHttpClient.HttpClient.PostAsJsonAsync($"{Environment.GetEnvironmentVariable("BaseUrl")}SleepTestOrchestrator_HttpStart/", data);
+            await EmulatorShared.HttpClient.PostAsJsonAsync($"{Environment.GetEnvironmentVariable("BaseUrl")}SleepTestOrchestrator_HttpStart/", data);
 
             HttpResponseMessage resp = new();
 
