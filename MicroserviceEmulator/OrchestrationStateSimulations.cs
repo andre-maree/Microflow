@@ -15,35 +15,28 @@ using Microsoft.Extensions.Logging;
 
 namespace Microflow.API.Internal
 {
-    /// <summary>
-    /// Use this to mock an orchestration micro-service for testing purposes,
-    /// this will be moved to its own function app in the future,
-    /// because it`s better to split the action/micro-service workers from the Microflow app for scalability
-    /// </summary>
     public static class OrchestrationStateSimulations
     {
         [FunctionName("RunningOrchestration")]
         public static async Task<List<string>> RunningOrchestrator(
             [OrchestrationTrigger] IDurableOrchestrationContext context)
         {
-            List<string> outputs = new List<string>();
+            List<string> outputs = new();
 
-            // Replace "hello" with the name of your Durable Activity Function.
             outputs.Add(await context.CallActivityAsync<string>("Arb_Activity", "Tokyo"));
             outputs.Add(await context.CallActivityAsync<string>("Arb_Activity", "Seattle"));
             outputs.Add(await context.CallActivityAsync<string>("Arb_Activity", "London"));
 
             //int o = 0;
             //int t = 5 / o;
-            // returns ["Hello Tokyo!", "Hello Seattle!", "Hello London!"]
+            
             return outputs;
         }
 
         [FunctionName("Arb_Activity")]
         public static async Task<string> Arb_Activity([ActivityTrigger] string name, ILogger log)
         {
-            //await EmulatorShared.HttpClient.PostAsync("", new StringContent(""));
-            await Task.Delay(15000);
+            await Task.Delay(30000);
 
             log.LogInformation($"Saying hello to {name}.");
             return $"Hello {name}!";
@@ -55,7 +48,6 @@ namespace Microflow.API.Internal
             [DurableClient] IDurableOrchestrationClient starter,
             ILogger log)
         {
-            // Function input comes from the request content.
             string instanceId = await starter.StartNewAsync("RunningOrchestration", instanceId: "timer_qwerty");
 
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
@@ -69,7 +61,6 @@ namespace Microflow.API.Internal
             [DurableClient] IDurableOrchestrationClient starter,
             ILogger log)
         {
-            // Function input comes from the request content.
             string instanceId = await starter.StartNewAsync("RunningOrchestration", null);
 
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
