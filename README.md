@@ -10,7 +10,7 @@ A Microflow workflow is a list of steps, with each step having child steps. Comp
 
 > Microflow is a dynamic and flexible micro-service orchestrator with webhook functionality.
 
-Standardize, minimize, and easily manage workflow execution code within and across development teams. Ease the learning curve for developers new to Durable Functions. Microflow can be seen a "low-code" or even a "no-code" solution.
+Standardize, minimize, and easily manage workflow execution code within and across development teams. Ease the learning curve for developers new to Durable Functions. Microflow can be seen as a "low-code" or even a "no-code" solution.
 
 Other functionality include:
 - Protect resources from being overloaded by grouping steps with a ScaleGroupId and setting a maximum concurrent instance count per scale group.
