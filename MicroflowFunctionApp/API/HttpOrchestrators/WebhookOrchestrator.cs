@@ -106,21 +106,11 @@ namespace Microflow.HttpOrchestrators
             {
                 throw tex;
             }
-            catch (Exception e)
-            {
-                if (!httpCall.StopOnWebhookTimeout)
-                {
-                    return new MicroflowHttpResponse()
-                    {
-                        CalloutOrWebhook = CalloutOrWebhook.Webhook,
-                        Success = false,
-                        HttpResponseStatusCode = -500,
-                        Content = $"Webhook action failed - " + e.Message
-                    };
-                }
+            //catch (Exception e)
+            //{
 
-                throw;
-            }
+            //    throw;
+            //}
 
             #region Optional: no stepcount
 #if DEBUG || RELEASE || !DEBUG_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !DEBUG_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !DEBUG_NO_UPSERT_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_FLOWCONTROL_STEPCOUNT && !RELEASE_NO_UPSERT_SCALEGROUPS_STEPCOUNT && !RELEASE_NO_UPSERT_STEPCOUNT
