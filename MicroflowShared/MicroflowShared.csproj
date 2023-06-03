@@ -117,8 +117,8 @@
 		<Optimize>True</Optimize>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Azure.Data.Tables" Version="12.7.0-beta.1" />
-		<PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.8.1" />
+		<PackageReference Include="Azure.Data.Tables" Version="12.8.0" />
+		<PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.9.5" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\MicroflowModels\MicroflowModels.csproj" />

@@ -89,37 +89,59 @@ namespace MicroflowTest
             var blobHttpRosponse1 = blobHttpRequest1Task.Result;
             var blobHttpRosponse2 = blobHttpRequest2Task.Result;
 
-            string s1 = "{\"WorkflowName\":\"Unit_test_workflow@1.0\",\"MainOrchestrationId\":\"" +
-                arr[1] + "\"," + 
-                "\"SubOrchestrationId\":\"" +
-                sortedSteps[0].SubOrchestrationId + "\"," +
-                "\"Webhook\":null," +
-                "\"RunId\":\"" +
-                sortedSteps[0].RunId + "\"," +
-                "\"StepNumber\":1,\"StepId\":\"myStep 1\",\"GlobalKey\":\"" +
-                sortedSteps[0].GlobalKey + "\"," +
-                "\"PostData\":\"{\\u0022Name\\u0022:\\u0022Andre\\u0022,\\u0022Id\\u0022:1}\"}";
-
-            string s2 = "{\"WorkflowName\":\"Unit_test_workflow@1.0\",\"MainOrchestrationId\":\"" +
-                arr[1] + "\"," +
-                "\"SubOrchestrationId\":\"" +
-                sortedSteps[1].SubOrchestrationId + "\"," +
-                "\"Webhook\":null," +
-                "\"RunId\":\"" +
-                sortedSteps[1].RunId + "\"," +
-                "\"StepNumber\":2,\"StepId\":\"myStep 2\",\"GlobalKey\":\"" +
-                sortedSteps[1].GlobalKey + "\"," +
-                "\"PostData\":\"{\\u0022Name\\u0022:\\u0022Andre\\u0022,\\u0022Id\\u0022:1}\"}";
-
             if (step0is1)
             {
+                string s1 = "{\"WorkflowName\":\"Unit_test_workflow@1.0\",\"MainOrchestrationId\":\"" +
+                    arr[1] + "\"," +
+                    "\"SubOrchestrationId\":\"" +
+                    sortedSteps[0].SubOrchestrationId + "\"," +
+                    "\"Webhook\":null," +
+                    "\"RunId\":\"" +
+                    sortedSteps[0].RunId + "\"," +
+                    "\"StepNumber\":1,\"StepId\":\"myStep 1\",\"GlobalKey\":\"" +
+                    sortedSteps[0].GlobalKey + "\"," +
+                    "\"PostData\":\"{\\u0022Name\\u0022:\\u0022Andre\\u0022,\\u0022Id\\u0022:1}\"}";
+
+                string s2 = "{\"WorkflowName\":\"Unit_test_workflow@1.0\",\"MainOrchestrationId\":\"" +
+                    arr[1] + "\"," +
+                    "\"SubOrchestrationId\":\"" +
+                    sortedSteps[1].SubOrchestrationId + "\"," +
+                    "\"Webhook\":null," +
+                    "\"RunId\":\"" +
+                    sortedSteps[1].RunId + "\"," +
+                    "\"StepNumber\":2,\"StepId\":\"myStep 2\",\"GlobalKey\":\"" +
+                    sortedSteps[1].GlobalKey + "\"," +
+                    "\"PostData\":\"{\\u0022Name\\u0022:\\u0022Andre\\u0022,\\u0022Id\\u0022:1}\"}";
+
                 Assert.IsTrue(blobHttpRosponse1.Equals(s1));
                 Assert.IsTrue(blobHttpRosponse2.Equals(s2));
             }
             else
             {
-                Assert.IsTrue(blobHttpRosponse2.Equals(s1));
+                string s1 = "{\"WorkflowName\":\"Unit_test_workflow@1.0\",\"MainOrchestrationId\":\"" +
+                    arr[1] + "\"," +
+                    "\"SubOrchestrationId\":\"" +
+                    sortedSteps[1].SubOrchestrationId + "\"," +
+                    "\"Webhook\":null," +
+                    "\"RunId\":\"" +
+                    sortedSteps[1].RunId + "\"," +
+                    "\"StepNumber\":1,\"StepId\":\"myStep 1\",\"GlobalKey\":\"" +
+                    sortedSteps[1].GlobalKey + "\"," +
+                    "\"PostData\":\"{\\u0022Name\\u0022:\\u0022Andre\\u0022,\\u0022Id\\u0022:1}\"}";
+
+                string s2 = "{\"WorkflowName\":\"Unit_test_workflow@1.0\",\"MainOrchestrationId\":\"" +
+                    arr[1] + "\"," +
+                    "\"SubOrchestrationId\":\"" +
+                    sortedSteps[0].SubOrchestrationId + "\"," +
+                    "\"Webhook\":null," +
+                    "\"RunId\":\"" +
+                    sortedSteps[0].RunId + "\"," +
+                    "\"StepNumber\":2,\"StepId\":\"myStep 2\",\"GlobalKey\":\"" +
+                    sortedSteps[0].GlobalKey + "\"," +
+                    "\"PostData\":\"{\\u0022Name\\u0022:\\u0022Andre\\u0022,\\u0022Id\\u0022:1}\"}";
+
                 Assert.IsTrue(blobHttpRosponse1.Equals(s2));
+                Assert.IsTrue(blobHttpRosponse2.Equals(s1));
             }
         }
     }
