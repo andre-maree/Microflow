@@ -30,7 +30,7 @@ namespace Microflow.Helpers
                         };
                     }
 
-                    workflowRun.RunObject.MicroflowStepResponseData.Content = content;
+                    //workflowRun.RunObject.MicroflowStepResponseData.Content = content;
                 }
 
                 // start

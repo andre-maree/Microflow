@@ -43,6 +43,19 @@ namespace MicroflowTest
 
             return JsonSerializer.Deserialize<Dictionary<string, string>>(jsonString);
         }
+
+        public static List<Step> CreateTestWorkflow_2TopSteps()
+        {
+            // create 4 steps from 1 to 4, each with a post url merge field
+            List<Step> steps = WorkflowManager.CreateSteps(4, 1, "{default_post_url}");
+
+            steps.StepNumber(3).AddParentSteps(steps.StepNumber(1), steps.StepNumber(2));
+
+            steps.StepNumber(3).AddSubSteps(steps.StepNumber(4));
+
+            return steps;
+        }
+
         public static List<Step> CreateTestWorkflow_SimpleSteps()
         {
             // create 4 steps from 1 to 4, each with a post url merge field
