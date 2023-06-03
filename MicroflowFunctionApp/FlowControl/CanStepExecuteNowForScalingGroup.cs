@@ -23,9 +23,9 @@ namespace Microflow.FlowControl
             EntityId countId = new(ScaleGroupCalls.CanExecuteNowInScaleGroupCount, canExecuteNowObject.ScaleGroupId);
 
             EntityId scaleGroupCountId = new(ScaleGroupCalls.ScaleGroupMaxConcurrentInstanceCount, canExecuteNowObject.ScaleGroupId);
-            int scaleGroupMaxCount = await context.CallEntityAsync<int>(scaleGroupCountId, MicroflowControlKeys.Read);
+            ScaleGroupState scaleGroupState = await context.CallEntityAsync<ScaleGroupState>(scaleGroupCountId, MicroflowControlKeys.Read);
 
-            if (scaleGroupMaxCount == 0)
+            if (scaleGroupState.ScaleGroupMaxConcurrentInstanceCount == 0)
             {
                 return;
             }
@@ -34,7 +34,7 @@ namespace Microflow.FlowControl
             {
                 int scaleGroupInProcessCount = await context.CallEntityAsync<int>(countId, MicroflowEntityKeys.Read);
 
-                if (scaleGroupInProcessCount < scaleGroupMaxCount)
+                if (scaleGroupInProcessCount < scaleGroupState.ScaleGroupMaxConcurrentInstanceCount)
                 {
                     await context.CallEntityAsync(countId, MicroflowEntityKeys.Add);
 
@@ -42,11 +42,11 @@ namespace Microflow.FlowControl
                 }
             }
 
-            DateTime endDate = context.CurrentUtcDateTime.AddHours(PollingConfig.PollingMaxHours);
+            DateTime endDate = context.CurrentUtcDateTime.AddHours(scaleGroupState.PollingMaxHours);
             // start interval seconds
-            int count = PollingConfig.PollingIntervalSeconds;
+            int count = scaleGroupState.PollingIntervalSeconds;
             // max interval seconds
-            int max = PollingConfig.PollingIntervalMaxSeconds;
+            int max = scaleGroupState.PollingIntervalMaxSeconds;
 
             using (CancellationTokenSource cts = new())
             {
@@ -62,7 +62,7 @@ namespace Microflow.FlowControl
                         {
                             int scaleGroupInProcessCount = await context.CallEntityAsync<int>(countId, MicroflowEntityKeys.Read);
 
-                            if (scaleGroupInProcessCount < scaleGroupMaxCount)
+                            if (scaleGroupInProcessCount < scaleGroupState.ScaleGroupMaxConcurrentInstanceCount)
                             {
                                 await context.CallEntityAsync<int>(countId, MicroflowEntityKeys.Add);
 
@@ -128,10 +128,10 @@ namespace Microflow.FlowControl
             switch (ctx.OperationName.ToLowerInvariant())
             {
                 case MicroflowEntityKeys.Set:
-                    ctx.SetState(ctx.GetInput<int>());
+                    ctx.SetState(ctx.GetInput<ScaleGroupState>());
                     break;
                 case MicroflowEntityKeys.Read:
-                    ctx.Return(ctx.GetState<int>());
+                    ctx.Return(ctx.GetState<ScaleGroupState>());
                     break;
                 //case "delete":
                 //    ctx.DeleteState();

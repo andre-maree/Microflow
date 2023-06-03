@@ -12,6 +12,14 @@ namespace MicroflowModels
         Webhook
     }
 
+    public class ScaleGroupState
+    {
+        public int ScaleGroupMaxConcurrentInstanceCount { get; set; }
+        public int PollingIntervalSeconds { get; set; }
+        public int PollingIntervalMaxSeconds { get; set; }
+        public int PollingMaxHours { get; set; }
+    }
+
     public class SubStepsMappingForActions
     {
         public string WebhookAction { get; set; }

@@ -159,15 +159,23 @@ namespace MicroflowTest
             return await HttpClient.PostAsync(BaseUrl + $"/Start/{microflow.workflowName}?globalkey={globalKey}&loop={loop}", new StringContent(postData));
         }
 
-        public static async Task SetScaleGroupMax(int maxConcurrentInstanceCount, string scaleGroupId)
+        public static async Task SetScaleGroupMax(int scaleGroupMaxConcurrentInstanceCount, string scaleGroupId)
         {
+            ScaleGroupState scaleGroupState = new()
+            {
+                PollingIntervalMaxSeconds = 15,
+                PollingIntervalSeconds = 5,
+                PollingMaxHours = 1,
+                ScaleGroupMaxConcurrentInstanceCount = scaleGroupMaxConcurrentInstanceCount
+            };
+
             // set scale group
-            HttpResponseMessage scaleGroupSet = await ScaleGroupsManager.SetMaxInstanceCountForScaleGroup(scaleGroupId, maxConcurrentInstanceCount, BaseUrl, HttpClient);
+            HttpResponseMessage scaleGroupSet = await ScaleGroupsManager.SetMaxInstanceCountForScaleGroup(scaleGroupId, scaleGroupState, BaseUrl, HttpClient);
 
             Assert.IsTrue(scaleGroupSet.StatusCode == System.Net.HttpStatusCode.OK);
 
-            Dictionary<string, int> scaleGroupGet = await ScaleGroupsManager.GetScaleGroupsWithMaxInstanceCounts(scaleGroupId, BaseUrl, HttpClient);
-            Assert.IsTrue(scaleGroupGet[scaleGroupId] == maxConcurrentInstanceCount);
+            Dictionary<string, ScaleGroupState> scaleGroupGet = await ScaleGroupsManager.GetScaleGroupsWithMaxInstanceCounts(scaleGroupId, BaseUrl, HttpClient);
+            Assert.IsTrue(scaleGroupGet[scaleGroupId].ScaleGroupMaxConcurrentInstanceCount == scaleGroupMaxConcurrentInstanceCount);
         }
 
         public static Dictionary<string, string> CreateMergeFields(PassThroughParams passThroughParams, bool IsGet)

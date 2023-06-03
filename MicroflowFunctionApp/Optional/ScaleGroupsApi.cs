@@ -1,8 +1,11 @@
 ﻿#define INCLUDE_scalegroups
 #if INCLUDE_scalegroups
+using MicroflowModels;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,7 +28,7 @@ namespace MicroflowApi
                                                                   Route = MicroflowPath + "/ScaleGroup/{scaleGroupId}")] HttpRequestMessage req,
                                                                   [DurableClient] IDurableEntityClient client, string scaleGroupId)
         {
-            Dictionary<string, int> result = new();
+            Dictionary<string, ScaleGroupState> result = new();
             EntityQueryResult res = null;
 
             using (CancellationTokenSource cts = new())
@@ -42,18 +45,18 @@ namespace MicroflowApi
             {
                 foreach (DurableEntityStatus rr in res.Entities)
                 {
-                    result.Add(rr.EntityId.EntityKey, (int)rr.State);
+                    result.Add(rr.EntityId.EntityKey, rr.State.Value<ScaleGroupState>());
                 }
             }
             else
             {
                 foreach (DurableEntityStatus rr in res.Entities.Where(e => e.EntityId.EntityKey.Equals(scaleGroupId)))
                 {
-                    result.Add(rr.EntityId.EntityKey, (int)rr.State);
+                    result.Add(rr.EntityId.EntityKey, rr.State.ToObject<ScaleGroupState>());
                 }
             }
 
-            StringContent content = new StringContent(JsonSerializer.Serialize(result));
+            StringContent content = new(JsonConvert.SerializeObject(result));
 
             return new HttpResponseMessage(HttpStatusCode.OK)
             {
@@ -65,11 +68,13 @@ namespace MicroflowApi
         /// Set the max instance count for scale group, default to wait for 5 seconds
         /// </summary>
         [FunctionName("Set" + ScaleGroupCalls.ScaleGroup)]
-        public static async Task<HttpResponseMessage> ScaleGroup([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post",
-                                                                  Route = MicroflowPath + "/ScaleGroup/{scaleGroupId}/{maxInstanceCount}/{maxWaitSeconds:int?}")] HttpRequestMessage req,
-                                                                  [DurableClient] IDurableOrchestrationClient client, string scaleGroupId, int maxInstanceCount, int? maxWaitSeconds)
+        public static async Task<HttpResponseMessage> ScaleGroup([HttpTrigger(AuthorizationLevel.Anonymous, "post",
+                                                                  Route = MicroflowPath + "/ScaleGroup/{scaleGroupId}/{maxWaitSeconds:int?}")] HttpRequestMessage req,
+                                                                  [DurableClient] IDurableOrchestrationClient client, string scaleGroupId, int? maxWaitSeconds)
         {
-            string instanceId = await client.StartNewAsync("SetScaleGroupMaxConcurrentCount", null, (scaleGroupId, maxInstanceCount));
+            ScaleGroupState state = JsonConvert.DeserializeObject<ScaleGroupState>(await req.Content.ReadAsStringAsync());
+
+            string instanceId = await client.StartNewAsync("SetScaleGroupMaxConcurrentCount", null, (scaleGroupId, state));
 
             return await client.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromSeconds(maxWaitSeconds is null
                                                                                    ? 5
@@ -84,11 +89,11 @@ namespace MicroflowApi
         [FunctionName("SetScaleGroupMaxConcurrentCount")]
         public static async Task SetScaleGroupMaxOrchestration([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
-            (string scaleGroupId, int maxInstanceCount) input = context.GetInput<(string, int)>();
+            (string scaleGroupId, ScaleGroupState state) = context.GetInput<(string, ScaleGroupState)>();
 
-            EntityId scaleGroupCountId = new(ScaleGroupCalls.ScaleGroupMaxConcurrentInstanceCount, input.scaleGroupId);
+            EntityId scaleGroupCountId = new(ScaleGroupCalls.ScaleGroupMaxConcurrentInstanceCount, scaleGroupId);
 
-            await context.CallEntityAsync(scaleGroupCountId, MicroflowEntityKeys.Set, input.maxInstanceCount);
+            await context.CallEntityAsync(scaleGroupCountId, MicroflowEntityKeys.Set, state);
         }
     }
 }
