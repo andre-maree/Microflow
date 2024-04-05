@@ -33,17 +33,22 @@ namespace MicroflowTest
             // the global key is needed to group related workflows and control the group
             string globalKey = Guid.NewGuid().ToString();
 
+            // set the scale group ids of steps 4 to 13 to the same scale group id
             microflow.workflow.Steps.Where(s => s.StepNumber > 3 && s.StepNumber < 14).ToList().ForEach(x => x.ScaleGroupId = scaleGroupId);
 
+            // upsert the workflow
             await UpsertWorkflow(microflow);
 
+            // set the maximum limit of concurrent executions for the scale group id tp 10
             await TestWorkflowHelper.SetScaleGroupMax(10, scaleGroupId);
 
             // start the upserted Microflow
             HttpResponseMessage startResult = await TestWorkflowHelper.StartMicroflow(microflow, loop, globalKey);
 
+            // wait for completion
             string instanceId = await WorkflowManager.WaitForWorkflowCompleted(startResult);
 
+            // test that 
             await TestNoScaleGroupWithMax10(microflow, instanceId);
         }
 
