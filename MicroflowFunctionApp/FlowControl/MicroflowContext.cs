@@ -216,7 +216,7 @@ namespace Microflow.FlowControl
                 //}
                 //else
                 //{
-                    await HandleCalloutException(ex);
+                await HandleCalloutException(ex);
                 //}
             }
         }
@@ -226,26 +226,6 @@ namespace Microflow.FlowControl
         /// </summary>
         private async Task HttpCallout(string subInstanceId)
         {
-            MicroflowHttpResponse runObjectResponseData = MicroflowRun.RunObject.MicroflowStepResponseData ?? null;
-
-            // send and receive inline flow
-            if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.CalloutUrl))
-            {
-                if (HttpCallWithRetries.RetryDelaySeconds > 0)
-                {
-                    MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(CallNames.HttpCallOrchestrator,
-                                                                                                                                   HttpCallWithRetries.GetRetryOptions(),
-                                                                                                                                   subInstanceId,
-                                                                                                                                   (HttpCallWithRetries, runObjectResponseData));
-                }
-                else
-                {
-                    MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallOrchestrator,
-                                                                                                                          subInstanceId,
-                                                                                                                          (HttpCallWithRetries, runObjectResponseData));
-                }
-            }
-
             if (HttpCallWithRetries.EnableWebhook)
             {
                 try
@@ -274,6 +254,50 @@ namespace Microflow.FlowControl
                     }
 
                     throw;
+                }
+            }
+
+            MicroflowHttpResponse runObjectResponseData = MicroflowRun.RunObject.MicroflowStepResponseData ?? null;
+
+            // send and receive inline flow
+            if (!string.IsNullOrWhiteSpace(HttpCallWithRetries.CalloutUrl))
+            {
+                if (HttpCallWithRetries.RetryDelaySeconds > 0)
+                {
+                    List<int> substeps = null;
+
+                    if (MicroflowHttpResponse?.SubStepsToRun != null)
+                    {
+                        substeps = MicroflowHttpResponse.SubStepsToRun;
+                    }
+
+                    MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(CallNames.HttpCallOrchestrator,
+                                                                                                                                   HttpCallWithRetries.GetRetryOptions(),
+                                                                                                                                   subInstanceId,
+                                                                                                                                   (HttpCallWithRetries, runObjectResponseData));
+
+                    if (HttpCallWithRetries.EnableWebhook)
+                    {
+                        MicroflowHttpResponse.SubStepsToRun = substeps;
+                    }
+                }
+                else
+                {
+                    List<int> substeps = null;
+
+                    if (MicroflowHttpResponse?.SubStepsToRun != null)
+                    {
+                        substeps = MicroflowHttpResponse.SubStepsToRun;
+                    }
+
+                    MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.HttpCallOrchestrator,
+                                                                                                                          subInstanceId,
+                                                                                                                          (HttpCallWithRetries, runObjectResponseData));
+
+                    if (HttpCallWithRetries.EnableWebhook)
+                    {
+                        MicroflowHttpResponse.SubStepsToRun = substeps;
+                    }
                 }
             }
         }
@@ -326,7 +350,7 @@ namespace Microflow.FlowControl
             {
                 await ContinueProcessing();
             }
-            else if(MicroflowHttpResponse.CalloutOrWebhook == CalloutOrWebhook.Callout && !HttpCallWithRetries.StopOnCalloutFailure)
+            else if (MicroflowHttpResponse.CalloutOrWebhook == CalloutOrWebhook.Callout && !HttpCallWithRetries.StopOnCalloutFailure)
             {
                 MicroflowHttpResponse.SubStepsToRun = JsonSerializer.Deserialize<List<int>>(HttpCallWithRetries.SubStepsToRunForCalloutFailure);
 
