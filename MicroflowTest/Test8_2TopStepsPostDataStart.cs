@@ -22,8 +22,7 @@ namespace MicroflowTest
         [TestMethod]
         public async Task TwoTopStepsPostDataStart()
         {
-            // create a simple workflow with parent steps 1 and 2, child step 3, and child of 3 step 4
-            // siblings steps 2 and 3 runs in parallel
+            // create a simple workflow top steps 1 and 2, with a child step 3, and step 3 with child step 4
             List<Step> stepsList = TestWorkflowHelper.CreateTestWorkflow_2TopSteps();
             stepsList.ForEach(x=>x.IsHttpGet = false);
 
