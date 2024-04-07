@@ -221,6 +221,23 @@ namespace Microflow.FlowControl
             }
         }
 
+        [FunctionName("CheckWebhookStatus")]
+        public static async Task CheckWebhookStatus([ActivityTrigger] string instanceId, [DurableClient] IDurableOrchestrationClient client)
+        {
+            while (true)
+            {
+                await Task.Delay(250);
+
+                DurableOrchestrationStatus status = await client.GetStatusAsync(instanceId, showHistoryOutput: false);
+
+                if (status?.RuntimeStatus == OrchestrationRuntimeStatus.Running)
+                {
+                    break;
+                }
+
+            }
+        }
+
         /// <summary>
         /// Do the http callout
         /// </summary>
@@ -230,6 +247,8 @@ namespace Microflow.FlowControl
             {
                 try
                 {
+                    Task checkTask = CheckWebhook();
+
                     if (HttpCallWithRetries.RetryDelaySeconds > 0)
                     {
                         MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorWithRetryAsync<MicroflowHttpResponse>(CallNames.WebhookOrchestrator,
@@ -241,8 +260,9 @@ namespace Microflow.FlowControl
                     }
 
                     MicroflowHttpResponse = await MicroflowDurableContext.CallSubOrchestratorAsync<MicroflowHttpResponse>(CallNames.WebhookOrchestrator,
-                                                                                                                          HttpCallWithRetries.WebhookId,
-                                                                                                                          HttpCallWithRetries);
+                                                                                                                          HttpCallWithRetries.WebhookId, HttpCallWithRetries);
+
+                    await checkTask;
                 }
                 catch (FunctionFailedException fex)
                 {
@@ -300,6 +320,13 @@ namespace Microflow.FlowControl
                     }
                 }
             }
+        }
+
+        private async Task CheckWebhook()
+        {
+            await MicroflowDurableContext.CallActivityAsync("CheckWebhookStatus", HttpCallWithRetries.WebhookId);
+
+            await MicroflowDurableContext.CallHttpAsync(System.Net.Http.HttpMethod.Post, new Uri(HttpCallWithRetries.CalloutUrl));
         }
 
         private void HandleWebhookTimeout(TimeoutException tex)
