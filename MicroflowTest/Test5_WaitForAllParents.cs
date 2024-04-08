@@ -15,6 +15,8 @@ namespace MicroflowTest
         [TestMethod]
         public async Task WaitForAllParents()
         {
+            // create a workflow with parent step 1, two child steps 2 and 3, 2 with five children and 3 with five children,
+            // and step 14 as the child of the ten children of 2 and 3
             List<Step> workflow = TestWorkflowHelper.CreateTestWorkflow_10StepsParallel();
 
             (MicroflowModels.Microflow workflow, string workflowName) microflow = TestWorkflowHelper.CreateMicroflow(workflow);

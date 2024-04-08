@@ -19,8 +19,8 @@ namespace MicroflowTest
         [TestMethod]
         public async Task MaxInstanceCountForScaleGroupTo10()
         {
-            // create a simple workflow with parent step 1, subling children step 2 and 3, and child of 2 and 3 step 4
-            // siblings steps 2 and 3 runs in parallel
+            // create a workflow with parent step 1, two child steps 2 and 3, 2 with five children and 3 with five children,
+            // and step 14 as the child of the ten children of 2 and 3
             List<Step> workflow = TestWorkflowHelper.CreateTestWorkflow_10StepsParallel();
 
             // create Microflow with the created workflow
@@ -33,7 +33,7 @@ namespace MicroflowTest
             // the global key is needed to group related workflows and control the group
             string globalKey = Guid.NewGuid().ToString();
 
-            // set the scale group ids of steps 4 to 13 to the same scale group id
+            // set the ten parallel steps 4 - 13 to the same scale group with the max instance count = 10, will overlap
             microflow.workflow.Steps.Where(s => s.StepNumber > 3 && s.StepNumber < 14).ToList().ForEach(x => x.ScaleGroupId = scaleGroupId);
 
             // upsert the workflow
@@ -55,8 +55,8 @@ namespace MicroflowTest
         [TestMethod]
         public async Task MaxInstanceCountForScaleGroupTo1()
         {
-            // create a simple workflow with parent step 1, subling children step 2 and 3, and child of 2 and 3 step 4
-            // siblings steps 2 and 3 runs in parallel
+            // create a workflow with parent step 1, two child steps 2 and 3, 2 with five children and 3 with five children,
+            // and step 14 as the child of the ten children of 2 and 3
             List<Step> workflow = TestWorkflowHelper.CreateTestWorkflow_10StepsParallel();
 
             // create Microflow with the created workflow
@@ -73,6 +73,7 @@ namespace MicroflowTest
 
             await UpsertWorkflow(microflow);
 
+            // set the ten parallel steps 4 - 13 to the same scale group with the max instance count = 1, no overlapping
             await TestWorkflowHelper.SetScaleGroupMax(1, scaleGroupId);
 
             // start the upserted Microflow
@@ -102,7 +103,7 @@ namespace MicroflowTest
 
             foreach (LogStepEntity paraStep in parallelSteps)
             {
-                // these are now in sequence since the the scalegroup max instance count is 1
+                // these are now not overlapping since the scalegroup max instance count is 1
                 // count the other step`s with start dates before this step`s end date
                 if (parallelSteps.Count(s => s.StartDate < paraStep.EndDate) != count)
                 {
